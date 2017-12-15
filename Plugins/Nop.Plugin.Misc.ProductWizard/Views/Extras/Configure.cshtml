@@ -1,0 +1,141 @@
+﻿@model int
+
+@inject AdminAreaSettings adminAreaSettings
+
+@{
+
+    //    Layout = "~/admin/Views/Shared/_AdminLayout.cshtml";
+    var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
+    var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
+     
+}
+ 
+
+<div class="raw clearfix">
+    <div class="col-md-12">
+        <div class="panel-group"> 
+
+            <div class="panel panel-default margin-bottom" id="group-associated-products">
+                <div class="panel-heading">
+                    Legacy ID
+                </div>
+                <div class="panel-body">
+
+                    <div id="legacy-grid"></div>
+
+                    <script>
+                        $(document).ready(function() {
+                            $("#legacy-grid").kendoGrid({
+                                dataSource: {
+                                    type: "json",
+                                    transport: {
+                                        read: {
+                                            url: "@Html.Raw(Url.Action("List", "LegacyId"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalDatalegacy
+                                        } ,
+                                        create: {
+                                            url: "@Html.Raw(Url.Action("Create", "LegacyId"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalDatalegacy
+                                        },
+                                        update: {
+                                            url: "@Html.Raw(Url.Action("Update", "LegacyId"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: addAntiForgeryToken
+                                        },
+                                        destroy: {
+                                            url: "@Html.Raw(Url.Action("destroy", "LegacyId"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: addAntiForgeryToken
+                                        },
+
+                                    },
+                                    schema: {
+                                        data: "Data",
+                                        total: "Total",
+                                        errors: "Errors",
+                                        model: {
+                                            id: "Id",
+                                            fields: {
+                                                LegacyCode: { editable: true, validation: { required: true } }
+                                            }
+                                        }
+                                    },
+                                    requestEnd: function (e) {
+                                        if (e.type == "create" || e.type == "update") {
+                                            this.read();
+                                        }
+                                    },
+                                    error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(defaultGridPageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true
+                                },
+                                pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(gridPageSizes)],
+                                    @Html.Partial("_GridPagerMessages")
+                                },
+                                 toolbar: [{ name: "create", text: "@T("Admin.Common.AddNewRecord")" }],
+                                editable: {
+                                    confirmation: "@T("Admin.Common.DeleteConfirmation")",
+                                    mode: "inline"
+                                },
+                                scrollable: false,
+
+                                columns: [
+                                    {
+                                        field: "LegacyCode",
+                                        title: "LegacyID"
+                                    } ,
+                                   {
+                                        command: [
+                                            {
+                                                name: "edit",
+                                                text: {
+                                                    edit: "@T("Admin.Common.Edit")",
+                                                    update: "@T("Admin.Common.Update")",
+                                                    cancel: "@T("Admin.Common.Cancel")"
+                                                }
+                                            }, {
+                                                name: "destroy",
+                                                text: "@T("Admin.Common.Delete")"
+                                            }
+                                        ],
+                                        width: 200
+                                    }
+
+                                ]
+                            });
+                        });
+
+
+
+
+                        function additionalDatalegacy() {
+                            var itemId = '@Model';
+                            var data = {
+                                itemId: itemId,
+                            };
+                            addAntiForgeryToken(data);
+                            return data;
+                        };
+                    </script>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+</div>

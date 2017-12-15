@@ -1,0 +1,1113 @@
+﻿@model Nop.Plugin.Misc.ProductWizard.Models.ProductListModel
+@inject AdminAreaSettings adminAreaSettings
+
+@using Nop.Core.Domain.Catalog
+
+@{
+    Layout = "_AdminLayout";
+    var defaultGridPageSize = adminAreaSettings.DefaultGridPageSize;
+    var gridPageSizes = adminAreaSettings.GridPageSizes;
+
+    //page title
+    ViewBag.Title = T("Admin.Catalog.Products").Text;
+    //active menu item (system name)
+    Html.SetActiveMenuItemSystemName("Products");
+}
+
+
+<form asp-controller="Relations" asp-action="List" method="post">
+    <div class="content-header clearfix">
+        <h1 class="pull-left">
+             Item Entry -@Model.ItemId @Model.ItemName 
+        </h1>
+        <small>
+            <i class="fa fa-arrow-circle-left"></i>
+            <a asp-action="Edit" asp-controller="product" asp-route-id="@Model.ItemId">Return to product </a>
+        </small>
+    </div>
+    <div class="row">
+        <div class="col-md-10">
+            <label class="content-header"> Item Filter: Individual Relations</label>
+        </div>
+    </div>
+    <div class="content">
+        <div class="form-horizontal">
+            <div class="panel-group">
+                <div class="panel panel-default panel-search">
+                    <div class="panel-body">
+
+                        <div class="row">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchProductName" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-editor asp-for="SearchProductName" />
+                                    </div>
+                                </div>
+                                <div class="form-group" @(Model.AvailableCategories.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchCategoryId" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-select asp-for="SearchCategoryId" asp-items="Model.AvailableCategories" />
+                                    </div>
+                                </div>
+                                <div class="form-group" @(Model.AvailableCategories.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchIncludeSubCategories" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-editor asp-for="SearchIncludeSubCategories" />
+                                    </div>
+                                </div>
+                                <div class="form-group" @(Model.AvailableManufacturers.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchManufacturerId" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-select asp-for="SearchManufacturerId" asp-items="Model.AvailableManufacturers" />
+                                    </div>
+                                </div>
+                                <div class="form-group" @(Model.AvailableVendors.SelectionIsNotPossible() || Model.IsLoggedInAsVendor ? Html.Raw("style='display: none;'") : null)>
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchVendorId" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-select asp-for="SearchVendorId" asp-items="Model.AvailableVendors" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="form-group" @(Model.AvailableStores.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchStoreId" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-select asp-for="SearchStoreId" asp-items="Model.AvailableStores" />
+                                    </div>
+                                </div>
+                                <div class="form-group" @(Model.AvailableWarehouses.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchWarehouseId" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-select asp-for="SearchWarehouseId" asp-items="Model.AvailableWarehouses" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchProductTypeId" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-select asp-for="SearchProductTypeId" asp-items="Model.AvailableProductTypes" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchPublishedId" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-select asp-for="SearchPublishedId" asp-items="Model.AvailablePublishedOptions" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="GoDirectlyToSku" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="input-group input-group-short">
+                                            <nop-editor asp-for="GoDirectlyToSku" />
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-7 col-md-offset-5">
+                                <button type="button" id="search-products" class="btn btn-primary btn-search">
+                                    <i class="fa fa-search"></i>
+                                    @T("Admin.Common.Search")
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-10"><br /><br />
+                                Pressing the ADD SINGLE RELATIONS button or paging or sorting will<br />
+                                add relations selected on one single page
+                                <br />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div class="panel panel-info">
+                                    <div class="panel-heading clearfix">
+                                        <label> Single Relations</label>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-fields">
+                                <div class="inputs">
+                                    <div class="panel-heading clearfix">
+                                        
+                                        <span class="male">
+                                            <input type="radio" asp-for="SingleType" value="true" checked id="ItemIsPartofGrid" />
+                                            <label class="forcheckbox" for="gender-male">Wizard Item is a part of Checked Items</label>
+                                        </span>
+
+                                        <span class="female" style="margin-left:10px">
+                                            <input type="radio" asp-for="SingleType" value="true" id="GridIsPartofItem" />
+                                            <label class="forcheckbox" for="gender-female">Checked Items are part of Wizard Item</label>
+                                        </span>
+                                    </div>
+                                    </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div id="products-grid"></div>
+
+                        <script type="text/javascript">
+                            $(document).ready(function() {
+                                $("#products-grid").kendoGrid({
+                                    dataSource: {
+                                        type: "json",
+                                        transport: {
+                                            read: {
+                                                url: "@Html.Raw(Url.Action("ProductList", "Relations"))",
+                                                type: "POST",
+                                                dataType: "json",
+                                                data: additionalData
+                                            }
+                                        },
+                                        schema: {
+                                            data: "Data",
+                                            total: "Total",
+                                            errors: "Errors"
+                                        },
+                                        error: function(e) {
+                                            display_kendoui_grid_error(e);
+                                            // Cancel the changes
+                                            this.cancelChanges();
+                                        },
+                                        pageSize: @(defaultGridPageSize),
+                                        serverPaging: true,
+                                        serverFiltering: true,
+                                        serverSorting: true
+                                    },
+                                    pageable: {
+                                        refresh: true,
+                                        pageSizes: [@(gridPageSizes)],
+                                        @await Html.PartialAsync("_GridPagerMessages")
+                                    },
+                                    editable: {
+                                        confirmation: "@T("Admin.Common.DeleteConfirmation")",
+                                        mode: "inline"
+                                    },
+                                    scrollable: false,
+                                    dataBound: onDataBound,
+                                    columns: [
+                                        {
+                                            field: "Id",
+                                            title: "Id",
+                                            width: 100
+                                        },
+                                        {
+                                            field: "PictureThumbnailUrl",
+                                            title: "@T("Admin.Catalog.Products.Fields.PictureThumbnailUrl")",
+                                            template: '<img src="#=PictureThumbnailUrl#" />',
+                                            width: 100
+                                        },
+                                        {
+                                            field: "Name",
+                                            title: "@T("Admin.Catalog.Products.Fields.Name")",
+                                            width: 300
+                                        }, {
+                                            field: "Sku",
+                                            title: "@T("Admin.Catalog.Products.Fields.Sku")",
+                                            width: 100
+                                        }, {
+                                            field: "NameCategory",
+                                            title: "Category",
+                                            width: 100
+                                        },
+                                        {
+                                            field: "Published",
+                                            title: "@T("Admin.Catalog.Products.Fields.Published")",
+                                            width: 100,
+                                            template: '# if(Published) {# <i class="fa fa-check true-icon"></i> #} else {# <i class="fa fa-close false-icon"></i> #} #'
+                                        } ,
+                                        {
+                                            field: "Id",
+                                            headerTemplate: "Add Relation<br /><input id='mastercheckbox' type='checkbox'/>",
+                                            headerAttributes: { style: "text-align:center" },
+                                            attributes: { style: "text-align:center" },
+                                            template: "<input type='checkbox' value='#=Id#' class='checkboxGroups'/>",
+                                            width: 50
+                                        }
+                                    ]
+                                });
+                            });
+                        </script>
+
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div class="panel-heading clearfix">
+                                    <button type="submit" name="singleRelationsButton" id="AddSingleRelationsButton" class="btn btn-primary">
+                                        Add Single Relations
+                                    </button>
+                                </div>
+                            </div>
+                                <div class="col-md-10">
+                                    <div class="panel-heading clearfix">
+                                        <label> Current Single Relations for this Item:</label>
+                                    </div>
+                                </div>
+                            <div class="col-md-10">
+                                <div class="panel-heading clearfix">
+                                    <button type="submit" name="deletesinglerelationsButton" id="deletesinglerelationsButton" class="btn btn-primary">
+                                        Delete All Selected Relations
+                                    </button>
+                                </div></div>
+                        </div>
+                        <div class="row">
+                            <div class="form-fields">
+                                <div class="inputs">
+                                    <div class="panel-heading clearfix">
+
+                                        <span class="male">
+                                            <input type="radio" asp-for="BelongsTo" value="true" checked id="WizardBelongGrid" />
+                                            <label class="forcheckbox" for="gender-male">Wizard Item Belong to Following Parts</label>
+                                        </span>
+                                        <span class="female" style="margin-left:10px">
+                                            <input type="radio" asp-for="BelongsTo" value="true" id="GridBelongsWizard" />
+                                            <label class="forcheckbox" for="gender-female">Following Parts belong to Wizard Part</label>
+                                        </span>
+                                    </div>
+                                    </div>
+
+                                <div id="currRelationsGridView-grid"></div>
+                                <script>
+                        $(document).ready(function() {
+                            $("#currRelationsGridView-grid").kendoGrid({
+                                dataSource: {
+                                    type: "json",
+                                    transport: {
+                                        read: {
+                                            url: "@Html.Raw(Url.Action("ListItemRelationships", "Relations"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalDataRelationships
+                                        } ,
+
+                                        destroy: {
+                                            url: "@Html.Raw(Url.Action("DestroyItemRelationships", "Relations"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: addAntiForgeryToken
+                                        },
+
+                                    },
+                                    schema: {
+                                        data: "Data",
+                                        total: "Total",
+                                        errors: "Errors",
+                                        model: {
+                                            id: "Id",
+                                            fields: {
+                                                Sku: { editable: false },
+                                                ItemName: { editable: false },
+                                                CategoryName: { editable: false},
+                                                Id: { editable: false, type: "number" }
+                                            }
+                                        }
+                                    },
+
+                                    error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(defaultGridPageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true
+                                },
+                                pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(gridPageSizes)],
+                                    @Html.Partial("_GridPagerMessages")
+                                },
+                               editable: {
+                                    confirmation: "@T("Admin.Common.DeleteConfirmation")",
+                                    mode: "inline"
+                                },
+                                scrollable: false,
+                                //detailInit: detailInit,
+                                   dataBound: onDataBound1,
+                                    columns: [
+                                        {
+                                            field: "Id",
+                                            title: "ItemId"
+                                        },
+                                        {
+                                            field: "Sku",
+                                            title: "ProductId"
+                                        },
+                                    {
+                                        field: "ItemName",
+                                        title: "ProductName"
+                                    },
+                                {
+                                    field: "CategoryName",
+                                    title: "CategoryName"
+                                    }
+                                        ,
+                                    {
+                                        field: "Id",
+                                        title:"Select For Deletion",
+                                        attributes: { style: "text-align:center" },
+                                        template: "<input type='checkbox' value='#=Id#' class='checkboxGroups1'/>",
+                                        width: 50
+                                    },
+
+                                    {
+                                        command: [
+                                              {
+                                                name: "destroy",
+                                                text: "@T("Admin.Common.Delete")"
+                                            }
+                                        ],
+                                        width: 100
+                                    }
+
+                                    @*, {
+                                        field: "Interval",
+                                        title: "@T("Admin.Catalog.Categories.Fields.Published")",
+                                        width: 100,
+                                        headerAttributes: { style: "text-align:center" },
+                                        attributes: { style: "text-align:center" },
+                                        template: '# if(Published) {# <i class="fa fa-check true-icon"></i> #} else {# <i class="fa fa-close false-icon"></i> #} #'
+                                    } {
+                                        field: "Id",
+                                        title: "@T("Admin.Common.Edit")",
+                                        width: 100,
+                                        headerAttributes: { style: "text-align:center" },
+                                        attributes: { style: "text-align:center" },
+                                        template: '<a class="btn btn-default" href="Edit/#=Id#"><i class="fa fa-pencil"></i>@T("Admin.Common.Edit")</a>'
+                                    }*@
+                                ]
+                            });
+                        });
+                                </script>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div class="panel panel-info">
+                                    <div class="panel-heading clearfix">
+                                        <label> Group Relations</label>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div class="panel-heading clearfix">
+                                    <label>Add Group Relations:</label>
+                                </div>
+                                </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-5">
+                                <div class="panel-heading clearfix">
+                                    <div class="inputs">
+                                        <input id="SearchGroupName" name="SearchGroupName" class="form-fields" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="panel-heading clearfix">
+                                    <button id="refreshGroup" type="button">
+                                        Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-fields">
+                                <div class="inputs">
+
+                                    <div class="panel-heading clearfix">
+                                        <span class="male">
+                                            <input name="Groups1" type="radio" id="GroupBelongWizard" />
+                                            <label class="forcheckbox" for="gender-male">Group Belongs to Wizard Part</label>
+                                        </span>
+                                        <span class="female" style="margin-left:10px">
+                                            <input name="Groups1" type="radio" checked id="WizardBelongGroup" />
+                                            <label class="forcheckbox" for="gender-female">Wizard Part Belongs to Group</label>
+                                        </span>
+                                    </div>
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div id="AddGroupRelGridView-grid"></div>
+                            <script>
+                                $(document).ready(function () {
+
+                                    $("#AddGroupRelGridView-grid").kendoGrid({
+                                dataSource: {
+                                    type: "json",
+                                    transport: {
+                                        read: {
+                                            url: "@Html.Raw(Url.Action("ListGroups", "Relations"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalDataGroupsFilter 
+                                        }  
+
+                                    },
+                                    schema: {
+                                        data: "Data",
+                                        total: "Total",
+                                        errors: "Errors",
+                                        model: {
+                                            id: "Id",
+                                            fields: {
+                                                GroupName: { editable: true, validation: { required: true } },
+                                                Interval: { editable: true, type: "number" },
+                                                Percentage: { editable: true, type: "number" },
+                                                Id: { editable: false, type: "number" }
+                                            }
+                                        }
+                                    },
+
+                                    error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(defaultGridPageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true
+                                },
+                                pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(gridPageSizes)],
+                                    @Html.Partial("_GridPagerMessages")
+                                } ,
+                                scrollable: false,
+                                //detailInit: detailInit,
+                                  //  dataBound: onDataBound,
+                                    columns: [
+                                        {
+                                            field: "Id",
+                                            title: "Group Id"
+                                        },
+                                        {
+                                            field: "GroupName",
+                                            title: "Group Name"
+                                        }
+                                        ,
+                                    {
+                                        field: "Id",
+                                        title:"Add Group Relation",
+                                        attributes: { style: "text-align:center" },
+                                        template: "<input type='checkbox' value='#=Id#' class='checkboxGroups2'/>",
+                                        width: 50
+                                    } 
+  
+                                ]
+                            });
+                        });
+
+                            </script>
+                           
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div class="panel-heading clearfix">
+                                    <button type="submit" name="addGroupRelButton" id="addGroupRelButton" class="btn btn-primary">
+                                        Add Group Relation
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-10">
+                                <div class="panel-heading clearfix">
+                                    <label> Current Group Relations:</label>
+                                </div>
+                            </div>
+                            <div class="col-md-10">
+                                <div class="panel-heading clearfix">
+                                    <button type="submit" name="deletegrouprelations" id="deletegrouprelations" class="btn btn-primary">
+                                        Delete All Selected Group Relations
+                                    </button>
+                                </div>
+                                </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-fields">
+                                <div class="inputs">
+                                    <div class="panel-heading clearfix">
+
+                                        <span class="male">
+                                            <input name="group2" type="radio" id="currGroupBelongsWizard" />
+                                            <label class="forcheckbox" for="gender-male">Groups belonging to Wizard Item</label>
+                                        </span>
+                                        <span class="female" style="margin-left:10px">
+                                            <input name="group2" type="radio" checked id="currWizardBelongGroup" />
+                                            <label class="forcheckbox" for="gender-female">Groups that Wizard Item Belong to</label>
+                                        </span>
+                                    </div>
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div id="ViewGroupRelDataView-grid"></div>
+                            <script>
+                                $(document).ready(function () {
+
+                                    $("#ViewGroupRelDataView-grid").kendoGrid({
+                                dataSource: {
+                                    type: "json",
+                                    transport: {
+                                        read: {
+                                            url: "@Html.Raw(Url.Action("ListGroupsRelations", "Relations"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalDataGroupsRels
+                                        }
+
+                                    },
+                                    schema: {
+                                        data: "Data",
+                                        total: "Total",
+                                        errors: "Errors",
+                                        model: {
+                                            id: "Id",
+                                            fields: {
+                                                ItemName: { editable: false  }, 
+                                                Id: { editable: false, type: "number" }
+                                            }
+                                        }
+                                    },
+
+                                    error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(defaultGridPageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true
+                                },
+                                pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(gridPageSizes)],
+                                    @Html.Partial("_GridPagerMessages")
+                                } ,
+                                scrollable: false,
+                                //detailInit: detailInit,
+                                  //  dataBound: onDataBound,
+                                    columns: [
+                                        {
+                                            field: "GroupItemId",
+                                            title: "Id"
+                                        },
+                                        {
+                                            field: "ItemName",
+                                            title: "Group Name"
+                                        }
+                                        ,
+                                        {
+                                            field: "GroupItemId",
+                                            title: "Select For Deletion",
+                                            headerAttributes: { style: "text-align:center" },
+                                            attributes: { style: "text-align:center" },
+                                            template: "<input type='checkbox' value='#=GroupItemId#' class='checkboxGroups3'/>",
+                                            width: 50
+                                        }
+
+                                ]
+                            });
+                        });
+
+                            </script>
+
+                        </div>
+
+                        </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+
+    <script type="text/javascript">
+                                var selectedIds = [];
+                                var toDeleteSelectedIds = [];
+                                var selectedGroupsIds = [];
+                                var selectedViewGroupsIds = [];
+
+        $(document).ready(function () {
+
+            $('#currGroupBelongsWizard').change(function () {
+                var grid = $('#ViewGroupRelDataView-grid').data('kendoGrid');
+                grid.dataSource.read();
+
+            });
+
+            $('#currWizardBelongGroup').change(function () {
+                var grid = $('#ViewGroupRelDataView-grid').data('kendoGrid');
+                grid.dataSource.read();
+
+            });
+
+
+
+
+
+
+
+            $('#WizardBelongGrid').change(function () {
+                var grid = $('#currRelationsGridView-grid').data('kendoGrid');
+                grid.dataSource.read();
+
+                var grid1 = $('#ViewGroupRelDataView-grid').data('kendoGrid');
+                grid1.dataSource.read();
+            });
+            $('#GridBelongsWizard').change(function () {
+                var grid = $('#currRelationsGridView-grid').data('kendoGrid');
+                grid.dataSource.read();
+
+                var grid1 = $('#ViewGroupRelDataView-grid').data('kendoGrid');
+                grid1.dataSource.read();
+            });
+            $('#GroupBelongWizard').change(function () {
+                var grid = $('#currRelationsGridView-grid').data('kendoGrid');
+                grid.dataSource.read();
+
+                var grid1 = $('#ViewGroupRelDataView-grid').data('kendoGrid');
+                grid1.dataSource.read();
+            });
+            $('#WizardBelongGroup').change(function () {
+                var grid = $('#currRelationsGridView-grid').data('kendoGrid');
+                grid.dataSource.read();
+
+                var grid1 = $('#ViewGroupRelDataView-grid').data('kendoGrid');
+                grid1.dataSource.read();
+            });
+
+
+            //search group
+            $('#refreshGroup').click(function (event) {
+                event.preventDefault();
+                //search
+                var grid = $('#AddGroupRelGridView-grid').data('kendoGrid');
+                grid.dataSource.read();
+                var grid1 = $('#ViewGroupRelDataView-grid').data('kendoGrid');
+                grid1.dataSource.read();
+
+            });
+
+            //search button
+            $('#search-products').click(function () {
+                //search
+                var grid = $('#products-grid').data('kendoGrid');
+                grid.dataSource.page(1); //new search. Set page size to 1
+                //grid.dataSource.read(); we already loaded the grid above using "page" function
+                //clear selected checkboxes
+                $('.checkboxGroups').attr('checked', false).change();
+                selectedIds = [];
+                toDeleteSelectedIds = [];
+                return false;
+            });
+
+            $("#@Html.IdFor(model => model.SearchProductName)").keydown(function (event) {
+                if (event.keyCode === 13) {
+                    $("#search-products").click();
+                    return false;
+                }
+            });
+
+            @*$("#@Html.IdFor(model => model.GoDirectlyToSku)").keydown(function (event) {
+                if (event.keyCode === 13) {
+                    $("#go-to-product-by-sku").click();
+                    return false;
+                }
+            });*@
+
+             //Add Single Relations selected
+            $('#addGroupRelButton').click(function(e) {
+                e.preventDefault();
+                var $check = $('#WizardBelongGroup');
+                var $check1 = $('#GroupBelongWizard');
+                var postData = {
+                    selectedIds: selectedGroupsIds,
+                    itemId: '@Model.ItemId',
+                    wizardBelongGroup: $check.is(":checked"),
+                    groupBelongWizard: $check1.is(":checked")
+                };
+                addAntiForgeryToken(postData);
+
+                $.ajax({
+                    cache: false,
+                    type: "POST",
+                    url: "@(Url.Action("AddGroupRelations", "Relations"))",
+                    data: postData,
+                    complete: function(data) {
+                        //reload grid
+                        var grid = $('#ViewGroupRelDataView-grid').data('kendoGrid');
+                        grid.dataSource.read();
+
+
+
+                    },
+                    error: function(xhr, ajaxOptions, thrownError) {
+                        alert(thrownError);
+                    },
+                    traditional: true
+                });
+                return false;
+            });
+
+
+            //Add Single Relations selected
+            $('#AddSingleRelationsButton').click(function(e) {
+                e.preventDefault();
+                var $check = $('#GridIsPartofItem');
+                var $check1 = $('#ItemIsPartofGrid');
+                var postData = {
+                    selectedIds: selectedIds,
+                    itemId: '@Model.ItemId',
+                    gridIsPartofItem: $check.is(":checked"),
+                    itemIsPartofGrid: $check1.is(":checked")
+                };
+                addAntiForgeryToken(postData);
+
+                $.ajax({
+                    cache: false,
+                    type: "POST",
+                    url: "@(Url.Action("AddSingleRelations", "Relations"))",
+                    data: postData,
+                    complete: function(data) {
+                        //reload grid
+                        var grid = $('#products-grid').data('kendoGrid');
+                        grid.dataSource.read();
+
+                        var grid1 = $('#currRelationsGridView-grid').data('kendoGrid');
+                        grid1.dataSource.read();
+
+
+                    },
+                    error: function(xhr, ajaxOptions, thrownError) {
+                        alert(thrownError);
+                    },
+                    traditional: true
+                });
+                return false;
+            });
+
+            //Delete Single Relations selected
+            $('#deletesinglerelationsButton').click(function(e) {
+                e.preventDefault();
+
+                var $check = $('#WizardBelongGrid');
+                var $check1 = $('#GridBelongsWizard');
+                var postData = {
+                    selectedIds: toDeleteSelectedIds,
+                    itemId: '@Model.ItemId',
+                    wizardBelongGrid: $check.is(":checked"),
+                    gridBelongsWizard: $check1.is(":checked")
+                };
+                addAntiForgeryToken(postData);
+
+                $.ajax({
+                    cache: false,
+                    type: "POST",
+                    url: "@(Url.Action("DeleteSingleRelations", "Relations"))",
+                    data: postData,
+                    complete: function(data) {
+                        //reload grid
+                        var grid = $('#currRelationsGridView-grid').data('kendoGrid');
+                        grid.dataSource.read();
+                    },
+                    error: function(xhr, ajaxOptions, thrownError) {
+                        alert(thrownError);
+                    },
+                    traditional: true
+                });
+                return false;
+            });
+              //Delete delete group relations
+            $('#deletegrouprelations').click(function(e) {
+                e.preventDefault();
+
+                var $check = $('#currGroupBelongsWizard');
+                var $check1 = $('#currWizardBelongGroup');
+                var postData = {
+                    selectedIds: selectedViewGroupsIds,
+                    itemId: '@Model.ItemId',
+                    currGroupBelongsWizard: $check.is(":checked"),
+                    currWizardBelongGroup: $check1.is(":checked")
+                };
+                addAntiForgeryToken(postData);
+
+                $.ajax({
+                    cache: false,
+                    type: "POST",
+                    url: "@(Url.Action("deletegrouprelations", "Relations"))",
+                    data: postData,
+                    complete: function(data) {
+                        //reload grid
+                        var grid = $('#ViewGroupRelDataView-grid').data('kendoGrid');
+                        grid.dataSource.read();
+                    },
+                    error: function(xhr, ajaxOptions, thrownError) {
+                        alert(thrownError);
+                    },
+                    traditional: true
+                });
+                return false;
+            });
+
+
+            $('#mastercheckbox').click(function () {
+                $('.checkboxGroups').attr('checked', $(this).is(':checked')).change();
+            });
+
+            $('#mastercheckbox1').click(function () {
+                $('.checkboxGroups1').attr('checked', $(this).is(':checked')).change();
+            });
+
+            //wire up checkboxes.
+            $('#products-grid').on('change', 'input[type=checkbox][id!=mastercheckbox][class=checkboxGroups]', function (e) {
+                var $check = $(this);
+                if ($check.is(":checked") == true) {
+                    var checked = jQuery.inArray($check.val(), selectedIds);
+                    if (checked == -1) {
+                        //add id to selectedIds.
+                        selectedIds.push($check.val());
+                    }
+                }
+                else {
+                    var checked = jQuery.inArray($check.val(), selectedIds);
+                    if (checked > -1) {
+                        //remove id from selectedIds.
+                        selectedIds = $.grep(selectedIds, function (item, index) {
+                            return item != $check.val();
+                        });
+                    }
+                }
+                updateMasterCheckbox();
+            });
+
+            //wire up checkboxes single relation grid.
+            $('#currRelationsGridView-grid').on('change', 'input[type=checkbox][id!=mastercheckbox1][class=checkboxGroups1]', function (e) {
+                var $check = $(this);
+                if ($check.is(":checked") == true) {
+                    var checked = jQuery.inArray($check.val(), toDeleteSelectedIds);
+                    if (checked == -1) {
+                        //add id to selectedIds.
+                        toDeleteSelectedIds.push($check.val());
+                    }
+                }
+                else {
+                    var checked = jQuery.inArray($check.val(), toDeleteSelectedIds);
+                    if (checked > -1) {
+                        //remove id from selectedIds.
+                        toDeleteSelectedIds = $.grep(toDeleteSelectedIds, function (item, index) {
+                            return item != $check.val();
+                        });
+                    }
+                }
+                updateMasterCheckbox1();
+            });
+
+            //wire up checkboxes group relation grid.
+            $('#AddGroupRelGridView-grid').on('change', 'input[type=checkbox][id!=mastercheckbox2][class=checkboxGroups2]', function (e) {
+                var $check = $(this);
+                if ($check.is(":checked") == true) {
+                    var checked = jQuery.inArray($check.val(), selectedGroupsIds);
+                    if (checked == -1) {
+                        //add id to selectedIds.
+                        selectedGroupsIds.push($check.val());
+                    }
+                }
+                else {
+                    var checked = jQuery.inArray($check.val(), selectedGroupsIds);
+                    if (checked > -1) {
+                        //remove id from selectedIds.
+                        selectedGroupsIds = $.grep(selectedGroupsIds, function (item, index) {
+                            return item != $check.val();
+                        });
+                    }
+                }
+                updateMasterCheckbox2();
+            });
+
+
+            //wire up checkboxes View group relations.
+            $('#ViewGroupRelDataView-grid').on('change', 'input[type=checkbox][id!=mastercheckbox3][class=checkboxGroups3]', function (e) {
+                var $check = $(this);
+                if ($check.is(":checked") == true) {
+                    var checked = jQuery.inArray($check.val(), selectedViewGroupsIds);
+                    if (checked == -1) {
+                        //add id to selectedIds.
+                        selectedViewGroupsIds.push($check.val());
+                    }
+                }
+                else {
+                    var checked = jQuery.inArray($check.val(), selectedViewGroupsIds);
+                    if (checked > -1) {
+                        //remove id from selectedIds.
+                        selectedViewGroupsIds = $.grep(selectedViewGroupsIds, function (item, index) {
+                            return item != $check.val();
+                        });
+                    }
+                }
+                updateMasterCheckbox3();
+            });
+
+        });
+        
+
+        function additionalDataGroupsFilter() {
+
+            var searchval= $('#SearchGroupName').val()
+           
+            var data = {
+                searchGroupName :searchval,
+
+            };
+            addAntiForgeryToken(data);
+            return data;
+        };
+
+         function additionalDataGroupsRels() {
+
+             var $check = $('#currGroupBelongsWizard');
+             var $check1 = $('#currWizardBelongGroup');
+
+            var data = {
+                itemId: @Model.ItemId,
+                currGroupBelongsWizard: $check.is(":checked"),
+                currWizardBelongGroup: $check1.is(":checked"),
+
+            };
+            addAntiForgeryToken(data);
+            return data;
+        };
+
+        function additionalDataRelationships() {
+
+            var $check = $('#WizardBelongGrid');
+            var $check1 = $('#GridBelongsWizard');
+
+            var data = {
+                itemId: @Model.ItemId,
+                wizardBelongGrid: $check.is(":checked"),
+                gridBelongsWizard: $check1.is(":checked"),
+
+            };
+            addAntiForgeryToken(data);
+            return data;
+        };
+
+        function additionalData() {
+            var data = {
+                SearchProductName: $('#@Html.IdFor(model => model.SearchProductName)').val(),
+                SearchCategoryId: $('#SearchCategoryId').val(),
+                SearchIncludeSubCategories: $('#@Html.IdFor(model => model.SearchIncludeSubCategories)').is(':checked'),
+                SearchManufacturerId: $('#SearchManufacturerId').val(),
+                SearchStoreId: $('#SearchStoreId').val(),
+                SearchWarehouseId: $('#SearchWarehouseId').val(),
+                SearchVendorId: $('#SearchVendorId').val(),
+                SearchProductTypeId: $('#SearchProductTypeId').val(),
+                SearchPublishedId: $('#SearchPublishedId').val(),
+                GoDirectlyToSku: $("#GoDirectlyToSku").val()
+            };
+            addAntiForgeryToken(data);
+            return data;
+        }
+
+        function onDataBound(e) {
+            $('#products-grid input[type=checkbox][id!=mastercheckbox][class=checkboxGroups]').each(function () {
+                var currentId = $(this).val();
+                var checked = jQuery.inArray(currentId, selectedIds);
+                //set checked based on if current checkbox's value is in selectedIds.
+                $(this).attr('checked', checked > -1);
+            });
+
+            updateMasterCheckbox();
+        }
+
+        function updateMasterCheckbox() {
+            var numChkBoxes = $('#products-grid input[type=checkbox][id!=mastercheckbox][class=checkboxGroups]').length;
+            var numChkBoxesChecked = $('#products-grid input[type=checkbox][id!=mastercheckbox][class=checkboxGroups]:checked').length;
+            $('#mastercheckbox').attr('checked', numChkBoxes == numChkBoxesChecked && numChkBoxes > 0);
+        }
+        function onDataBound1(e) {
+            $('#currRelationsGridView-grid input[type=checkbox][id!=mastercheckbox1][class=checkboxGroups1]').each(function () {
+                var currentId = $(this).val();
+                var checked = jQuery.inArray(currentId, toDeleteSelectedIds);
+                //set checked based on if current checkbox's value is in selectedIds.
+                $(this).attr('checked', checked > -1);
+            });
+
+            updateMasterCheckbox1();
+        }
+        function updateMasterCheckbox1() {
+            var numChkBoxes = $('#currRelationsGridView-grid input[type=checkbox][id!=mastercheckbox1][class=checkboxGroups1]').length;
+            var numChkBoxesChecked = $('#currRelationsGridView-grid input[type=checkbox][id!=mastercheckbox1][class=checkboxGroups1]:checked').length;
+          //  $('#mastercheckbox1').attr('checked', numChkBoxes == numChkBoxesChecked && numChkBoxes > 0);
+        }
+        function updateMasterCheckbox2() {
+            var numChkBoxes = $('#AddGroupRelGridView-grid input[type=checkbox][id!=mastercheckbox2][class=checkboxGroups2]').length;
+            var numChkBoxesChecked = $('#AddGroupRelGridView-grid input[type=checkbox][id!=mastercheckbox2][class=checkboxGroups2]:checked').length;
+            //$('#mastercheckbox2').attr('checked', numChkBoxes == numChkBoxesChecked && numChkBoxes > 0);
+        }
+
+        function updateMasterCheckbox3() {
+            var numChkBoxes = $('#ViewGroupRelDataView-grid input[type=checkbox][id!=mastercheckbox3][class=checkboxGroups3]').length;
+            var numChkBoxesChecked = $('#ViewGroupRelDataView-grid input[type=checkbox][id!=mastercheckbox3][class=checkboxGroups3]:checked').length;
+            $('#mastercheckbox3').attr('checked', numChkBoxes == numChkBoxesChecked && numChkBoxes > 0);
+        }
+                            </script>
+</form>
+
+ 
+ 

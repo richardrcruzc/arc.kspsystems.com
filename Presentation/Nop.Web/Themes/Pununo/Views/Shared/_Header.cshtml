@@ -1,0 +1,64 @@
+﻿
+    <!-- Header Start -->
+    <div class="top-wrapper hidden-xs hidden-sm">
+        <div class="container">
+            @await Component.InvokeAsync("Widget", new { widgetZone = "header_before" })
+            <div class="row">
+                <div class="col-md-4 col-sm-6 hidden-xs top-wraper-left">
+                    <ul class="header-social-icons">
+                        <li class="facebook"><a href="javascript:void(0)" target="_blank"><i class="fa fa-facebook"></i></a></li>
+                        <li class="twitter"><a href="javascript:void(0)" target="_blank"><i class="fa fa-twitter"></i></a></li>
+                        <li class="linkedin"><a href="javascript:void(0)" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+                        <li class="pinterest"><a href="javascript:void(0)" target="_blank"><i class="fa fa-pinterest"></i></a></li>
+                        <li class="google-plus"><a href="javascript:void(0)" target="_blank"><i class="fa fa-google-plus"></i></a></li>
+                        <li class="youtube"><a href="javascript:void(0)" target="_blank"><i class="fa fa-youtube"></i></a></li>
+                        <li class="dribbble"><a href="javascript:void(0)" target="_blank"><i class="fa fa-dribbble"></i></a></li>
+                    </ul>
+                </div>
+                <div class="col-md-8 col-sm-6">
+                    @await Component.InvokeAsync("TaxTypeSelector")
+                    @await Component.InvokeAsync("CurrencySelector")
+                    @await Component.InvokeAsync("LanguageSelector")
+                    @await Component.InvokeAsync("Widget", new { widgetZone = "header_selectors" })
+                    @await Component.InvokeAsync("HeaderLinks")
+                    @await Component.InvokeAsync("FlyoutShoppingCart")
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="logo-bar wow fadeInDown" data-offset-top="197" data-spy="affix">
+        <div class="container">
+            <!-- Logo -->
+            <div class="row">
+                <div class="col-sm-3 logo  hidden-xs">
+                    @await Component.InvokeAsync("Logo")
+                </div>
+                <div class="col-sm-9">
+                    <div class="navigation">
+                        <nav class="navbar navbar-default">
+                            <div class="row">
+                                <!-- Brand and toggle get grouped for better mobile display -->
+                                <div class="navbar-header">
+                                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+
+                                    <div class="navbar-brand">
+                                        @await Component.InvokeAsync("Logo")
+                                    </div>
+                                </div>
+                                <!-- Collect the nav links, forms, and other content for toggling -->
+                                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                                    @await Component.InvokeAsync("TopMenu")
+
+                                  
+                                </div>
+                                <!-- /.navbar-collapse -->
+                            </div>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    

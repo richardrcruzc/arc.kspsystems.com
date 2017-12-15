@@ -1,0 +1,166 @@
+﻿ 
+
+@inject AdminAreaSettings adminAreaSettings
+
+@{
+    Layout = "_AdminLayout";
+    //    Layout = "~/admin/Views/Shared/_AdminLayout.cshtml";
+    var defaultGridPageSize =EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
+    var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
+
+    //page title
+    ViewBag.Title = T("Plugins.ProductWizard.ManageGroups").Text;
+    //active menu item (system name)
+    Html.SetActiveMenuItemSystemName("Product Groups");
+
+}
+
+
+<nop-antiforgery-token />
+<div class="content-header clearfix">
+    <h1 class="pull-left">
+      
+            Item Entry - @ViewBag.ItemName  @ViewBag.ItemId
+         
+    </h1>
+    
+</div>
+
+<div class="content">
+    <div class="form-horizontal">
+        <div class="panel-group">
+            
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div id="legacy-grid"></div>
+
+                    <script>
+                        $(document).ready(function() {
+                            $("#legacy-grid").kendoGrid({
+                                dataSource: {
+                                    type: "json",
+                                    transport: {
+                                        read: {
+                                            url: "@Html.Raw(Url.Action("List", "LegacyId"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalData
+                                        } ,
+                                        create: {
+                                            url: "@Html.Raw(Url.Action("Create", "LegacyId"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalData
+                                        },
+                                        update: {
+                                            url: "@Html.Raw(Url.Action("Update", "LegacyId"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: addAntiForgeryToken
+                                        },
+                                        destroy: {
+                                            url: "@Html.Raw(Url.Action("destroy", "LegacyId"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: addAntiForgeryToken
+                                        },
+
+                                    },
+                                    schema: {
+                                        data: "Data",
+                                        total: "Total",
+                                        errors: "Errors",
+                                        model: {
+                                            id: "Id",
+                                            fields: {
+                                                LegacyCode: { editable: true, validation: { required: true } }
+                                            }
+                                        }
+                                    },
+                                    requestEnd: function (e) {
+                                        if (e.type == "create" || e.type == "update") {
+                                            this.read();
+                                        }
+                                    },
+                                    error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(defaultGridPageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true
+                                },
+                                pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(gridPageSizes)],
+                                    @Html.Partial("_GridPagerMessages")
+                                },
+                                 toolbar: [{ name: "create", text: "@T("Admin.Common.AddNewRecord")" }],
+                                editable: {
+                                    confirmation: "@T("Admin.Common.DeleteConfirmation")",
+                                    mode: "inline"
+                                },
+                                scrollable: false,
+
+                                columns: [
+                                    {
+                                        field: "LegacyCode",
+                                        title: "LegacyID"
+                                    } ,
+                                   {
+                                        command: [
+                                            {
+                                                name: "edit",
+                                                text: {
+                                                    edit: "@T("Admin.Common.Edit")",
+                                                    update: "@T("Admin.Common.Update")",
+                                                    cancel: "@T("Admin.Common.Cancel")"
+                                                }
+                                            }, {
+                                                name: "destroy",
+                                                text: "@T("Admin.Common.Delete")"
+                                            }
+                                        ],
+                                        width: 200
+                                    }
+                                    @*, {
+                                        field: "Interval",
+                                        title: "@T("Admin.Catalog.Categories.Fields.Published")",
+                                        width: 100,
+                                        headerAttributes: { style: "text-align:center" },
+                                        attributes: { style: "text-align:center" },
+                                        template: '# if(Published) {# <i class="fa fa-check true-icon"></i> #} else {# <i class="fa fa-close false-icon"></i> #} #'
+                                    } {
+                                        field: "Id",
+                                        title: "@T("Admin.Common.Edit")",
+                                        width: 100,
+                                        headerAttributes: { style: "text-align:center" },
+                                        attributes: { style: "text-align:center" },
+                                        template: '<a class="btn btn-default" href="Edit/#=Id#"><i class="fa fa-pencil"></i>@T("Admin.Common.Edit")</a>'
+                                    }*@
+                                ]
+                            });
+                        });
+
+
+
+
+                        function additionalData() {
+                            var itemId = '@ViewBag.ItemId'; 
+                             
+                            var data = {
+                                itemId: itemId, 
+                            };
+                            addAntiForgeryToken(data);
+                            return data;
+                        };
+                    </script>
+ 
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+ 

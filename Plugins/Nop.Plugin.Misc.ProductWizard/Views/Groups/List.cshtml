@@ -1,0 +1,456 @@
+﻿@model Nop.Plugin.Misc.ProductWizard.Models.GroupsListModel
+
+
+@inject AdminAreaSettings adminAreaSettings
+
+@{
+    Layout = "_AdminLayout";
+    //    Layout = "~/admin/Views/Shared/_AdminLayout.cshtml";
+    var defaultGridPageSize =EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
+    var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
+
+    //page title
+    ViewBag.Title = T("Plugins.ProductWizard.ManageGroups").Text;
+    //active menu item (system name)
+    Html.SetActiveMenuItemSystemName("Product Groups");
+
+}
+
+
+<nop-antiforgery-token />
+<div class="content-header clearfix">
+    <h1 class="pull-left">
+        @T("Plugins.ProductWizard.ManageGroups")
+    </h1>
+    @*<div class="pull-right">
+        <a href="@Url.Action("Create")" class="btn bg-blue">
+            <i class="fa fa-plus-square"></i>
+            @T("Admin.Common.AddNew")
+        </a>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success">
+                <i class="fa fa-download"></i>
+                @T("Admin.Common.Export")
+            </button>
+            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                <span class="caret"></span>
+                <span class="sr-only">&nbsp;</span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a href="@Url.Action("ExportXml")">
+                        <i class="fa fa-file-code-o"></i>
+                        @T("Admin.Common.ExportToXml")
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("ExportXlsx")">
+                        <i class="fa fa-file-excel-o"></i>
+                        @T("Admin.Common.ExportToExcel")
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <button type="button" name="importexcel" class="btn bg-olive" data-toggle="modal" data-target="#importexcel-window">
+            <i class="fa fa-upload"></i>
+            @T("Admin.Common.Import")
+        </button>
+    </div>*@
+</div>
+
+<div class="content">
+    <div class="form-horizontal">
+        <div class="panel-group">
+            <div class="panel panel-default panel-search">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="SearchGroupName" />
+                                </div>
+                                <div class="col-md-8">
+
+                                    <nop-editor asp-for="SearchGroupName" />
+                                </div>
+                            </div>
+                            <div class="form-group" @(Model.AvailableStores.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                <div class="col-md-4">                                  
+                                    <nop-label asp-for="SearchStoreId" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-select asp-for="SearchStoreId" asp-items="Model.AvailableStores" /> 
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-8 col-md-offset-4">
+                                    <button type="button" id="search-categories" class="btn btn-primary btn-search"><i class="fa fa-search"></i>@T("Admin.Common.Search")</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div id="categories-grid"></div>
+
+                    <script>
+                        $(document).ready(function() {
+                            $("#categories-grid").kendoGrid({
+                                dataSource: {
+                                    type: "json",
+                                    transport: {
+                                        read: {
+                                            url: "@Html.Raw(Url.Action("List", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalData
+                                        } ,
+                                        create: {
+                                            url: "@Html.Raw(Url.Action("Create", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: addAntiForgeryToken
+                                        },
+                                        update: {
+                                            url: "@Html.Raw(Url.Action("Update", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: addAntiForgeryToken
+                                        },
+                                        destroy: {
+                                            url: "@Html.Raw(Url.Action("destroy", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: addAntiForgeryToken
+                                        },
+
+                                    },
+                                    schema: {
+                                        data: "Data",
+                                        total: "Total",
+                                        errors: "Errors",
+                                        model: {
+                                            id: "Id",
+                                            fields: {
+                                                GroupName: { editable: true, validation: { required: true } },
+                                                Interval: { editable: true, type: "number" },
+                                                Percentage: { editable: true, type: "number" },
+                                                Id: { editable: false, type: "number" }
+                                            }
+                                        }
+                                    },
+                                    requestEnd: function (e) {
+                                        if (e.type == "create" || e.type == "update") {
+                                            this.read();
+                                        }
+                                    },
+                                    error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(defaultGridPageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true
+                                },
+                                pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(gridPageSizes)],
+                                    @Html.Partial("_GridPagerMessages")
+                                },
+                                 toolbar: [{ name: "create", text: "@T("Admin.Common.AddNewRecord")" }],
+                                editable: {
+                                    confirmation: "@T("Admin.Common.DeleteConfirmation")",
+                                    mode: "inline"
+                                },
+                                scrollable: false,
+                                detailInit: detailInit,
+                                dataBound: function () {
+                                    this.expandRow(this.tbody.find("tr.k-master-row").first());
+                                },
+                                columns: [
+                                    {
+                                        field: "GroupName",
+                                        title: "GroupName"
+                                    },
+                                {
+                                    field: "Interval",
+                                    title: "Interval",
+                                    width: "120px"
+                                    },
+                                 {
+                                     field: "Percentage",
+                                     title: "Percentage",
+                                     width: "120px"
+                                    },
+                                   {
+                                        command: [
+                                            {
+                                                name: "edit",
+                                                text: {
+                                                    edit: "@T("Admin.Common.Edit")",
+                                                    update: "@T("Admin.Common.Update")",
+                                                    cancel: "@T("Admin.Common.Cancel")"
+                                                }
+                                            }, {
+                                                name: "destroy",
+                                                text: "@T("Admin.Common.Delete")"
+                                            }
+                                        ],
+                                        width: 200
+                                    }
+                                    @*, {
+                                        field: "Interval",
+                                        title: "@T("Admin.Catalog.Categories.Fields.Published")",
+                                        width: 100,
+                                        headerAttributes: { style: "text-align:center" },
+                                        attributes: { style: "text-align:center" },
+                                        template: '# if(Published) {# <i class="fa fa-check true-icon"></i> #} else {# <i class="fa fa-close false-icon"></i> #} #'
+                                    } {
+                                        field: "Id",
+                                        title: "@T("Admin.Common.Edit")",
+                                        width: 100,
+                                        headerAttributes: { style: "text-align:center" },
+                                        attributes: { style: "text-align:center" },
+                                        template: '<a class="btn btn-default" href="Edit/#=Id#"><i class="fa fa-pencil"></i>@T("Admin.Common.Edit")</a>'
+                                    }*@
+                                ]
+                            });
+                        });
+                    </script>
+
+                    <script type="text/javascript">
+                        function detailInit(e) {
+                            $('<div id="childGrid' + e.data.Id + '"></div>')
+                                .appendTo(e.detailCell).kendoGrid({
+                                dataSource: {
+                                    type: "json",
+                                    transport: {
+                                        read: {
+                                            url: "@Html.Raw(Url.Action("GetGroupsItems", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: { groupId: e.data.Id }
+                                        },
+                                        create: {
+                                            url: "@Html.Raw(Url.Action("CreateItem", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: { groupId: e.data.Id }
+                                        },
+                                         update: {
+                                            url: "@Html.Raw(Url.Action("UpdateItem", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                           // data: addAntiForgeryToken
+                                        },
+                                        destroy: {
+                                            url: "@Html.Raw(Url.Action("destroyItem", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                           // data: addAntiForgeryToken
+                                        },
+                                    },
+                                    schema: {
+                                        data: "Data",
+                                        total: "Total",
+                                        errors: "Errors",
+                                        model: {
+                                            id: "GroupItemId",
+                                            fields: {
+                                                ItemName: { editable: true, validation: { required: true } },
+                                                ItemId: { editable: false, type: "number" },
+                                                GroupId: { editable: false, type: "number" },
+                                                GroupItemId: { editable: false, type: "number" }
+
+                                            }
+                                        }
+                                    },
+                                    serverPaging: true,
+                                    serverSorting: true,
+                                    serverFiltering: true,
+                                    pageSize: 10,
+                                    filter: { field: "GroupId", operator: "eq", value: e.data.Id }
+                                },
+                                toolbar: [{ name: "create", text: "@T("Admin.Common.AddNewRecord")" }],
+                                 editable: {
+                                    confirmation: "@T("Admin.Common.DeleteConfirmation")",
+                                    mode: "inline"
+                                },
+                                scrollable: false,
+                                sortable: true,
+                                pageable: true,
+                                columns: [
+                                    { field: "GroupItemId", title: "Id" },
+                                    { field: "GroupId", title: "GroupId" },
+                                    { field: "ItemId", title: "Item Id"  },
+                                    { field: "ItemName", title: "Item Name", editor: productDropDownEditor, template: "#=ItemName#" },
+                                    //{ field: "Relationship", title: "Parent/Child", editor: ParentChildEditor, template: "#=Relationship#" },
+                                     {
+                                        command: [
+                                            {
+                                                name: "edit",
+                                                text: {
+                                                    edit: "@T("Admin.Common.Edit")",
+                                                    update: "@T("Admin.Common.Update")",
+                                                    cancel: "@T("Admin.Common.Cancel")"
+                                                }
+                                            }, {
+                                                name: "destroy",
+                                                text: "@T("Admin.Common.Delete")"
+                                            }
+                                        ],
+                                        width: 200
+                                    }
+
+                                ]
+                            });
+                        }
+
+
+                        function ParentChildEditor(container, options) {
+                            $('<input required name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoComboBox({
+                                    dataTextField: "text",
+                                    dataValueField: "Relationship",
+                        dataSource: [
+                            { text: "Parent", Relationship: "Parent" },
+                            { text: "Child", Relationship: "Child" }
+                        ],
+                        filter: "contains",
+                        suggest: true,
+                        index: 3
+                                });
+                        }
+
+                        
+                        function productDropDownEditor(container, options) {
+                              $('<input required name="' + options.field + '"/>')
+                                .appendTo(container) 
+                                .kendoAutoComplete({
+                                    primitive: true,
+                                    autoBind: false,
+                                    dataTextField: "ItemName",
+                                    dataValueField: "ItemId",
+                                    filter: "startswith",
+                                    placeholder: "Select product...",
+                                    minLength: 3,
+                                    //separator: ", ",
+                                    dataSource: {
+                                        type: "json",
+                                        serverFiltering: true,
+                                        transport: {
+                                            read: {
+                                                url: "@Html.Raw(Url.Action("GetItems", "Groups"))",
+                                                type: "POST",
+                                                dataType: "json",
+                                                data: additionalDataAuto
+                                            }
+                                        }
+                                    }
+
+
+                                });
+
+                        
+                        }
+
+                        function additionalDataAuto(e) {
+                            //alert(e.filter.filters[0].value);
+                            return {
+                                text: e.filter.filters[0].value
+                                };
+                        }
+
+
+                        $(document).ready(function() {
+                            //search button
+                            $('#search-categories').click(function() {
+                                //search
+                                var grid = $('#categories-grid').data('kendoGrid');
+                                grid.dataSource.page(1); //new search. Set page size to 1
+                                //grid.dataSource.read(); we already loaded the grid above using "page" function
+                                return false;
+                            });
+
+                            $("#@Html.IdFor(model => model.SearchGroupName)").keydown(function(event) {
+                                if (event.keyCode == 13) {
+                                    $("#search-categories").click();
+                                    return false;
+                                }
+                            });
+                        });
+
+                        function additionalDataGroupId() {
+                            var data = {
+                                SearchGroupName: $('#@Html.IdFor(model => model.SearchGroupName)').val(),
+                                SearchStoreId: $('#SearchStoreId').val()
+                            };
+                            addAntiForgeryToken(data);
+                            return data;
+                        }
+
+                        function additionalData() {
+                            var data = {
+                                SearchGroupName: $('#@Html.IdFor(model => model.SearchGroupName)').val(),
+                                SearchStoreId: $('#SearchStoreId').val()
+                            };
+                            addAntiForgeryToken(data);
+                            return data;
+                        }
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*import categories form*@
+<div id="importexcel-window" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="importexcel-window-title">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="importexcel-window-title">@T("Admin.Common.ImportFromExcel")</h4>
+            </div>
+            @using (Html.BeginForm("ImportFromXlsx", "Groups", FormMethod.Post, new { enctype = "multipart/form-data" }))
+            {
+                <div class="form-horizontal">
+                    <div class="modal-body">
+                        @Html.AntiForgeryToken()
+                        <ul class="common-list">
+                            <li>
+                                <em>@T("Admin.Catalog.Categories.List.ImportFromExcelTip")</em>
+                            </li>
+                            <li>
+                                <em>@T("Admin.Common.ImportFromExcel.ManyRecordsWarning")</em>
+                            </li>
+                        </ul>
+                        <div class="form-group">
+                            <div class="col-md-2">
+                                <div class="label-wrapper">
+                                    <label class="control-label">
+                                        @T("Admin.Common.ExcelFile")
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-10">
+                                <input type="file" id="importexcelfile" name="importexcelfile" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">
+                            @T("Admin.Common.ImportFromExcel")
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

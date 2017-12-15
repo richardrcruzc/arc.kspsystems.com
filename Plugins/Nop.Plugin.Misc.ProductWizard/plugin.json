@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Product Extension",
+  "FriendlyName": "Product Wizard",
+  "SystemName": "ProductWizard",
+  "Version": "1.0",
+  "SupportedVersions": [ "4.00" ],
+  "Author": "nopCommerce team",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Misc.ProductWizard.dll",
+  "Description": "This plugin offers extension for product' fields and group product by parent child"
+}

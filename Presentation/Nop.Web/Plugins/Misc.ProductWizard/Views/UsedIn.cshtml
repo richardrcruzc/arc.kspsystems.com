@@ -1,0 +1,59 @@
+﻿@model Nop.Plugin.Misc.ProductWizard.Models.ProductExtModel
+
+
+
+<div>
+    <h2> <label>Part Number</label></h2>
+    <h4 class="product-title">
+        <label>@Model.PartNumber</label>
+    </h4>
+        <br /> <br />
+</div>
+<div>
+    <div><h2>Additional Part Numbers</h2></div>
+    <div class="details">
+        <h4 class="product-title">
+            @foreach (var item in Model.LegacyIdModel)
+            {
+
+
+                <label>@item.LegacyName </label>
+
+            }
+        </h4>
+    </div>
+    <br />
+</div>
+<div>
+    <div><h2>Category</h2></div>
+    <div class="details">
+        <h4 class="product-title">
+            @foreach (var item in Model.CategoryModel)
+            {
+
+                <label>@item.CatergoryName </label>
+
+            }
+        </h4>
+    </div>
+    <br />
+</div>
+
+<div>
+    <div><h2>Used in:</h2></div>
+    <div class="details">
+        <h4 class="product-title">
+            @foreach (var item in Model.UsedInModel)
+            {
+
+
+                <a href="@Url.RouteUrl("Product", new {SeName =item.SeName})">@item.ProductName ,</a>
+
+
+            }
+        </h4>
+    </div>
+    <br />
+</div>
+
+ 

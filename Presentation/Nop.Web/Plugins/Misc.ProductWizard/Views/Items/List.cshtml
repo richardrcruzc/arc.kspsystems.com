@@ -1,0 +1,286 @@
+﻿@model Nop.Plugin.Misc.ProductWizard.Models.ItemsCompatabilityModel
+@using Nop.Core.Infrastructure;
+@using Nop.Web.Framework;
+@using Nop.Web.Framework.UI;
+@{
+    Layout = "_AdminLayout";
+    var defaultGridPageSize =EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
+    var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
+
+    //page title
+    ViewBag.Title = T("Plugins.ProductWizard.ManageGroups").Text;
+    //active menu item (system name)
+    Html.SetActiveMenuItemSystemName("Items Compatability");
+
+}
+
+@Html.AntiForgeryToken()
+<div class="content-header clearfix">
+    <h1 class="pull-left">
+        List Items Relationships
+    </h1>
+    @*<div class="pull-right">
+        <a href="@Url.Action("Create")" class="btn bg-blue">
+            <i class="fa fa-plus-square"></i>
+            @T("Admin.Common.AddNew")
+        </a>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success">
+                <i class="fa fa-download"></i>
+                @T("Admin.Common.Export")
+            </button>
+            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                <span class="caret"></span>
+                <span class="sr-only">&nbsp;</span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li>
+                    <a href="@Url.Action("ExportXml")">
+                        <i class="fa fa-file-code-o"></i>
+                        @T("Admin.Common.ExportToXml")
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("ExportXlsx")">
+                        <i class="fa fa-file-excel-o"></i>
+                        @T("Admin.Common.ExportToExcel")
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <button type="button" name="importexcel" class="btn bg-olive" data-toggle="modal" data-target="#importexcel-window">
+            <i class="fa fa-upload"></i>
+            @T("Admin.Common.Import")
+        </button>
+    </div>*@
+</div>
+
+<div class="content">
+    <div class="form-horizontal">
+        <div class="panel-group">
+  
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div id="compatability-grid"></div>
+
+                    <script>
+                        $(document).ready(function() {
+                            $("#compatability-grid").kendoGrid({
+                                dataSource: {
+                                    type: "json",
+                                    transport: {
+                                        read: {
+                                            url: "@Html.Raw(Url.Action("ListItemRelationships", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json"
+                                        } ,
+                                        create: {
+                                            url: "@Html.Raw(Url.Action("CreateItemsCompatability", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                           // data: addAntiForgeryToken
+                                        },
+                                        update: {
+                                            url: "@Html.Raw(Url.Action("UpdateItemsCompatability", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                           // data: addAntiForgeryToken
+                                        },
+                                        destroy: {
+                                            url: "@Html.Raw(Url.Action("DestroyItemsCompatability", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                           // data: addAntiForgeryToken
+                                        },
+
+                                    },
+                                    schema: {
+                                        data: "Data",
+                                        total: "Total",
+                                        errors: "Errors",
+                                        model: {
+                                            id: "Id",
+                                            fields: {
+                                                ItemId: { editable: false, validation: { required: true } },
+                                                ItemName: { editable: true, validation: { required: true } },
+                                                ItemIdPart: { editable: false, validation: { required: true } },
+                                                ItemIdPartName: { editable: true, validation: { required: true } }
+                                            }
+                                        }
+                                    },
+                                    requestEnd: function (e) {
+                                        if (e.type == "create" || e.type == "update") {
+                                            this.read();
+                                        }
+                                    },
+                                    error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(defaultGridPageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true
+                                },
+                                pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(gridPageSizes)],
+                                    @Html.Partial("_GridPagerMessages")
+                                },
+                                 toolbar: [{ name: "create", text: "@T("Admin.Common.AddNewRecord")" }],
+                                editable: {
+                                    confirmation: "@T("Admin.Common.DeleteConfirmation")",
+                                    mode: "inline"
+                                },
+                                scrollable: false,
+                              //  detailInit: detailInit,
+                                //dataBound: function () {
+                                //    this.expandRow(this.tbody.find("tr.k-master-row").first());
+                                //},
+                                columns: [
+                                    { field: "ItemId", title: "Item Id" },
+                                    { field: "ItemName", title: "Item Name", editor: productDropDownEditor, template: "#=ItemName#" },
+                                    { field: "ItemIdPart", title: "Item Id Part" }, 
+                                    { field: "ItemIdPartName", title: "Item Name", editor: productDropDownEditorTwo, template: "#=ItemIdPartName#" },
+                                    //{ field: "ItemIdPart", title: "Item Part", editor: productDropDownEditor, template: "#=ItemName#" },
+
+                                   {
+                                        command: [
+                                            {
+                                                name: "edit",
+                                                text: {
+                                                    edit: "@T("Admin.Common.Edit")",
+                                                    update: "@T("Admin.Common.Update")",
+                                                    cancel: "@T("Admin.Common.Cancel")"
+                                                }
+                                            }, {
+                                                name: "destroy",
+                                                text: "@T("Admin.Common.Delete")"
+                                            }
+                                        ],
+                                        width: 200
+                                    }
+
+                                ]
+                            });
+                        });
+                    </script>
+
+                    <script type="text/javascript">
+                        function select(e) {
+                            alert(1);
+                            //get the selected item
+                            var selectedItem = this.dataItem(e.item.index());
+                            var row = this.element.closest("tr");
+                            var grid = $("#gridEntryOfService").data("kendoGrid");
+                            // get the Grid item
+                            var gridItem = grid.dataItem(row);
+                            //set the new value
+                            gridItem.EmployeeId = selectedItem.EmployeeId;
+                        }
+
+
+                        function productDropDownEditorTwo(container, options) {
+                            $('<input required name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoAutoComplete({
+                                    primitive: true,
+                                    autoBind: false,
+                                    autoWidth: true,
+                                    dataTextField: "ItemName",
+                                    dataValueField: "ItemId",
+                                    filter: "startswith",
+                                    placeholder: "Select product...",
+                                    minLength: 3,
+                                    //separator: ", ",
+                                    dataSource: {
+                                        type: "json",
+                                        serverFiltering: true,
+                                        transport: {
+                                            read: {
+                                                url: "@Html.Raw(Url.Action("GetItems", "Groups"))",
+                                                type: "POST",
+                                                dataType: "json",
+                                                data: additionalDataAuto
+                                            }
+                                        }
+                                    },
+                                    select: function (e) {
+                                        //call preventDefault() to prevent the selection
+                                        //e.preventDefault();
+                                        //alert(1);
+
+                                        //get the selected item
+                                        var selectedItem = this.dataItem(e.item.index());
+                                        var row = this.element.closest("tr");
+                                        var grid = $("#compatability-grid").data("kendoGrid");
+                                        // get the Grid item
+                                        var gridItem = grid.dataItem(row);
+                                        //set the new value
+                                        gridItem.ItemIdPart = selectedItem.ItemId;
+                                         //alert(gridItem.ItemId);
+                                    }
+                                 });
+                         }
+                         function productDropDownEditor(container, options) {
+                            $('<input required name="' + options.field + '"/>')
+                                .appendTo(container)
+                                .kendoAutoComplete({
+                                    primitive: true,
+                                    autoBind: false,
+                                    autoWidth: true,
+                                    dataTextField: "ItemName",
+                                    dataValueField: "ItemId",
+                                    filter: "startswith",
+                                    placeholder: "Select product...",
+                                    minLength: 3,
+                                    //separator: ", ",
+                                    dataSource: {
+                                        type: "json",
+                                        serverFiltering: true,
+                                        transport: {
+                                            read: {
+                                                url: "@Html.Raw(Url.Action("GetItems", "Groups"))",
+                                                type: "POST",
+                                                dataType: "json",
+                                                data: additionalDataAuto
+                                            }
+                                        }
+                                    },
+                                    select: function (e) {
+                                        //call preventDefault() to prevent the selection
+                                        //e.preventDefault();
+                                        //alert(1);
+
+                                        //get the selected item
+                                        var selectedItem = this.dataItem(e.item.index());
+                                        var row = this.element.closest("tr");
+                                        var grid = $("#compatability-grid").data("kendoGrid");
+                                        // get the Grid item
+                                        var gridItem = grid.dataItem(row);
+                                        //set the new value
+                                        gridItem.ItemId = selectedItem.ItemId;
+                                       // alert(gridItem.ItemId);
+                                    }
+                                 });
+                        }
+
+
+
+                         function additionalDataAuto(e) {
+                             alert(e.filter.filters[0].value);
+                             return {
+                                 text: e.filter.filters[0].value
+                             };
+                         }
+
+
+
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+ 

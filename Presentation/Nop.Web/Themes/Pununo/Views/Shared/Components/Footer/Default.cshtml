@@ -1,0 +1,154 @@
+﻿@model FooterModel
+@using Nop.Core
+@using Nop.Core.Domain.Tax
+@inject IWorkContext workContext;
+
+
+<!-- Copy Rights Start -->
+<footer id="footer-area">
+    <div class="footer-top footer-padding">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 col-sm-6 col-xs-12">
+                    <div class="widget widget_links fix">
+                        <h3 class="widget-title">@T("Footer.Information")</h3>
+                        <ul class="site_map_links">
+                            @if (Model.SitemapEnabled)
+                            {
+                                <li><a href="@Url.RouteUrl("Sitemap")">@T("Sitemap")</a></li>
+                            }
+                            @foreach (var topic in Model.Topics.Where(x => x.IncludeInFooterColumn1).ToList())
+                            {
+                                <li><a href="@Url.RouteUrl("Topic", new { SeName = topic.SeName })">@topic.Name</a></li>
+                            }
+                            <li><a href="@Url.RouteUrl("ContactUs")">@T("ContactUs")</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 col-xs-12">
+                    <div class="widget widget_links fix">
+                        <h3 class="widget-title">@T("Footer.CustomerService")</h3>
+                        <ul class="site_map_links">
+                            <li><a href="@Url.RouteUrl("ProductSearch")"><i class="fa fa-bullseye" aria-hidden="true"></i>@T("Search")</a> </li>
+                            @if (Model.NewsEnabled)
+                            {
+                                <li><a href="@Url.RouteUrl("NewsArchive")"><i class="fa fa-bullseye" aria-hidden="true"></i>@T("News")</a></li>
+                            }
+                            @if (Model.BlogEnabled)
+                            {
+                                <li><a href="@Url.RouteUrl("Blog")"><i class="fa fa-bullseye" aria-hidden="true"></i>@T("Blog")</a></li>
+                            }
+                            @if (Model.ForumEnabled)
+                            {
+                                <li><a href="@Url.RouteUrl("Boards")"><i class="fa fa-bullseye" aria-hidden="true"></i>@T("Forum.Forums")</a></li>
+                            }
+                            @if (Model.RecentlyViewedProductsEnabled)
+                            {
+                                <li><a href="@Url.RouteUrl("RecentlyViewedProducts")"><i class="fa fa-bullseye" aria-hidden="true"></i>@T("Products.RecentlyViewedProducts")</a></li>
+                            }
+                            @if (Model.CompareProductsEnabled)
+                            {
+                                <li><a href="@Url.RouteUrl("CompareProducts")"><i class="fa fa-bullseye" aria-hidden="true"></i>@T("Products.Compare.List")</a></li>
+                            }
+                            @if (Model.NewProductsEnabled)
+                            {
+                                <li><a href="@Url.RouteUrl("NewProducts")"><i class="fa fa-bullseye" aria-hidden="true"></i>@T("Products.NewProducts")</a></li>
+                            }
+                            @foreach (var topic in Model.Topics.Where(x => x.IncludeInFooterColumn2).ToList())
+                            {
+                                <li><a href="@Url.RouteUrl("Topic", new { SeName = topic.SeName })"><i class="fa fa-bullseye" aria-hidden="true"></i>@topic.Name</a></li>
+                            }
+                        </ul>
+                        
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 col-xs-12">
+                    <div class="widget">
+                        <h3 class="widget-title">@T("Footer.MyAccount")</h3>
+                        <ul class="site_map_links">
+                            <li><a href="@Url.RouteUrl("CustomerInfo")">@T("Account.MyAccount")</a></li>
+                            <li><a href="@Url.RouteUrl("CustomerOrders")">@T("Account.CustomerOrders")</a></li>
+                            <li><a href="@Url.RouteUrl("CustomerAddresses")">@T("Account.CustomerAddresses")</a></li>
+                            @if (Model.ShoppingCartEnabled)
+                            {
+                                <li><a href="@Url.RouteUrl("ShoppingCart")">@T("ShoppingCart")</a></li>
+                            }
+                            @if (Model.WishlistEnabled)
+                            {
+                                <li><a href="@Url.RouteUrl("Wishlist")">@T("Wishlist")</a></li>
+                            }
+                            @if (Model.AllowCustomersToApplyForVendorAccount)
+                            {
+                                <li><a href="@Url.RouteUrl("ApplyVendorAccount")">@T("Vendors.ApplyAccount")</a></li>
+                            }
+                            @foreach (var topic in Model.Topics.Where(x => x.IncludeInFooterColumn3).ToList())
+                            {
+                                <li><a href="@Url.RouteUrl("Topic", new { SeName = topic.SeName })">@topic.Name</a></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 col-xs-12">
+                    @await Component.InvokeAsync("NewsletterBox")
+                  
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom fix">
+        <div class="container bb-top foo-padding">
+            <div class="row">
+                <div class="col-sm-12">
+
+                    @await Component.InvokeAsync("SocialButtons")
+
+                    <p>
+                        &copy; Copyright
+                        <script type="text/javascript">
+                            var d = new Date();
+                            document.write(d.getFullYear());
+                        </script>,
+                       pununo.com | All Rights Reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    @await Component.InvokeAsync("Widget", new { widgetZone = "footer" })
+</footer>
+<!-- Copy Rights End --> 
+
+
+ 
+
+
+<script type="text/javascript" asp-location="Footer">
+    $(document).ready(function () {
+        $('.footer-block .title').click(function () {
+            var e = window, a = 'inner';
+            if (!('innerWidth' in window)) {
+                a = 'client';
+                e = document.documentElement || document.body;
+            }
+            var result = { width: e[a + 'Width'], height: e[a + 'Height'] };
+            if (result.width < 769) {
+                $(this).siblings('.list').slideToggle('slow');
+            }
+        });
+    });
+</script>
+<script type="text/javascript" asp-location="Footer">
+    $(document).ready(function () {
+        $('.block .title').click(function () {
+            var e = window, a = 'inner';
+            if (!('innerWidth' in window)) {
+                a = 'client';
+                e = document.documentElement || document.body;
+            }
+            var result = { width: e[a + 'Width'], height: e[a + 'Height'] };
+            if (result.width < 1001) {
+                $(this).siblings('.listbox').slideToggle('slow');
+            }
+        });
+    });
+</script>

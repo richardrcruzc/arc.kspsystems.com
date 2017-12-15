@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Widgets",
+  "FriendlyName": "Godaddy.com Api",
+  "SystemName": "Widgets.Godaddy",
+  "Version": "1.00",
+  "SupportedVersions": [ "4.00" ],
+  "Author": "richard-cruz@hotmail.com",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Widgets.GoDaddyApi.dll",
+  "Description": "This plugin allows calling GoDaddy REST API."
+}

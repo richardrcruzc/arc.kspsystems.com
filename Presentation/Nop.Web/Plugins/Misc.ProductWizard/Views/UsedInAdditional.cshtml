@@ -1,0 +1,116 @@
+﻿@model Nop.Plugin.Misc.ProductWizard.Models.ProductExtModel
+
+ 
+
+
+<div>
+    <div class="title"><strong>Parts for this Item </strong></div>
+    @if (Model.IsCopier != true)
+    {
+        <div class="details">
+            <h4 class="product-title">
+                @foreach (var item in Model.PartForItem)
+                {
+
+
+                    <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName ,</a>
+
+
+                }
+            </h4>
+        </div>
+    }
+    else
+    {
+
+        <div id="categories-grid"></div>
+
+        @*<script>
+                        $(document).ready(function() {
+                            $("#categories-grid").kendoGrid({
+                                dataSource: {
+                                    type: "json",
+                                    transport: {
+                                        read: {
+                                            url: "@Html.Raw(Url.Action("PartsForThisItem", "Groups"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalData
+                                        }
+
+                                    },
+                                    schema: {
+                                        data: "Data",
+                                        total: "Total",
+                                        errors: "Errors",
+                                        model: {
+                                            id: "Id",
+                                            fields: {
+                                                GroupName: { editable: true, validation: { required: true } },
+                                                Interval: { editable: true, type: "number" },
+                                                Percentage: { editable: true, type: "number" },
+                                                Id: { editable: false, type: "number" }
+                                            }
+                                        }
+                                    },
+                                    requestEnd: function (e) {
+                                        if (e.type == "create" || e.type == "update") {
+                                            this.read();
+                                        }
+                                    },
+                                    error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(defaultGridPageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true
+                                },
+                                pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(gridPageSizes)],
+                                    @Html.Partial("_GridPagerMessages")
+                                },
+
+                                scrollable: false,
+                                detailInit: detailInit,
+                                dataBound: function () {
+                                    this.expandRow(this.tbody.find("tr.k-master-row").first());
+                                },
+                                columns: [
+                                    {
+                                        field: "GroupName",
+                                        title: "GroupName"
+                                    },
+                                {
+                                    field: "Interval",
+                                    title: "Interval",
+                                    width: "120px"
+                                    },
+                                 {
+                                     field: "Percentage",
+                                     title: "Percentage",
+                                     width: "120px"
+                                    },
+
+                                ]
+                            });
+                        });
+        </script>*@
+
+        <script type="text/javascript">
+                        function detailInit(e) {
+                function additionalData()
+                {
+                    var data = {
+                                iDs: @Model.Id
+                            };
+            addAntiForgeryToken(data);
+            return data;
+                            }
+        </script>
+    }
+    <br />
+</div>
