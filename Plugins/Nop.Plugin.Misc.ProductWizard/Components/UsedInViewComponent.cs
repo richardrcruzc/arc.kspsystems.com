@@ -25,6 +25,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Components
         private readonly IRepository<GroupsItems> _gpiRepository;
         private readonly IRepository<RelationsGroupsItems> _rgpRepository;
         private readonly IRepository<ItemsCompatability> _iRepository;
+        private readonly IRepository<LegacyId> _lRepository;
+        
 
         private readonly IProductService _productService;
 
@@ -34,6 +36,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Components
         private readonly IPictureService _pictureService;
 
         public UsedInViewComponent(
+            IRepository<LegacyId> lRepository,
             IDbContext dbContext,
             IProductService productService,
              IRepository<ItemsCompatability> iRepository,
@@ -45,6 +48,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Components
             ISettingService settingService,
             IPictureService pictureService)
         {
+            this._lRepository = lRepository;
             this._dbContext = dbContext;
             this._productService = productService;
             this._iRepository = iRepository;
@@ -95,14 +99,15 @@ namespace Nop.Plugin.Misc.ProductWizard.Components
 "FROM          [Groups-Items] " +
 "   WHERE      (ItemID = {0}))) ", id);
 
-          //  var relatedProducts =  _dbContext.SqlQuery<List<ProductNameModel>>(sqlString).ToList();
+            //  var relatedProducts =  _dbContext.SqlQuery<List<ProductNameModel>>(sqlString).ToList();
 
-
+            var legacy = _lRepository.TableNoTracking.Where(x => x.ItemId == id);
             
             var product =  _productService.GetProductById(id);
            
             var model = new ProductExtModel();
             model.Id = id;
+            model.LegacyIdModel = _lRepository.TableNoTracking.Where(x => x.ItemId == id).Select(x=> new LegacyIdModel { itemId = x.ItemId, LegacyCode=x.LegacyCode, LegacyName=x.LegacyCode }).ToList();
 
             if (display == 0)
             {

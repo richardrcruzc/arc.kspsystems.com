@@ -4,6 +4,7 @@ using Nop.Core;
 using Nop.Core.Caching;
 using Nop.Core.Data;
 using Nop.Core.Domain.Catalog;
+using Nop.Core.Domain.Media;
 using Nop.Core.Infrastructure;
 using Nop.Data;
 using Nop.Plugin.Misc.ProductWizard.Domain;
@@ -38,6 +39,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
     public class GroupsController : BasePluginController
     {
         #region Fields
+        private readonly MediaSettings _mediaSettings;
         private readonly IDbContext _dbContext;
         private readonly IRepository<Groups> _gpRepository;
         private readonly IRepository<GroupsItems> _gpiRepository;
@@ -72,6 +74,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         #region Constructors
 
         public GroupsController(
+            MediaSettings mediaSettings,
             IDbContext dbContext,
             IRepository<ItemsCompatability> iRepository,
             IRepository<Groups> gpRepository,
@@ -98,6 +101,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             IImportManager importManager,
             ICacheManager cacheManager)
         {
+            this._mediaSettings = mediaSettings;
             this._dbContext = dbContext;
             this._iRepository = iRepository;
             this._gpRepository = gpRepository;
@@ -183,14 +187,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                 Total = groups.TotalCount
             };
             return Json(gridModel);
-        }
-
-
-      
-
-
-
-
+        } 
 
         public virtual IActionResult ListItemRelationships()
         {
@@ -561,14 +558,45 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
             var partForItem = _dbContext.SqlQuery<ProductNameModel>(sqlPartForItem).Select(x => x.ItemIDPart).ToList();
             var query = _productService.GetProductsByIds(partForItem.ToArray());
-             
+            //query.FirstOrDefault().ProductCategories.FirstOrDefault().Category.Name
+          //  var pictures = _pictureService.GetPicturesByProductId(product.Id);
+
 
             var gridModel = new DataSourceResult
             {
-                Data = query,
+                Data = query.Select(x =>
+                {
+                    //var pictures = _pictureService.GetPicturesByProductId(x.Id);
+                    //var defaultPicture = pictures.FirstOrDefault();
+                    //var thumb = _pictureService.GetPictureUrl(defaultPicture, _mediaSettings.ProductThumbPictureSizeOnProductDetailsPage);
+
+                    //picture
+                    var defaultProductPicture = _pictureService.GetPicturesByProductId(x.Id, 1).FirstOrDefault();
+                   var  thumb = _pictureService.GetPictureUrl(defaultProductPicture, 75, true);
+
+
+
+                    var model = new PartsForThisItemModel
+                    {
+                        Id = x.Id,
+                        CategoryName = string.Join(",", x.ProductCategories.Select(y => y.Category.Name).ToArray()),
+                        Manufacturer = string.Join(",", x.ProductManufacturers.Select(y => y.Manufacturer.Name).ToArray()),
+                        PartNumber = x.Sku,
+                        Price = x.Price,
+                        ProductName = x.Name,
+                        Qty = 1,
+                        ThumbImageUrl = thumb
+
+                    };
+                    //categoryModel.Breadcrumb = x.GetFormattedBreadCrumb(_categoryService);
+                    return model;
+                }).OrderBy(y=>y.Manufacturer).ThenBy(y=>y.ProductName),
                 Total = query.Count
             };
             return Json(gridModel);
+
+
+             
         }
 
         #endregion

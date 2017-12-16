@@ -44,13 +44,21 @@
     <div class="details">
         <h4 class="product-title">
             @foreach (var item in Model.UsedInModel)
+        { 
+            if (item != Model.UsedInModel[Model.UsedInModel.Count - 1])
             {
+                <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName, </a>
+    }
+    else
+    {
+
+        <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName</a>
+}
 
 
-                <a href="@Url.RouteUrl("Product", new {SeName =item.SeName})">@item.ProductName ,</a>
 
-
-            }
+}
+            
         </h4>
     </div>
     <br />
