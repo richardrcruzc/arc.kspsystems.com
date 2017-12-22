@@ -1,0 +1,19 @@
+﻿@model Dictionary<string, object>
+@{
+    var supportRtl = this.ShouldUseRtlTheme();
+    var themeName = ThemeHelper.GetPluginTheme(Plugin.FolderName);
+
+    Html.AddCssFileParts("~/Plugins/SevenSpikes.Nop.Plugins.SmartProductCollections/Themes/" + themeName + "/Content/SmartProductCollections.css");
+
+    if (supportRtl)
+    {
+        Html.AddCssFileParts("~/Plugins/SevenSpikes.Nop.Plugins.SmartProductCollections/Themes/" + themeName + "/Content/SmartProductCollections.rtl.css");
+    }
+
+    Html.AddScriptParts(ResourceLocation.Footer, "~/Plugins/SevenSpikes.Nop.Plugins.SmartProductCollections/Scripts/Products.min.js");
+}
+
+@foreach (var viewComponent in Model)
+{
+    @await Component.InvokeAsync(viewComponent.Key, viewComponent.Value)
+}

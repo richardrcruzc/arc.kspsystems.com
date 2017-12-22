@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
 using Nop.Core.Caching;
@@ -528,78 +529,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         #endregion
 
 
-        #region "Parts for this Item"
-
-        [HttpPost]
-        public virtual IActionResult PartsForThisItem(DataSourceRequest command, int id)
-        {
-            string sqlPartForItem = string.Format(
-                    "SELECT     ItemsCompatability.ItemIDPart, [product].Name as ProductName " +
-"FROM         ItemsCompatability INNER JOIN[product] " +
-"ON ItemsCompatability.ItemIDPart = [product].Id " +
-"WHERE(ItemsCompatability.ItemID =  {0}) " +
-"UNION " +
-"SELECT[Groups-Items].ItemID, [product_1].Name " +
-"FROM[Groups-Items] INNER JOIN[product] AS[product_1] " +
-"ON[Groups-Items].ItemID = [product_1].id " +
-"WHERE([Groups-Items].GroupID IN " +
-"(SELECT     GroupID " +
-"FROM[Relations-Groups-Items] " +
-"WHERE(ItemID = {0}) AND(Direction = 'A'))) " +
-"UNION " +
-"SELECT[Relations-Groups-Items].ItemID, [product].Name " +
-"FROM[product] INNER JOIN[Relations-Groups-Items] " +
-"ON[product].id = [Relations-Groups-Items].ItemID " +
-"WHERE([Relations-Groups-Items].Direction = 'B') " +
-"AND([Relations-Groups-Items].GroupID IN " +
-"(SELECT GroupID " +
-"FROM          [Groups-Items] " +
-"WHERE      (ItemID =  {0}))) ", id);
-
-            var partForItem = _dbContext.SqlQuery<ProductNameModel>(sqlPartForItem).Select(x => x.ItemIDPart).ToList();
-            var query = _productService.GetProductsByIds(partForItem.ToArray());
-            //query.FirstOrDefault().ProductCategories.FirstOrDefault().Category.Name
-          //  var pictures = _pictureService.GetPicturesByProductId(product.Id);
-
-
-            var gridModel = new DataSourceResult
-            {
-                Data = query.Select(x =>
-                {
-                    //var pictures = _pictureService.GetPicturesByProductId(x.Id);
-                    //var defaultPicture = pictures.FirstOrDefault();
-                    //var thumb = _pictureService.GetPictureUrl(defaultPicture, _mediaSettings.ProductThumbPictureSizeOnProductDetailsPage);
-
-                    //picture
-                    var defaultProductPicture = _pictureService.GetPicturesByProductId(x.Id, 1).FirstOrDefault();
-                   var  thumb = _pictureService.GetPictureUrl(defaultProductPicture, 75, true);
-
-
-
-                    var model = new PartsForThisItemModel
-                    {
-                        Id = x.Id,
-                        CategoryName = string.Join(",", x.ProductCategories.Select(y => y.Category.Name).ToArray()),
-                        Manufacturer = string.Join(",", x.ProductManufacturers.Select(y => y.Manufacturer.Name).ToArray()),
-                        PartNumber = x.Sku,
-                        Price = x.Price,
-                        ProductName = x.Name,
-                        Qty = 1,
-                        ThumbImageUrl = thumb
-
-                    };
-                    //categoryModel.Breadcrumb = x.GetFormattedBreadCrumb(_categoryService);
-                    return model;
-                }).OrderBy(y=>y.Manufacturer).ThenBy(y=>y.ProductName),
-                Total = query.Count
-            };
-            return Json(gridModel);
-
-
-             
-        }
-
-        #endregion
+    
         //#region Security
 
         ///// <summary>

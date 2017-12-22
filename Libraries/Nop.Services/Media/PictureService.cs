@@ -207,9 +207,11 @@ namespace Nop.Services.Media
             var image = Image.FromStream(ms, true);
 
             var logoPath = Path.Combine(_hostingEnvironment.WebRootPath, "images\\WaterMarkImages");
-            System.Drawing.Image logo = System.Drawing.Image.FromFile(logoPath + "\\ARC Logo.jpg"); //This is your watermark 
+            System.Drawing.Image logo = System.Drawing.Image.FromFile(logoPath + "\\ARC_Logo_214.png"); //This is your watermark 
+            //logo = ScaleImage(logo, 75, 50);
             Graphics g = System.Drawing.Graphics.FromImage(image); //Create graphics object of the background image //So that you can draw your logo on it
             Bitmap TransparentLogo = new Bitmap(logo.Width, logo.Height); //Create a blank bitmap object //to which we //draw our transparent logo
+            
             Graphics TGraphics = Graphics.FromImage(TransparentLogo);//Create a graphics object so that //we can draw //on the blank bitmap image object
             ColorMatrix ColorMatrix = new ColorMatrix(); //An image is represenred as a 5X4 matrix(i.e 4 //columns and 5 //rows) 
             ColorMatrix.Matrix33 = 0.40F;//the 3rd element of the 4th row represents the transparency 
@@ -217,8 +219,8 @@ namespace Nop.Services.Media
             ImgAttributes.SetColorMatrix(ColorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap); TGraphics.DrawImage(logo, new Rectangle(0, 0, TransparentLogo.Width, TransparentLogo.Height), 0, 0, TransparentLogo.Width, TransparentLogo.Height, GraphicsUnit.Pixel, ImgAttributes);
             TGraphics.Dispose();
 
-            g.DrawImage(TransparentLogo, (image.Width / 2) - 140, (image.Height / 2) - 80);
-
+            g.DrawImage(TransparentLogo, (image.Width / 2.5F), (image.Height / 2.5F));
+            //g.DrawImage(TransparentLogo, 1, 1);
             MemoryStream smImg = new MemoryStream();
             image.Save(smImg, ImageFormat.Jpeg);
 
@@ -226,7 +228,28 @@ namespace Nop.Services.Media
             //File.WriteAllBytes(GetPictureLocalPath(fileName), pictureBinary);
             File.WriteAllBytes(GetPictureLocalPath(fileName), smImg.ToArray());
         }
+        public Image ScaleImage(Image image, int maxWidth, int maxHeight)
+{
+        var ratioX = (double)maxWidth / image.Width;
+        var ratioY = (double)maxHeight / image.Height;
+        var ratio = Math.Min(ratioX, ratioY);
 
+        var newWidth = (int)(image.Width * ratio);
+        var newHeight = (int)(image.Height * ratio);
+
+        var newImage = new Bitmap(maxWidth, maxWidth);
+        using (var graphics = Graphics.FromImage(newImage))
+        {
+            // Calculate x and y which center the image
+            int y = (maxHeight/2) - newHeight / 2;
+            int x = (maxWidth / 2) - newWidth / 2;
+
+            // Draw image on x and y with newWidth and newHeight
+            graphics.DrawImage(image, x, y, newWidth, newHeight);
+        }
+
+        return newImage;
+}
         /// <summary>
         /// Delete a picture on file system
         /// </summary>
@@ -375,7 +398,7 @@ namespace Nop.Services.Media
             var image = Image.FromStream(ms, true);
 
             var logoPath = Path.Combine(_hostingEnvironment.WebRootPath, "images\\WaterMarkImages");
-            System.Drawing.Image logo = System.Drawing.Image.FromFile(logoPath+ "\\ARC Logo.jpg"); //This is your watermark 
+            System.Drawing.Image logo = System.Drawing.Image.FromFile(logoPath+ "\\ARC_Logo_214.png"); //This is your watermark 
             Graphics g = System.Drawing.Graphics.FromImage(image); //Create graphics object of the background image //So that you can draw your logo on it
             Bitmap TransparentLogo = new Bitmap(logo.Width, logo.Height); //Create a blank bitmap object //to which we //draw our transparent logo
             Graphics TGraphics = Graphics.FromImage(TransparentLogo);//Create a graphics object so that //we can draw //on the blank bitmap image object
@@ -385,8 +408,8 @@ namespace Nop.Services.Media
             ImgAttributes.SetColorMatrix(ColorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap); TGraphics.DrawImage(logo, new Rectangle(0, 0, TransparentLogo.Width, TransparentLogo.Height), 0, 0, TransparentLogo.Width, TransparentLogo.Height, GraphicsUnit.Pixel, ImgAttributes);
             TGraphics.Dispose();
 
-            g.DrawImage(TransparentLogo, (image.Width / 2) - 140, (image.Height / 2) - 80);
-
+           g.DrawImage(TransparentLogo, (image.Width /2.5f), (image.Height / 2.5f));
+           // g.DrawImage(TransparentLogo, 1, 1);
             MemoryStream smImg = new MemoryStream();
             image.Save(smImg, ImageFormat.Jpeg);
             //save

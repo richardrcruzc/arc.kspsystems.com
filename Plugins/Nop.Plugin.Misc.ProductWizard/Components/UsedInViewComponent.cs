@@ -168,9 +168,49 @@ namespace Nop.Plugin.Misc.ProductWizard.Components
 
                 }
                 else
-                { }
+                {
+                    string sqlPartForItem1 = string.Format(
+                    "SELECT     ItemsCompatability.ItemIDPart, [product].Name as ProductName " +
+"FROM         ItemsCompatability INNER JOIN[product] " +
+"ON ItemsCompatability.ItemIDPart = [product].Id " +
+"WHERE(ItemsCompatability.ItemID =  {0}) " +
+"UNION " +
+"SELECT[Groups-Items].ItemID, [product_1].Name " +
+"FROM[Groups-Items] INNER JOIN[product] AS[product_1] " +
+"ON[Groups-Items].ItemID = [product_1].id " +
+"WHERE([Groups-Items].GroupID IN " +
+"(SELECT     GroupID " +
+"FROM[Relations-Groups-Items] " +
+"WHERE(ItemID = {0}) AND(Direction = 'A'))) " +
+"UNION " +
+"SELECT[Relations-Groups-Items].ItemID, [product].Name " +
+"FROM[product] INNER JOIN[Relations-Groups-Items] " +
+"ON[product].id = [Relations-Groups-Items].ItemID " +
+"WHERE([Relations-Groups-Items].Direction = 'B') " +
+"AND([Relations-Groups-Items].GroupID IN " +
+"(SELECT GroupID " +
+"FROM          [Groups-Items] " +
+"WHERE      (ItemID =  {0}))) ", id);
 
+                    var partForItem1 = _dbContext.SqlQuery<ProductNameModel>(sqlPartForItem1).Select(x => x.ItemIDPart).ToList();
+                    var query = _productService.GetProductsByIds(partForItem.ToArray());
 
+                    var modelCtegory = query.Select(x => new CategoryModel
+                    {
+                        CatergorySeo = x.ProductCategories.Select(y => y.Category.GetSeName()).FirstOrDefault(),
+                        CatergoryName = x.ProductCategories.Select(y => y.Category.Name).FirstOrDefault()
+                    });
+
+                    var groupedBy = modelCtegory.GroupBy(x => new { x.CatergoryName, x.CatergorySeo })
+                        .Select(y => new CategoryModel
+                        {
+                            CatergorySeo = y.Key.CatergorySeo,
+                            CatergoryName = y.Key.CatergoryName
+                        })
+                        .OrderBy(z => z.CatergoryName)
+                        .ToList();
+                    model.CategoryModel = groupedBy;
+                }
 
 
 

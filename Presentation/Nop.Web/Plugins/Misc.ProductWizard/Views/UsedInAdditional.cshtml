@@ -38,19 +38,63 @@
     }
     else
     {
+        <div class="order-summary-content">
+            <div class="table-wrapper">
+                <div class="mobile-only">
+                    @if (Model.CategoryModel.Count > 0)
+    {
 
-        <div id="categories-grid"></div>
-       
-        <script>
+                <div id="listView">
+                    <div class="details">
+                        <h4 class="product-title">
+                            @foreach (var item in Model.CategoryModel)
+            {
 
-                $(document).ready(function () {
-                    $(document).ready(function () {
+                if (item != Model.CategoryModel[Model.CategoryModel.Count - 1])
+                {
+                    <a href="@item.CatergorySeo">@item.CatergoryName, </a>
+}
+else
+{
+
+                <a href="@item.CatergorySeo">@item.CatergoryName </a>
+}
+
+}
+                        </h4>
+                    </div>
+                </div>
+}
+                </div>
+                <div class="screen-only">
+                    <div id="categories-grid"></div>
+
+                    <script>
+                        $(document).ready(function () {
+
+                            @*$("#listView").kendoListView({
+                             dataSource: {
+                                type: "json",
+                                transport: {
+                                    read: {
+                                         url: "@Html.Raw(Url.Action("PartsForThisItemList", "PartsForItem"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalData
+                                    }
+                                }
+                            },
+                             template: '<a href="#:CatergorySeo#">#=CatergoryName#</a> '
+                            });*@
+
+
+
                         $("#categories-grid").kendoGrid({
                             dataSource: {
                                 type: "json",
                                 transport: {
                                     read: {
-                                         url: "@Html.Raw(Url.Action("PartsForThisItem", "admin/Groups"))",
+                                         url: "@Html.Raw(Url.Action("PartsForThisItem", "PartsForItem"))",
                                             type: "POST",
                                             dataType: "json",
                                             data: additionalData
@@ -64,13 +108,16 @@
                                         id: "Id",
                                         fields: {
                                             ThumbImageUrl: { editable: false },
-                                            CategoryName: { editable: false },
+                                            Category: { editable: false },
                                             ProductName: { editable: false },
                                             PartNumber: { editable: false },
                                             Manufacturer: { editable: false },
                                             Price: { editable: false },
                                             Qty: { editable: true, type: "number", validation: { required: true, min: 1 } },
-                                            Id: { editable: false, type: "number" }
+                                            Id: { editable: false, type: "number" },
+                                            SeName: { editable: false },
+                                            CategorySeo: { editable: false },
+                                            OutOfStock: { editable: false, type:"bool" },
                                         }
                                      }
                                 },
@@ -83,8 +130,11 @@
                                     serverPaging: true,
                                     serverFiltering: true,
                                     serverSorting: true,
-                                    group: { field: "CategoryName" },
-                            },   pageable: {
+                                    group: { field: "Category", template: '<a href="#:CategorySeo#">#=Category#</a>' },
+                            },
+                            scrollable: false,
+                            editable: "inline",
+                            pageable: {
                                     refresh: true,
                                     pageSizes: [@(gridPageSizes)],
                                     @Html.Partial("_GridPagerMessages")
@@ -96,42 +146,46 @@
                                 {
                                     field: "ThumbImageUrl",
                                             title: "@T("Admin.Catalog.Products.Fields.PictureThumbnailUrl")",
-                                            template: '<img src="#=ThumbImageUrl#" />',
-                                            width: 100
+                                            template: '<a href="#:SeName#"><img src="#=ThumbImageUrl#" /></a>',
+
                                 },
                                 {
                                     field: "ProductName",
-                                    title: "ProductName",
+                                    title: "Name",
+                                    template: '<a href="#:SeName#">#:ProductName#<br><span class="item_details_link_info"><img src="/images/magnify_plus.gif" alt="view details"> view details...</span> </a> '
                                 },
                                 {
                                     field: "PartNumber",
-                                    title: "PartNumber",
+                                    title: "Part #",
                                 },
                                 {
                                     field: "Manufacturer",
                                     title: "Manufacturer",
                                 },
                                 {
-                                    field: "CategoryName",
-                                    title: "CategoryName",
+                                    field: "Category",
+                                    title: "Category",
+                                    template: '<a href="#:CategorySeo#">#=Category#</a>',
                                 },
                                 {
                                     field: "Price",
                                     title: "Price",
                                     format: "{0:c}",
                                     attributes: { style: "text-align:right" },
-                                },  {
-                                    field: "Qty",
-                                    title: "Qty", 
-                                    attributes: { style: "text-align:right" },
-                                    width: 80
-                                    
                                 }, {
+                                    field: "Qty",
+                                    title: "Qty",
+                                    attributes: { style: "text-align:right" },
+                                    width: 75,
+                                    template:'<table  border="1"><tr><td style="border-collapse: collapse;border: 1px solid black;">#:Qty#</td></tr></table>'
+
+                                },  {
                                     field: "Id",
                                     title: "Buy Now",
                                     headerAttributes: { style: "text-align:center" },
                                     attributes: { style: "text-align:center" },
-                                    template: '<a href="\\#" onclick="rowclick(this);"  title="Edit">&nbsp;<input type="image" class="addToCartbutton" id="addToCartbutton" src="/images/add-btn-small.png"></a>'
+                                    template: '# if (OutOfStock) { #<input class="btn btn-xs btn-default" type="image" src="/images/call_button.gif"># } else { # <a class="btn btn-xs btn-default" href="\\#" onclick="rowclick(this);"  title="Edit">&nbsp;<input type="image" class="addToCartbutton" id="addToCartbutton" src="/images/add-btn-small.png"></a># } #',
+                                    attributes: { style: "text-align:center" },
                                    // template: '<table width="20%" style="border: none 0px;"><tbody><tr><td style="border: none 0px;">Qty.<br /><input id="cartQty" name="cartQty" class="cartQty" value="1" type="number"  style="width:30px"> </td><td style="border: none 0px;"><br /><input type="image" class="addToCartbutton" id="addToCartbutton" src="/images/add-btn-small.png" onclick="rowclick(this);" ></td></tr></tbody></table>'
                                 },
                                 //{
@@ -142,17 +196,17 @@
                                 //        attributes: { style: "text-align:center" },
                                 //        template: '<a class="btn btn-default" href="Edit/#=Id#"><img src= "/images/add-btn-small.png" /></a>'
                                 //    }
-                            ], 
+                            ],
                             editable: true
                         });
-                    });
 
-                   
+
+
 
                     $("#categorieseeee-grid").on("click", ".addToCartbutton", function (e) {
                          e.preventDefault();
                         //var grid = $("#categories-grid").data("kendoGrid");
-                        //var selectedItem = grid.dataItem(grid.select());  
+                        //var selectedItem = grid.dataItem(grid.select());
                         //alert(selectedItem.Price);
                          var row = $(this).closest("tr");
                          var spans = row.find("cartQty");
@@ -161,15 +215,15 @@
                         var grid = $("#categories-grid").data("kendoGrid");
                         var dataItem = grid.dataItem(row);
                         alert(dataItem.Price);
-                       
+
                     });
 
 
 
-                            
+
                 });
 
-             
+
 
 
             function rowclick(sender) {
@@ -189,7 +243,7 @@
                         var shoppingCartTypeId = 1;
                         var quantity = data.Qty;
                         var forceredirection = false
-
+                        alert(data.Qty);
                         var url = '/ShoppingCart/AddProductToCart_Catalog?productId='+data.Id+'&shoppingCartTypeId=1&quantity=' + data.Qty+'&forceredirection=false';
                       //  alert(url);
                         $.ajax({
@@ -197,10 +251,10 @@
                             url: url,
                             type: 'post',
                             success: function (result) {
-                                alert('product added');
+                                //alert('product added');
                             },
                             complete: function (result) { },
-                            error: function (result) { alert('error adding product to shopping cart');}
+                            error: function (result) { /*alert('error adding product to shopping cart');*/}
                         });
 
                     }
@@ -218,7 +272,10 @@
             addAntiForgeryToken(data);
             return data;
                             }
-        </script>
+                    </script>
+                </div>
+            </div>
+            </div>
     }
     <br />
 </div>

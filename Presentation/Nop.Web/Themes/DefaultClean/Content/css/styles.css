@@ -58,7 +58,13 @@ script {
     display: none !important;
 }
 
+.screen-only {
+    display: block;
+}
 
+.mobile-only {
+    display: none;
+}
 /*********** GLOBAL STYLES **********/
 
 
@@ -5071,7 +5077,15 @@ pre {
 
 
 @media all and (max-width: 1000px) {
+    .screen-only {
+        display: none;
+    }
 
+
+
+    .mobile-only {
+        display: block;
+    }
 
 /*** GLOBAL TABLES ***/
 

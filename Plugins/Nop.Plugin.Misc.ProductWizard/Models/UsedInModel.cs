@@ -26,7 +26,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Models
         public List<CategoryModel> CategoryModel { get; set; }
 
         public List<UsedInModel> PartForItem { get; set; }
-        public List<int> PartForItemId { get; set; }
+        public List<int> PartForItemId { get; set; } 
+        
     }
 
     public partial class UsedInModel : BaseNopEntityModel
@@ -42,6 +43,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Models
     public partial class CategoryModel : BaseNopEntityModel
     {
         public string CatergoryName { get; set; }
+        public string CatergorySeo { get; set; }
 
     }
 }

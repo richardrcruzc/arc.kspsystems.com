@@ -14,12 +14,18 @@
     <div class="details">
         <h4 class="product-title">
             @foreach (var item in Model.LegacyIdModel)
-            {
+    {
+        if (item != Model.LegacyIdModel[Model.LegacyIdModel.Count - 1])
+        {
 
+            <label>@item.LegacyName, </label>
+}
+else
+{
+        <label>@item.LegacyName </label>
 
-                <label>@item.LegacyName </label>
-
-            }
+}
+}
         </h4>
     </div>
     <br />
