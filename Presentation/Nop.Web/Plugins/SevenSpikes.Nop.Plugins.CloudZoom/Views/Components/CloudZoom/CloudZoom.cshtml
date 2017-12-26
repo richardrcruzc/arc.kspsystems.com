@@ -90,15 +90,15 @@
         <input type="hidden" class="cloudZoomEnableClickToZoom" />
     }
 
-    <div class="gallery sevenspikes-cloudzoom-gallery">
+    <div class="gallery sevenspikes-cloudzoom-gallery"> 
         <div class="picture-wrapper">
             <div class="picture" id="sevenspikes-cloud-zoom" data-zoomwindowelementid="@Model.ElementId"
                  data-selectoroftheparentelementofthecloudzoomwindow="@Model.SettingsModel.SelectorOfTheParentElementOfTheCloudZoomWindow"
                  data-defaultimagecontainerselector="@Model.SettingsModel.DefaultImageContainerSelector"
                  data-zoom-window-width="@Model.SettingsModel.ZoomWidth"
                  data-zoom-window-height="@Model.SettingsModel.ZoomHeight">
-                <a href="@Model.DefaultPicture.FullSizeImageUrl" data-full-image-url="@Model.DefaultPicture.FullSizeImageUrl" class="picture-link" id="zoom1">
-                    <img src="@Model.DefaultPicture.SmallImageUrl" alt="@Model.DefaultPicture.AlternateText" class="cloudzoom" id="cloudZoomImage"
+                <a href="@await Component.InvokeAsync("WaterMarkedPicture", new {ImageUrl =@Model.DefaultPicture.FullSizeImageUrl })" data-full-image-url="@await Component.InvokeAsync("WaterMarkedPicture", new {ImageUrl =@Model.DefaultPicture.FullSizeImageUrl })" class="picture-link" id="zoom1">
+                    <img src="@await Component.InvokeAsync("WaterMarkedPicture", new {ImageUrl =@Model.DefaultPicture.SmallImageUrl })" alt="@Model.DefaultPicture.AlternateText" class="cloudzoom" id="cloudZoomImage"
                          itemprop="image" data-cloudzoom="@Model.DefaultPicture.DefaultRelation"
                          @if (Model.SettingsModel.ShowTitle) { <text> title="@Model.DefaultPicture.Title" </text>      } />
                 </a>
@@ -115,7 +115,7 @@
 	                        @foreach (var picture in Model.Pictures)
 	                        {
 	                            <div class="picture-thumbs-item">
-	                                <a class="cloudzoom-gallery thumb-item" data-full-image-url="@picture.FullSizeImageUrl" data-cloudzoom="@picture.GalleryRelation"
+	                                <a class="cloudzoom-gallery thumb-item" data-full-image-url="@await Component.InvokeAsync("WaterMarkedPicture", new {ImageUrl =@picture.FullSizeImageUrl })" data-cloudzoom="@picture.GalleryRelation"
 	                                   @if (Model.SettingsModel.ShowTitle) { <text> title="@picture.Title" </text>         }>
 	                                    <img class="cloud-zoom-gallery-img" src="@picture.TinyImageUrl" alt="@picture.AlternateText" />
 	                                </a>
@@ -127,7 +127,7 @@
                 {
                     foreach (var picture in Model.Pictures)
                     {
-                        <a class="cloudzoom-gallery thumb-item" data-full-image-url="@picture.FullSizeImageUrl" data-cloudzoom="@picture.GalleryRelation"
+                        <a class="cloudzoom-gallery thumb-item" data-full-image-url="@await Component.InvokeAsync("WaterMarkedPicture", new {ImageUrl =@picture.FullSizeImageUrl })" data-cloudzoom="@picture.GalleryRelation"
                            @if (Model.SettingsModel.ShowTitle) { <text> title="@picture.Title" </text>  }>
                             <img class="cloud-zoom-gallery-img" src="@picture.TinyImageUrl" alt="@picture.AlternateText" />
                         </a>

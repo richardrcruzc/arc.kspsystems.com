@@ -38,6 +38,7 @@
     <None Remove="Views\Relations\List.cshtml" />
     <None Remove="Views\UsedIn.cshtml" />
     <None Remove="Views\UsedInAdditional.cshtml" />
+    <None Remove="Views\WaterMarkedPicture.cshtml" />
   </ItemGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -55,6 +56,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="plugin.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\WaterMarkedPicture.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Views\UsedInAdditional.cshtml">
@@ -107,10 +111,6 @@
 
   <ItemGroup>
     <Folder Include="Properties\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="2.4.0.280" />
   </ItemGroup>
 
   <ItemGroup>

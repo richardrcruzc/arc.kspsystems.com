@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -15,7 +14,7 @@ using Nop.Data;
 using Nop.Services.Configuration;
 using Nop.Services.Events;
 using Nop.Services.Logging;
-using Nop.Services.Seo; 
+using Nop.Services.Seo;
 
 namespace Nop.Services.Media
 {
@@ -113,7 +112,7 @@ namespace Nop.Services.Media
                     {
                         // landscape or square
                         width = targetSize;
-                        height = originalSize.Height * (targetSize / (float) originalSize.Width);
+                        height = originalSize.Height * (targetSize / (float)originalSize.Width);
                     }
                     break;
                 case ResizeType.Width:
@@ -195,61 +194,9 @@ namespace Nop.Services.Media
         {
             var lastPart = GetFileExtensionFromMimeType(mimeType);
             var fileName = $"{pictureId:0000000}_0.{lastPart}";
-
-
-
-
-
-            //WaterMark
-            //System.Drawing.Image image = System.Drawing.Image.FromFile(thumbFilePath);//This is the background image 
-            MemoryStream ms = new MemoryStream(pictureBinary, 0, pictureBinary.Length);
-            ms.Position = 0; // this is important
-            var image = Image.FromStream(ms, true);
-
-            var logoPath = Path.Combine(_hostingEnvironment.WebRootPath, "images\\WaterMarkImages");
-            System.Drawing.Image logo = System.Drawing.Image.FromFile(logoPath + "\\ARC_Logo_214.png"); //This is your watermark 
-            //logo = ScaleImage(logo, 75, 50);
-            Graphics g = System.Drawing.Graphics.FromImage(image); //Create graphics object of the background image //So that you can draw your logo on it
-            Bitmap TransparentLogo = new Bitmap(logo.Width, logo.Height); //Create a blank bitmap object //to which we //draw our transparent logo
-            
-            Graphics TGraphics = Graphics.FromImage(TransparentLogo);//Create a graphics object so that //we can draw //on the blank bitmap image object
-            ColorMatrix ColorMatrix = new ColorMatrix(); //An image is represenred as a 5X4 matrix(i.e 4 //columns and 5 //rows) 
-            ColorMatrix.Matrix33 = 0.40F;//the 3rd element of the 4th row represents the transparency 
-            ImageAttributes ImgAttributes = new ImageAttributes();//an ImageAttributes object is used to set all //the alpha //values.This is done by initializing a color matrix and setting the alpha scaling value in the matrix.The address of //the color matrix is passed to the SetColorMatrix method of the //ImageAttributes object, and the //ImageAttributes object is passed to the DrawImage method of the Graphics object.
-            ImgAttributes.SetColorMatrix(ColorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap); TGraphics.DrawImage(logo, new Rectangle(0, 0, TransparentLogo.Width, TransparentLogo.Height), 0, 0, TransparentLogo.Width, TransparentLogo.Height, GraphicsUnit.Pixel, ImgAttributes);
-            TGraphics.Dispose();
-
-            g.DrawImage(TransparentLogo, (image.Width / 2.5F), (image.Height / 2.5F));
-            //g.DrawImage(TransparentLogo, 1, 1);
-            MemoryStream smImg = new MemoryStream();
-            image.Save(smImg, ImageFormat.Jpeg);
-
-            //save
-            //File.WriteAllBytes(GetPictureLocalPath(fileName), pictureBinary);
-            File.WriteAllBytes(GetPictureLocalPath(fileName), smImg.ToArray());
-        }
-        public Image ScaleImage(Image image, int maxWidth, int maxHeight)
-{
-        var ratioX = (double)maxWidth / image.Width;
-        var ratioY = (double)maxHeight / image.Height;
-        var ratio = Math.Min(ratioX, ratioY);
-
-        var newWidth = (int)(image.Width * ratio);
-        var newHeight = (int)(image.Height * ratio);
-
-        var newImage = new Bitmap(maxWidth, maxWidth);
-        using (var graphics = Graphics.FromImage(newImage))
-        {
-            // Calculate x and y which center the image
-            int y = (maxHeight/2) - newHeight / 2;
-            int x = (maxWidth / 2) - newWidth / 2;
-
-            // Draw image on x and y with newWidth and newHeight
-            graphics.DrawImage(image, x, y, newWidth, newHeight);
+            File.WriteAllBytes(GetPictureLocalPath(fileName), pictureBinary);
         }
 
-        return newImage;
-}
         /// <summary>
         /// Delete a picture on file system
         /// </summary>
@@ -389,32 +336,9 @@ namespace Nop.Services.Media
             var thumbsDirectoryPath = Path.Combine(_hostingEnvironment.WebRootPath, "images\\thumbs");
             if (!System.IO.Directory.Exists(thumbsDirectoryPath))
                 System.IO.Directory.CreateDirectory(thumbsDirectoryPath);
-             
-          
-            //WaterMark
-            //System.Drawing.Image image = System.Drawing.Image.FromFile(thumbFilePath);//This is the background image 
-            MemoryStream ms = new MemoryStream(binary, 0, binary.Length);
-            ms.Position = 0; // this is important
-            var image = Image.FromStream(ms, true);
 
-            var logoPath = Path.Combine(_hostingEnvironment.WebRootPath, "images\\WaterMarkImages");
-            System.Drawing.Image logo = System.Drawing.Image.FromFile(logoPath+ "\\ARC_Logo_214.png"); //This is your watermark 
-            Graphics g = System.Drawing.Graphics.FromImage(image); //Create graphics object of the background image //So that you can draw your logo on it
-            Bitmap TransparentLogo = new Bitmap(logo.Width, logo.Height); //Create a blank bitmap object //to which we //draw our transparent logo
-            Graphics TGraphics = Graphics.FromImage(TransparentLogo);//Create a graphics object so that //we can draw //on the blank bitmap image object
-            ColorMatrix ColorMatrix = new ColorMatrix(); //An image is represenred as a 5X4 matrix(i.e 4 //columns and 5 //rows) 
-            ColorMatrix.Matrix33 = 0.40F;//the 3rd element of the 4th row represents the transparency 
-            ImageAttributes ImgAttributes = new ImageAttributes();//an ImageAttributes object is used to set all //the alpha //values.This is done by initializing a color matrix and setting the alpha scaling value in the matrix.The address of //the color matrix is passed to the SetColorMatrix method of the //ImageAttributes object, and the //ImageAttributes object is passed to the DrawImage method of the Graphics object.
-            ImgAttributes.SetColorMatrix(ColorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap); TGraphics.DrawImage(logo, new Rectangle(0, 0, TransparentLogo.Width, TransparentLogo.Height), 0, 0, TransparentLogo.Width, TransparentLogo.Height, GraphicsUnit.Pixel, ImgAttributes);
-            TGraphics.Dispose();
-
-           g.DrawImage(TransparentLogo, (image.Width /2.5f), (image.Height / 2.5f));
-           // g.DrawImage(TransparentLogo, 1, 1);
-            MemoryStream smImg = new MemoryStream();
-            image.Save(smImg, ImageFormat.Jpeg);
             //save
-            //File.WriteAllBytes(thumbFilePath, binary);
-            File.WriteAllBytes(thumbFilePath, smImg.ToArray());
+            File.WriteAllBytes(thumbFilePath, binary);
         }
 
         #endregion
@@ -570,7 +494,7 @@ namespace Nop.Services.Media
             }
 
             var seoFileName = picture.SeoFilename; // = GetPictureSeName(picture.SeoFilename); //just for sure
-            
+
             var lastPart = GetFileExtensionFromMimeType(picture.MimeType);
             string thumbFileName;
             if (targetSize == 0)
@@ -591,8 +515,8 @@ namespace Nop.Services.Media
             //and does not decrease performance significantly, because the code is blocked only for the specific file.
             using (var mutex = new Mutex(false, thumbFileName))
             {
-                if(!GeneratedThumbExists(thumbFilePath, thumbFileName))
-                { 
+                if (!GeneratedThumbExists(thumbFilePath, thumbFileName))
+                {
                     mutex.WaitOne();
 
                     //check, if the file was created, while we were waiting for the release of the mutex.
@@ -646,10 +570,10 @@ namespace Nop.Services.Media
 
                         SaveThumb(thumbFilePath, thumbFileName, picture.MimeType, pictureBinaryResized);
                     }
-                    
+
                     mutex.ReleaseMutex();
                 }
-                
+
             }
             url = GetThumbUrl(thumbFileName, storeLocation);
             return url;
@@ -725,7 +649,7 @@ namespace Nop.Services.Media
             var pics = new PagedList<Picture>(query, pageIndex, pageSize);
             return pics;
         }
-        
+
         /// <summary>
         /// Gets pictures by product identifier
         /// </summary>
@@ -895,7 +819,7 @@ namespace Nop.Services.Media
         /// <summary>
         /// Helper class for making pictures hashes from DB
         /// </summary>
-        private class HashItem: IComparable, IComparable<HashItem>
+        private class HashItem : IComparable, IComparable<HashItem>
         {
             public int PictureId { get; set; }
             public byte[] Hash { get; set; }
@@ -919,7 +843,7 @@ namespace Nop.Services.Media
         public IDictionary<int, string> GetPicturesHash(int[] picturesIds)
         {
             var supportedLengthOfBinaryHash = _dataProvider.SupportedLengthOfBinaryHash();
-            if(supportedLengthOfBinaryHash == 0 || !picturesIds.Any())
+            if (supportedLengthOfBinaryHash == 0 || !picturesIds.Any())
                 return new Dictionary<int, string>();
 
             const string strCommand = "SELECT [Id] as [PictureId], HASHBYTES('sha1', substring([PictureBinary], 0, {0})) as [Hash] FROM [Picture] where id in ({1})";
@@ -1010,13 +934,5 @@ namespace Nop.Services.Media
         }
 
         #endregion
-
-
-
-        #region WaterMarks Methods
-        public void WaterMarkPicture ()
-        {
-        }
-            #endregion
-        }
+    }
 }
