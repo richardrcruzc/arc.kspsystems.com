@@ -102,8 +102,10 @@ namespace Nop.Plugin.Misc.ProductWizard.Components
                 imageUrl = "data:image/jpeg;base64," + Convert.ToBase64String(bImg);
 
             }
+            else
+            { imageUrl = ""; }
 
-
+            
             // PictureModel model = new PictureModel { AlternateText = alternateText, ImageUrl = imageUrl, Title = title, Id = id };
             
             return View("~/Plugins/Misc.ProductWizard/Views/WaterMarkedPicture.cshtml", imageUrl);

@@ -29,13 +29,16 @@
   <ItemGroup>
     <None Remove="logo.jpg" />
     <None Remove="plugin.json" />
+    <None Remove="Views\BrowserInventory.cshtml" />
     <None Remove="Views\Groups\Create.cshtml" />
     <None Remove="Views\Groups\Edit.cshtml" />
     <None Remove="Views\Groups\List.cshtml" />
     <None Remove="Views\Groups\_CreateOrUpdate.cshtml" />
     <None Remove="Views\Items\List.cshtml" />
     <None Remove="Views\Configure.cshtml" />
+    <None Remove="Views\MainSearch.cshtml" />
     <None Remove="Views\Relations\List.cshtml" />
+    <None Remove="Views\TriSearch.cshtml" />
     <None Remove="Views\UsedIn.cshtml" />
     <None Remove="Views\UsedInAdditional.cshtml" />
     <None Remove="Views\WaterMarkedPicture.cshtml" />
@@ -56,6 +59,16 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="plugin.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\BrowserInventory.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\MainSearch.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\TriSearch.cshtml">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Views\WaterMarkedPicture.cshtml">

@@ -1,0 +1,196 @@
+﻿@model int
+<link href="~/lib/kendo/2014.1.318/kendo.common.min.css" rel="stylesheet" />
+<link href="~/lib/kendo/2014.1.318/kendo.default.min.css" rel="stylesheet" />
+<link href="~/lib/kendo/2014.1.318/kendo.default.mobile.min.css" rel="stylesheet" />
+@{
+
+    //    Layout = "~/admin/Views/Shared/_AdminLayout.cshtml";
+    var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
+    var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
+ 
+    Layout = "_ColumnsTwo";
+
+    //title
+    Html.AddTitleParts(T("PageTitle.Search").Text);
+    //page class
+    Html.AppendPageCssClassParts("html-search-page");
+}
+
+<div class="page search-page">
+    <div class="page-body">
+        <div class="title"><strong>Search Results</strong></div>
+        <div id="categories"></div>
+    </div>
+</div>
+
+<script>
+        $(document).ready(function () {
+
+            $("#categories").kendoGrid({
+                autoBind: true,
+                            dataSource: {
+                                type: "json",
+                                transport: {
+                                    read: {
+                                         url: "@Html.Raw(Url.Action("FrontSearch", "PartsForItem"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: additionalData
+                                    }
+                                },
+                                schema: {
+                                    data: "Data",
+                                    total: "Total",
+                                    errors: "Errors",
+                                    model: {
+                                        id: "Id",
+                                        fields: {
+                                            ThumbImageUrl: { editable: false },
+                                            Category: { editable: false },
+                                            ProductName: { editable: false },
+                                            PartNumber: { editable: false },
+                                            Manufacturer: { editable: false },
+                                            Price: { editable: false },
+                                            Qty: { editable: true, type: "number", validation: { required: true, min: 1 } },
+                                            Id: { editable: false, type: "number" },
+                                            SeName: { editable: false },
+                                            CategorySeo: { editable: false },
+                                            OutOfStock: { editable: false, type:"bool" },
+                                        }
+                                     }
+                                },
+                                 error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(defaultGridPageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true,
+                                    group: { field: "Category", template: '<a href="#:CategorySeo#">#=Category#</a>' },
+                            },
+                            scrollable: false,
+                            editable: "inline",
+                            pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(gridPageSizes)],
+                                    @Html.Partial("_GridPagerMessages")
+                            },
+                          //   rowTemplate: kendo.template($("#rowTemplate").html()),
+                            //altRowTemplate: kendo.template($("#altRowTemplate").html()),
+                            scrollable: false,
+                            columns: [
+                                {
+                                    field: "ThumbImageUrl",
+                                            title: "@T("Admin.Catalog.Products.Fields.PictureThumbnailUrl")",
+                                            template: '<a href="#:SeName#"><img src="#=ThumbImageUrl#" /></a>',
+
+                                },
+                                {
+                                    field: "ProductName",
+                                    title: "Name",
+                                    template: '<a href="#:SeName#">#:ProductName#<br><span class="item_details_link_info"><img src="/images/magnify_plus.gif" alt="view details"> view details...</span> </a> '
+                                },
+                                {
+                                    field: "PartNumber",
+                                    title: "Part #",
+                                },
+                                {
+                                    field: "Manufacturer",
+                                    title: "Manufacturer",
+                                },
+                                {
+                                    field: "Category",
+                                    title: "Category",
+                                    template: '<a href="#:CategorySeo#">#=Category#</a>',
+                                },
+                                {
+                                    field: "Price",
+                                    title: "Price",
+                                    format: "{0:c}",
+                                    attributes: { style: "text-align:right" },
+                                }, {
+                                    field: "Qty",
+                                    title: "Qty",
+                                    attributes: { style: "text-align:right" },
+                                    width: 75,
+                                    template:'<table  border="1"><tr><td style="border-collapse: collapse;border: 1px solid black;">#:Qty#</td></tr></table>'
+
+                                },  {
+                                    field: "Id",
+                                    title: "Buy Now",
+                                    headerAttributes: { style: "text-align:center" },
+                                    attributes: { style: "text-align:center" },
+                                    template: '# if (OutOfStock) { #<input class="btn btn-xs btn-default" type="image" src="/images/call_button.gif"># } else { # <a class="btn btn-xs btn-default" href="\\#" onclick="rowclick(this);"  title="Edit">&nbsp;<input type="image" class="addToCartbutton" id="addToCartbutton" src="/images/add-btn-small.png"></a># } #',
+                                    attributes: { style: "text-align:center" },
+                                   // template: '<table width="20%" style="border: none 0px;"><tbody><tr><td style="border: none 0px;">Qty.<br /><input id="cartQty" name="cartQty" class="cartQty" value="1" type="number"  style="width:30px"> </td><td style="border: none 0px;"><br /><input type="image" class="addToCartbutton" id="addToCartbutton" src="/images/add-btn-small.png" onclick="rowclick(this);" ></td></tr></tbody></table>'
+                                },
+                                //{
+                                //        field: "Id",
+                                //        title: "",
+                                //        width: 100,
+                                //        headerAttributes: { style: "text-align:center" },
+                                //        attributes: { style: "text-align:center" },
+                                //        template: '<a class="btn btn-default" href="Edit/#=Id#"><img src= "/images/add-btn-small.png" /></a>'
+                                //    }
+                            ],
+                            editable: true
+            });
+
+
+
+
+
+        });
+
+        function rowclick(sender) {
+            var grid = $('#categories').data('kendoGrid');
+
+            if (grid) {
+                var data = grid.dataItem($(sender).closest("tr"));
+                if (data) {
+                    //  alert("You clicked " + data.Qty + " for Id : " + data.Id);
+                    //AjaxCart.addproducttocart_catalog(productId);
+                    //AjaxCart.addproducttocart_details('/addproducttocart/details/'++'/1', '#product-details-form')
+                    // addtocartlink = 'Url.RouteUrl("AddProductToCart-Catalog", new { productId = data.Id, shoppingCartTypeId = 1, quantity = data.Qty, forceredirection = false})';
+
+                    // alert(addtocartlink);
+
+                    var productId = data.Id;
+                    var shoppingCartTypeId = 1;
+                    var quantity = data.Qty;
+                    var forceredirection = false
+                   // alert(data.Qty);
+                    var url = '/ShoppingCart/AddProductToCart_Catalog?productId=' + data.Id + '&shoppingCartTypeId=1&quantity=' + data.Qty + '&forceredirection=false';
+                        alert(url);
+                    $.ajax({
+                        cache: false,
+                        url: url,
+                        type: 'post',
+                        success: function (result) {
+                            //alert('product added');
+                        },
+                        complete: function (result) {/* alert('results')*/},
+                        error: function (result) { alert('error adding product to shopping cart'); }
+                    });
+
+                }
+                else
+                    alert("Why isn't my row selected!");
+            }
+
+
+        };
+        function additionalData() {
+            var brand = $("#Brands").val();
+            var copier = @ViewBag.Rid;
+            var category = @ViewBag.Cid;
+            var data = {
+                rid: copier,
+                cid: category
+            };
+            addAntiForgeryToken(data);
+            return data;
+        }
+    </script>

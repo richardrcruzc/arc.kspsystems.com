@@ -130,7 +130,97 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             this._cacheManager = cacheManager;
         }
         #endregion
-        #region "Parts for this Item"
+
+        
+
+
+        #region frontsearch
+
+
+
+        public virtual IActionResult BrowserInventory(int rid, int cid)
+        {
+            ViewBag.Rid = rid;
+            ViewBag.Cid = cid;
+
+            return View("~/Plugins/Misc.ProductWizard/Views/BrowserInventory.cshtml" , rid);
+        }
+
+
+      [HttpPost]
+        public virtual IActionResult FrontSearch(DataSourceRequest command,int rid, int cid)
+        {
+            var query = _productService.GetProductsByIds(new int[] {0});
+
+
+            if (cid == 0)
+            {
+
+               // var products = _productService.SearchProducts(orderBy: ProductSortingEnum.NameDesc);
+                //ItemsCompatability
+                var ic = _iRepository.TableNoTracking.Where(x => x.ItemId == rid).Select(x => x.ItemId).ToList();
+                //GroupsItems
+                var gpi = _gpiRepository.TableNoTracking.Where(x => x.ItemId == rid).Select(x => x.GroupId).ToList();
+                //RelationsGroupsItems>
+                var rgp = _rgpRepository.TableNoTracking.Where(x => x.Direction == "B" && gpi.Contains(x.GroupId)).Select(x => x.ItemId).ToList();
+
+
+
+                rgp.AddRange(ic);
+                //var catergories
+                //query = products.Where(x => ic.Contains(x.Id) || rgp.Contains(x.Id)) ;
+
+                query = _productService.GetProductsByIds(rgp.ToArray());
+
+
+            }
+            else
+            {
+
+               var  tmp = _categoryService.GetProductCategoriesByCategoryId(cid).Select(x=>x.Product.Id);
+                query = _productService.GetProductsByIds(tmp.ToArray());
+
+            }
+
+            var gridModel = new DataSourceResult
+            {
+                Data = query.Select(x =>
+                {
+                    //var pictures = _pictureService.GetPicturesByProductId(x.Id);
+                    //var defaultPicture = pictures.FirstOrDefault();
+                    //var thumb = _pictureService.GetPictureUrl(defaultPicture, _mediaSettings.ProductThumbPictureSizeOnProductDetailsPage);
+
+                    //picture
+                    var defaultProductPicture = _pictureService.GetPicturesByProductId(x.Id, 1).FirstOrDefault();
+                    var thumb = _pictureService.GetPictureUrl(defaultProductPicture, 75, true);
+
+
+
+                    var model = new PartsForThisItemModel
+                    {
+                        Id = x.Id,
+                        Category = string.Join(",", x.ProductCategories.Select(y => y.Category.Name).ToArray()),
+                        CategorySeo = x.ProductCategories.Select(y => y.Category.GetSeName()).FirstOrDefault(),
+                        Manufacturer = string.Join(",", x.ProductManufacturers.Select(y => y.Manufacturer.Name).ToArray()),
+                        PartNumber = x.Sku,
+                        Price = x.Price,
+                        ProductName = x.Name,
+                        Qty = 1,
+                        ThumbImageUrl = thumb,
+                        SeName = x.GetSeName(),
+                        OutOfStock = x.GetTotalStockQuantity() <= 0,
+
+                    };
+                    //categoryModel.Breadcrumb = x.GetFormattedBreadCrumb(_categoryService);
+                    return model;
+                }).OrderBy(y => y.Manufacturer).ThenBy(y => y.ProductName),
+                Total = query.Count
+            };
+            return Json(gridModel);
+        }
+        #endregion 
+
+       #region "Parts for this Item"
         [HttpPost]
         public virtual IActionResult PartsForThisItemList(DataSourceRequest command, int id)
         {

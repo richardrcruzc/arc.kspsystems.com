@@ -1,0 +1,136 @@
+﻿@model int
+<link href="~/lib/kendo/2014.1.318/kendo.common.min.css" rel="stylesheet" />
+<link href="~/lib/kendo/2014.1.318/kendo.default.min.css" rel="stylesheet" />
+<link href="~/lib/kendo/2014.1.318/kendo.default.mobile.min.css" rel="stylesheet" />
+@{
+
+    //    Layout = "~/admin/Views/Shared/_AdminLayout.cshtml";
+    var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
+    var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
+}
+  
+    <table class="table table-responsive">
+        <tr>
+            <td>
+
+                <img src="~/images/search-img.png" />
+               
+            </td>
+            <td>  <input id="Brands" /></td>
+            <td> <input id="CopiersAccesories" /></td>
+            <td> <input id="Categories" /></td>
+        </tr>
+    </table>
+
+
+
+
+
+    <script>
+    $(document).ready(function () {
+        $("#Brands").kendoDropDownList({
+            optionLabel: "1. Select brand...",
+            dataTextField: "Name",
+            dataValueField: "Id",
+            dataSource: {
+                type: "json",
+                transport: {
+                    read: {
+                        url: "@Html.Raw(Url.Action("GetBrands", "FrontSearch"))",
+                        type: "POST",
+                        dataType: "json"
+                    }
+                }
+            },
+            change: onChangeBrand
+        }).data("kendoDropDownList");
+
+
+        $("#CopiersAccesories").kendoDropDownList({
+            autoBind: false,
+            cascadeFrom: "Brands",
+            optionLabel: "2. Select copier/accesories...",
+            dataTextField: "Description",
+            dataValueField: "Id",
+            dataSource: {
+            serverFiltering: true,
+                type: "json",
+                transport: {
+                    read: {
+                        url: "@Html.Raw(Url.Action("GetCopiers", "FrontSearch"))",
+                        type: "POST",
+                        dataType: "json",
+                        data: CopiersAccesories
+                    }
+                }
+            },
+            change: onChangeCopier
+        }).data("kendoDropDownList");
+        $("#Categories").kendoDropDownList({
+            autoBind: false,
+            cascadeFrom: "CopiersAccesories",
+            optionLabel: "3. Select category...",
+            dataTextField: "Name",
+            dataValueField: "Id",
+            dataSource: {
+            serverFiltering: true,
+                type: "json",
+                transport: {
+                    read: {
+                        url: "@Html.Raw(Url.Action("GetCategories", "FrontSearch"))",
+                        type: "POST",
+                        dataType: "json",
+                        data: DataForCategories
+                    }
+                }
+            },
+            change: onChangeCategory
+        }).data("kendoDropDownList");
+    });
+
+    var value = 0;
+    function onChangeBrand() {
+        value = $("#Brands").val();
+        var copier = $("#CopiersAccesories").data("kendoDropDownList");
+        copier.select(0);
+        copier.enable(true);
+        $("#ItemsListResults").hide();
+    }
+    function onChangeCopier() {
+        value = $("#CopiersAccesories").val();
+        var copier = $("#Categories").data("kendoDropDownList");
+        copier.select(0);
+        copier.enable(true);
+        $("#ItemsListResults").hide();
+    }
+        function onChangeCategory() {
+            var rid = $("#CopiersAccesories").val();
+            var cid = $("#Categories").val();
+            //window.location.href = '/anon/BrowserInventory?rid=' + 2 + "?cid=" + 3;
+            window.location.href = '/anon/BrowserInventory?rid=' + rid + "&cid=" + cid;
+
+        //$("#ItemsListResults").show(); 
+        //var grid = $("#categories").data("kendoGrid");
+        //grid.dataSource.read();
+    }
+    function CopiersAccesories()
+    {
+        value = $("#Brands").val();
+                    var data  = {
+                                id: value
+                            };
+            addAntiForgeryToken(data);
+            return data;
+    }
+
+    function DataForCategories() {
+        value = $("#CopiersAccesories").val();
+
+        var data = {
+            id: value
+        };
+        addAntiForgeryToken(data);
+        return data;
+    }
+    </script>
+ 

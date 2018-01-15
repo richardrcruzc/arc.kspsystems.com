@@ -133,7 +133,18 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         }
         #endregion
 
-        public IActionResult Configure( )
+        #region Tri Search
+        public IActionResult TriSearch()
+        {
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+                return AccessDeniedView();
+
+           // return View("~/Plugins/Misc.ProductWizard/Views/Configure.cshtml");
+            return View("~/Plugins/Misc.ProductWizard/Views/TriSearch.cshtml");
+        }
+        #endregion
+
+        public IActionResult Configure()
         {
             if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
                 return AccessDeniedView();
@@ -280,8 +291,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         }
         #endregion
 
-            #region Create / Edit / Delete
-            #region group
+        #region Create / Edit / Delete
+        #region group
         [HttpPost]
         public virtual IActionResult Create(GroupsModel model)
         {

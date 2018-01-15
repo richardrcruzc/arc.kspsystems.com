@@ -45,6 +45,16 @@ namespace Nop.Plugin.Misc.ProductWizard
                 RouteValues = new RouteValueDictionary() { { "area", "admin" } },
                  IconClass = "fa fa-dot-circle-o"
             };
+            var menuItem1 = new SiteMapNode()
+            {
+                Title = "Tri Search",
+                SystemName = "Tri Search",
+                ControllerName = "Groups",
+                ActionName = "TriSearch",
+                Visible = true,
+                RouteValues = new RouteValueDictionary() { { "area", "admin" } },
+                IconClass = "fa fa-dot-circle-o"
+            };
 
             //var  SubMenuItem = new SiteMapNode()   // add child Custom menu
             //{
@@ -73,9 +83,15 @@ namespace Nop.Plugin.Misc.ProductWizard
 
             var pluginNode = rootNode.ChildNodes.FirstOrDefault(x => x.SystemName == "Catalog");
             if (pluginNode != null)
+            {
                 pluginNode.ChildNodes.Add(menuItem);
+                pluginNode.ChildNodes.Add(menuItem1);
+            }
             else
+            {
                 rootNode.ChildNodes.Add(menuItem);
+                rootNode.ChildNodes.Add(menuItem1);
+            }
         }
         //public SiteMapNode BuildMenuItem() // SiteMapNode is Class in Nop.Web.Framework.Menu
         //{

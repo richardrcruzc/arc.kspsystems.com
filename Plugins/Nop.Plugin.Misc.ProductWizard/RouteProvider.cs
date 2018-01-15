@@ -1,29 +1,29 @@
-﻿//using Microsoft.AspNetCore.Routing;
-//using Nop.Web.Framework.Mvc.Routing;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Nop.Web.Framework.Mvc.Routing;
 
-//namespace Nop.Plugin.Misc.ProductWizard
-//{
-//    public partial class RouteProvider : IRouteProvider
-//    {
-//        public void RegisterRoutes(RouteCollection routes)
-//        {
-//            routes.MapRoute("Plugin.Misc.ProductWizard.Configure",
-//                 "Plugins/GroupsWizard/Configure",
-//                 new { controller = "Groups", action = "Configure" },
-//                 new[] { "Nop.Plugin.Misc.ProductWizard.Controllers" }
-//            );
-//           // routes.MapRoute("Plugin.Misc.ProductWizard.List",
-//           //     "PluginsGroupsWizard/List",
-//           //     new { controller = "Groups", action = "List" },
-//           //     new[] { "Nop.Plugin.Misc.ProductWizard.Controllers" }
-//           //);
-//        }
-//        public int Priority
-//        {
-//            get
-//            {
-//                return 0;
-//            }
-//        }
-//    }
-//}
+
+namespace Nop.Plugin.Misc.ProductWizard
+{
+    public partial class RouteProvider : IRouteProvider
+{
+    /// <summary>
+    /// Register routes
+    /// </summary>
+    /// <param name="routeBuilder">Route builder</param>
+    public void RegisterRoutes(IRouteBuilder routeBuilder)
+    {
+        routeBuilder.MapRoute("Nop.Plugin.Misc.ProductWizard.WebhookEventsHandler", "anon/BrowserInventory",
+            new { controller = "PartsForItem", action = "BrowserInventory" });
+
+    }
+
+    /// <summary>
+    /// Gets a priority of route provider
+    /// </summary>
+    public int Priority
+    {
+        get { return -1; }
+    }
+}
+}

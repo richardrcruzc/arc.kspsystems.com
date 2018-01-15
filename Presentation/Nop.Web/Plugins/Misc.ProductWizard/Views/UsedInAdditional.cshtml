@@ -1,75 +1,78 @@
 ﻿@model Nop.Plugin.Misc.ProductWizard.Models.ProductExtModel
+    <link href="~/lib/kendo/2014.1.318/kendo.common.min.css" rel="stylesheet" />
+    <link href="~/lib/kendo/2014.1.318/kendo.default.min.css" rel="stylesheet" />
+    <link href="~/lib/kendo/2014.1.318/kendo.default.mobile.min.css" rel="stylesheet" />
 
-@*<link href="~/lib/kendo/2014.1.318/kendo.common.min.css" rel="stylesheet" />
-<link href="~/lib/kendo/2014.1.318/kendo.default.min.css" rel="stylesheet" />
-<link href="~/lib/kendo/2014.1.318/kendo.rtl.min.css" rel = "stylesheet" />
-<script src="~/lib/kendo/2014.1.318/kendo.web.min.js"></script>*@
+    @*<link href="~/lib/kendo/2014.1.318/kendo.common.min.css" rel="stylesheet" />
+        <link href="~/lib/kendo/2014.1.318/kendo.default.min.css" rel="stylesheet" />
+        <link href="~/lib/kendo/2014.1.318/kendo.rtl.min.css" rel = "stylesheet" />
+        <script src="~/lib/kendo/2014.1.318/kendo.web.min.js"></script>*@
     @{
-        
+
         //    Layout = "~/admin/Views/Shared/_AdminLayout.cshtml";
         var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
         var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
     }
 
-<div>
-    <div class="title"><strong>Parts for this Item </strong><br /></div>
+    <div>
+        <div class="title"><strong>Parts for this Item </strong><br /></div>
 
-    @if (Model.IsCopier != true)
-    {
-        <div class="details">
-            <h4 class="product-title">
-                @foreach (var item in Model.PartForItem)
-                {
-
-
-                    if (item != Model.PartForItem[Model.PartForItem.Count - 1])
-                    {
-                        <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName, </a>
-                    }
-                    else
+        @if (Model.IsCopier != true)
+        {
+            <div class="details">
+                <h4 class="product-title">
+                    @foreach (var item in Model.PartForItem)
                     {
 
-                        <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName</a>
+
+                        if (item != Model.PartForItem[Model.PartForItem.Count - 1])
+                        {
+                            <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName, </a>
+                        }
+                        else
+                        {
+
+                            <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName</a>
+                        }
+
                     }
+                </h4>
+            </div>
+        }
+        else
+        {
+            <div class="order-summary-content">
+                <div class="table-wrapper">
+                    <div class="mobile-only">
+                        @if (Model.CategoryModel.Count > 0)
+                        {
 
-                }
-            </h4>
-        </div>
-    }
-    else
-    {
-        <div class="order-summary-content">
-            <div class="table-wrapper">
-                <div class="mobile-only">
-                    @if (Model.CategoryModel.Count > 0)
-    {
+                            <div id="listView">
+                                <div class="details">
+                                    <h4 class="product-title">
+                                        @foreach (var item in Model.CategoryModel)
+                                        {
 
-                <div id="listView">
-                    <div class="details">
-                        <h4 class="product-title">
-                            @foreach (var item in Model.CategoryModel)
-            {
+                                            if (item != Model.CategoryModel[Model.CategoryModel.Count - 1])
+                                            {
+                                                <a href="@item.CatergorySeo">@item.CatergoryName, </a>
+                                            }
+                                            else
+                                            {
 
-                if (item != Model.CategoryModel[Model.CategoryModel.Count - 1])
-                {
-                    <a href="@item.CatergorySeo">@item.CatergoryName, </a>
-}
-else
-{
+                                                <a href="@item.CatergorySeo">@item.CatergoryName </a>
+                                            }
 
-                <a href="@item.CatergorySeo">@item.CatergoryName </a>
-}
-
-}
-                        </h4>
+                                        }
+                                    </h4>
+                                </div>
+                            </div>
+                        }
                     </div>
-                </div>
-}
-                </div>
-                <div class="screen-only">
-                    <div id="categories-grid"></div>
+                    <div class="screen-only">
+                        <div id="categories-grid"></div>
 
-                    <script>
+                      <script>
                         $(document).ready(function () {
 
                             @*$("#listView").kendoListView({
@@ -138,9 +141,7 @@ else
                                     refresh: true,
                                     pageSizes: [@(gridPageSizes)],
                                     @Html.Partial("_GridPagerMessages")
-                            },
-                          //   rowTemplate: kendo.template($("#rowTemplate").html()),
-                            //altRowTemplate: kendo.template($("#altRowTemplate").html()),
+                            },                         
                             scrollable: false,
                             columns: [
                                 {
@@ -243,7 +244,7 @@ else
                         var shoppingCartTypeId = 1;
                         var quantity = data.Qty;
                         var forceredirection = false
-                        alert(data.Qty);
+                        //alert(data.Qty);
                         var url = '/ShoppingCart/AddProductToCart_Catalog?productId='+data.Id+'&shoppingCartTypeId=1&quantity=' + data.Qty+'&forceredirection=false';
                       //  alert(url);
                         $.ajax({
@@ -272,10 +273,10 @@ else
             addAntiForgeryToken(data);
             return data;
                             }
-                    </script>
+                        </script>
+                    </div>
                 </div>
             </div>
-            </div>
-    }
-    <br />
-</div>
+        }
+        <br />
+    </div>

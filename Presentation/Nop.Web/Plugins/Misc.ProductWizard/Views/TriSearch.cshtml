@@ -1,0 +1,383 @@
+﻿
+@inject AdminAreaSettings adminAreaSettings     
+
+@{
+
+    Layout = "_AdminLayout";
+    var defaultGridPageSize = adminAreaSettings.DefaultGridPageSize;
+    var gridPageSizes = adminAreaSettings.GridPageSizes;
+
+    //page title
+    ViewBag.Title = T("Admin.Catalog.Products").Text;
+    //active menu item (system name)
+    Html.SetActiveMenuItemSystemName("Tri Search");
+}
+
+ 
+    <div class="content-header clearfix">
+       
+      
+
+        <div class="content">
+          
+            <div class="form-horizontal">
+                <h1 class="pull-left">
+                    @T("Admin.Catalog.Products")
+                </h1>
+                <div class="panel-group">
+                    <div class="panel panel-default panel-search">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-12">
+
+
+
+                                    <div class="form-group">
+                                        <div class="col-md-2">
+                                            <div class="label-wrapper">
+                                                <label class="control-label">Brands</label>
+                                                <div title="Select Brands" class="ico-help"><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-10">
+                                            <div class="input-group input-group-short">
+
+                                                <input id="Brands" />
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-2">
+                                            <div class="label-wrapper">
+                                                <label class="control-label">CopiersAccesories</label>
+                                                <div title="Select Copiers/Accesories" class="ico-help"><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-10">
+                                            <div class="input-group input-group-short">
+
+                                                <input id="CopiersAccesories" />
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-2">
+                                            <div class="label-wrapper">
+                                                <label class="control-label">Categories</label>
+                                                <div title="Select Categories" class="ico-help"><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-10">
+                                            <div class="input-group input-group-short">
+
+                                                <input id="Categories" />
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                           
+                        </div>
+                    </div>
+
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div id="products-grid"> </div>
+
+                     <script type="text/javascript">
+                       $(document).ready(function() {
+                           $("#products-grid").kendoGrid({ 
+                            dataSource: {
+                                type: "json",
+                                transport: {
+                                    read: {
+                                        url: '/PartsForItem/FrontSearch', @*"@Html.Raw(Url.Action("FrontSearch", "/PartsForItem"))",*@
+                                            type: "POST",
+                                            dataType: "json",
+                                             data: additionalData
+                                    }
+                                },
+                                schema: {
+                                    data: "Data",
+                                    total: "Total",
+                                    errors: "Errors",
+                                    model: {
+                                        id: "Id",
+                                        fields: {
+                                            ThumbImageUrl: { editable: false },
+                                            Category: { editable: false },
+                                            ProductName: { editable: false },
+                                            PartNumber: { editable: false },
+                                            Manufacturer: { editable: false },
+                                            Price: { editable: false },
+                                            Qty: { editable: true, type: "number", validation: { required: true, min: 1 } },
+                                            Id: { editable: false, type: "number" },
+                                            SeName: { editable: false },
+                                            CategorySeo: { editable: false },
+                                            OutOfStock: { editable: false, type:"bool" },
+                                        }
+                                     }
+                                },
+                                 error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(defaultGridPageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true,
+                                    group: { field: "Category", template: '<a href="#:CategorySeo#">#=Category#</a>' },
+                            },
+                            scrollable: false,
+                            editable: "inline",
+                            pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(gridPageSizes)],
+                                    @Html.Partial("_GridPagerMessages")
+                            },
+                          //   rowTemplate: kendo.template($("#rowTemplate").html()),
+                            //altRowTemplate: kendo.template($("#altRowTemplate").html()),
+                            scrollable: false,
+                            columns: [
+                                {
+                                    field: "ThumbImageUrl",
+                                            title: "@T("Admin.Catalog.Products.Fields.PictureThumbnailUrl")",
+                                            template: '<a href="#:SeName#"><img src="#=ThumbImageUrl#" /></a>',
+
+                                },
+                                {
+                                    field: "ProductName",
+                                    title: "Name",
+                                    template: '<a href="#:SeName#">#:ProductName#<br><span class="item_details_link_info"><img src="/images/magnify_plus.gif" alt="view details"> view details...</span> </a> '
+                                },
+                                {
+                                    field: "PartNumber",
+                                    title: "Part #",
+                                },
+                                {
+                                    field: "Manufacturer",
+                                    title: "Manufacturer",
+                                },
+                                {
+                                    field: "Category",
+                                    title: "Category",
+                                    template: '<a href="#:CategorySeo#">#=Category#</a>',
+                                },
+                                {
+                                    field: "Price",
+                                    title: "Price",
+                                    format: "{0:c}",
+                                    attributes: { style: "text-align:right" },
+                                }, {
+                                    field: "Qty",
+                                    title: "Qty",
+                                    attributes: { style: "text-align:right" },
+                                    width: 75,
+                                    template:'<table  border="1"><tr><td style="border-collapse: collapse;border: 1px solid black;">#:Qty#</td></tr></table>'
+
+                                },  {
+                                    field: "Id",
+                                    title: "Buy Now",
+                                    headerAttributes: { style: "text-align:center" },
+                                    attributes: { style: "text-align:center" },
+                                    template: '# if (OutOfStock) { #<input class="btn btn-xs btn-default" type="image" src="/images/call_button.gif"># } else { # <a class="btn btn-xs btn-default" href="\\#" onclick="rowclick(this);"  title="Edit">&nbsp;<input type="image" class="addToCartbutton" id="addToCartbutton" src="/images/add-btn-small.png"></a># } #',
+                                    attributes: { style: "text-align:center" },
+                                   // template: '<table width="20%" style="border: none 0px;"><tbody><tr><td style="border: none 0px;">Qty.<br /><input id="cartQty" name="cartQty" class="cartQty" value="1" type="number"  style="width:30px"> </td><td style="border: none 0px;"><br /><input type="image" class="addToCartbutton" id="addToCartbutton" src="/images/add-btn-small.png" onclick="rowclick(this);" ></td></tr></tbody></table>'
+                                },
+                                //{
+                                //        field: "Id",
+                                //        title: "",
+                                //        width: 100,
+                                //        headerAttributes: { style: "text-align:center" },
+                                //        attributes: { style: "text-align:center" },
+                                //        template: '<a class="btn btn-default" href="Edit/#=Id#"><img src= "/images/add-btn-small.png" /></a>'
+                                //    }
+                            ],
+                            editable: true
+            });
+                            });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("#Brands").kendoDropDownList({
+            optionLabel: "1. Select brand...",
+            dataTextField: "Name",
+            dataValueField: "Id",
+            dataSource: {
+                type: "json",
+                transport: {
+                    read: {
+                        url: '/FrontSearch/GetBrands',      @*"@Html.Raw(Url.Action("GetBrands", "/FrontSearch"))",*@
+                        type: "POST",
+                        dataType: "json"
+                    }
+                }
+            },
+            change: onChangeBrand
+        }).data("kendoDropDownList");
+
+
+        $("#CopiersAccesories").kendoDropDownList({
+            autoBind: false,
+            cascadeFrom: "Brands",
+            optionLabel: "2. Select copier/accesories...",
+            dataTextField: "Description",
+            dataValueField: "Id",
+            dataSource: {
+            serverFiltering: true,
+                type: "json",
+                transport: {
+                    read: {
+                        url: '/FrontSearch/GetCopiers',  @*"@Html.Raw(Url.Action("GetCopiers", "/FrontSearch"))",*@
+                        type: "POST",
+                        dataType: "json",
+                        data: CopiersAccesories
+                    }
+                }
+            },
+            change: onChangeCopier
+        }).data("kendoDropDownList");
+
+        $("#Categories").kendoDropDownList({
+            autoBind: false,
+            cascadeFrom: "CopiersAccesories",
+            optionLabel: "3. Select category...",
+            dataTextField: "Name",
+            dataValueField: "Id",
+            dataSource: {
+            serverFiltering: true,
+                type: "json",
+                transport: {
+                    read: {
+                        url: '/FrontSearch/GetCategories', @*"@Html.Raw(Url.Action("GetCategories", "/FrontSearch"))",*@
+                        type: "POST",
+                        dataType: "json",
+                        data: DataForCategories
+                    }
+                }
+            },
+            change: onChangeCategory
+        }).data("kendoDropDownList");
+    });
+
+    var value = 0;
+    function onChangeBrand() {
+        value = $("#Brands").val();
+        var copier = $("#CopiersAccesories").data("kendoDropDownList");
+        copier.select(0);
+        copier.enable(true);
+        $("#ItemsListResults").hide();
+    }
+    function onChangeCopier() {
+        value = $("#CopiersAccesories").val();
+        var copier = $("#Categories").data("kendoDropDownList");
+        copier.select(0);
+        copier.enable(true);
+        $("#ItemsListResults").hide();
+    }
+        function onChangeCategory() {
+            //var rid = $("#CopiersAccesories").val();
+            //var cid = $("#Categories").val();
+            //window.location.href = '/anon/BrowserInventory?rid=' + 2 + "?cid=" + 3;
+            //window.location.href = '/anon/BrowserInventory?rid=' + rid + "&cid=" + cid;
+
+            var brand = $("#Brands").val();
+            var copier = $("#CopiersAccesories").val();
+            var category = $("#Categories").val();
+
+            //alert("brand " + brand + " copier " + copier + "category " + category);
+            $("#ItemsListResults").show();
+            var grid = $("#products-grid").data("kendoGrid");
+            grid.dataSource.read();
+    }
+    function CopiersAccesories()
+    {
+        value = $("#Brands").val();
+                    var data  = {
+                                id: value
+                            };
+            addAntiForgeryToken(data);
+            return data;
+    }
+
+    function DataForCategories() {
+        value = $("#CopiersAccesories").val();
+
+        var data = {
+            id: value
+        };
+        addAntiForgeryToken(data);
+        return data;
+        }
+
+        function additionalData() {
+            var brand = $("#Brands").val();
+            var copier = $("#CopiersAccesories").val();
+            var category = $("#Categories").val();
+
+           
+            var data = {
+                rid: copier,
+                cid: category
+            };
+           // addAntiForgeryToken(data);
+            return data;
+            }
+
+
+
+
+            function rowclick(sender) {
+                var grid = $('#products-grid').data('kendoGrid');
+
+                if (grid) {
+                    var data = grid.dataItem($(sender).closest("tr"));
+                    if (data) {
+                        //  alert("You clicked " + data.Qty + " for Id : " + data.Id);
+                        //AjaxCart.addproducttocart_catalog(productId);
+                        //AjaxCart.addproducttocart_details('/addproducttocart/details/'++'/1', '#product-details-form')
+                        // addtocartlink = 'Url.RouteUrl("AddProductToCart-Catalog", new { productId = data.Id, shoppingCartTypeId = 1, quantity = data.Qty, forceredirection = false})';
+
+                        // alert(addtocartlink);
+
+                        var productId = data.Id;
+                        var shoppingCartTypeId = 1;
+                        var quantity = data.Qty;
+                        var forceredirection = false
+                        // alert(data.Qty);
+                        var url = '/ShoppingCart/AddProductToCart_Catalog?productId=' + data.Id + '&shoppingCartTypeId=1&quantity=' + data.Qty + '&forceredirection=false';
+                        alert(url);
+                        $.ajax({
+                            cache: false,
+                            url: url,
+                            type: 'post',
+                            success: function (result) {
+                                //alert('product added');
+                            },
+                            complete: function (result) {/* alert('results')*/ },
+                            error: function (result) { alert('error adding product to shopping cart'); }
+                        });
+
+                    }
+                    else
+                        alert("Why isn't my row selected!");
+                }
+
+
+            };
+        </script>
+         
+    </div>
+ 
