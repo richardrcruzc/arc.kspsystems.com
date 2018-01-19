@@ -131,19 +131,24 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         }
         #endregion
 
-        
+
 
 
         #region frontsearch
+        //public virtual IActionResult UrlRecordSlug(int productId, string productName, string partNumber)
+        //{
+        //    //return $"productId:{productId} productName:{productName} partNumber:{partNumber} Ok.";
+
+        //    return RedirectToAction("ProductDetails","Product",new { productId = 45 });
+        //}
 
 
-
-        public virtual IActionResult BrowserInventory(int rid, int cid)
+        public virtual IActionResult BrowseInventory(int rid, int cid)
         {
             ViewBag.Rid = rid;
             ViewBag.Cid = cid;
 
-            return View("~/Plugins/Misc.ProductWizard/Views/BrowserInventory.cshtml" , rid);
+            return View("~/Plugins/Misc.ProductWizard/Views/BrowseInventory.cshtml" , rid);
         }
 
 
@@ -169,8 +174,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                 rgp.AddRange(ic);
                 //var catergories
                 //query = products.Where(x => ic.Contains(x.Id) || rgp.Contains(x.Id)) ;
-
-                query = _productService.GetProductsByIds(rgp.ToArray());
+                var distinct = rgp.Distinct();
+                query = _productService.GetProductsByIds(distinct.ToArray());
 
 
             }
@@ -178,7 +183,9 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             {
 
                var  tmp = _categoryService.GetProductCategoriesByCategoryId(cid).Select(x=>x.Product.Id);
-                query = _productService.GetProductsByIds(tmp.ToArray());
+                var distinct = tmp.Distinct();
+
+                query = _productService.GetProductsByIds(distinct.ToArray());
 
             }
 
@@ -209,6 +216,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         ThumbImageUrl = thumb,
                         SeName = x.GetSeName(),
                         OutOfStock = x.GetTotalStockQuantity() <= 0,
+                        NewSeName = $"{x.Id}/{x.GetSeName()}-{x.Sku}" 
+
 
                     };
                     //categoryModel.Breadcrumb = x.GetFormattedBreadCrumb(_categoryService);

@@ -8,25 +8,37 @@
     var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
     var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
 }
-  
-    <table class="table table-responsive">
+ 
+        
+                <img src="~/images/search-img.png"  class="search-box-text"/>
+          
+                <input id="Brands"  class="search-box-text" />
+          
+          
+                <input id="CopiersAccesories"  class="search-box-text"/>
+         
+     
+                <input id="Categories"  class="search-box-text"/>
+         
+ 
+@*<table class="table table-responsive">
         <tr>
             <td>
 
                 <img src="~/images/search-img.png" />
-               
+
             </td>
             <td>  <input id="Brands" /></td>
             <td> <input id="CopiersAccesories" /></td>
             <td> <input id="Categories" /></td>
         </tr>
-    </table>
+    </table>*@
 
 
 
 
 
-    <script>
+<script>
     $(document).ready(function () {
         $("#Brands").kendoDropDownList({
             optionLabel: "1. Select brand...",
@@ -107,9 +119,13 @@
             var rid = $("#CopiersAccesories").val();
             var cid = $("#Categories").val();
             //window.location.href = '/anon/BrowserInventory?rid=' + 2 + "?cid=" + 3;
-            window.location.href = '/anon/BrowserInventory?rid=' + rid + "&cid=" + cid;
-
-        //$("#ItemsListResults").show(); 
+            if (cid == 0) {
+                window.location.href = '/anon/BrowseInventory.aspx?rid=' + rid ;
+            }
+            else {
+                window.location.href = '/anon/BrowseInventory.aspx?rid=' + rid + "&cid=" + cid;
+            }
+        //$("#ItemsListResults").show();
         //var grid = $("#categories").data("kendoGrid");
         //grid.dataSource.read();
     }
@@ -132,5 +148,4 @@
         addAntiForgeryToken(data);
         return data;
     }
-    </script>
- 
+</script>

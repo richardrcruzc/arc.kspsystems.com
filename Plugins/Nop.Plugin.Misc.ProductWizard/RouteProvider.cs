@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Routing.Constraints;
+using Nop.Web.Framework.Localization;
 using Nop.Web.Framework.Mvc.Routing;
 
 
@@ -13,10 +15,17 @@ namespace Nop.Plugin.Misc.ProductWizard
     /// <param name="routeBuilder">Route builder</param>
     public void RegisterRoutes(IRouteBuilder routeBuilder)
     {
-        routeBuilder.MapRoute("Nop.Plugin.Misc.ProductWizard.WebhookEventsHandler", "anon/BrowserInventory",
-            new { controller = "PartsForItem", action = "BrowserInventory" });
+        routeBuilder.MapRoute("Nop.Plugin.Misc.ProductWizard.WebhookEventsHandler", "anon/BrowseInventory.aspx",
+            new { controller = "PartsForItem", action = "BrowseInventory"  });
 
-    }
+            routeBuilder.MapLocalizedRoute(
+                "Nop.Plugin.Misc.ProductWizard.Slug",
+                "{productId:min(1)}/{productName:required}-{PartNumber}",
+         new { controller = "Product", action = "UrlRecordSlug" });
+
+          
+
+        }
 
     /// <summary>
     /// Gets a priority of route provider

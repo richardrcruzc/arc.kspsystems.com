@@ -20,7 +20,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Models
         public int Qty { get; set; }
         public string SeName { get; set; }
         public bool OutOfStock { get; set; }
-
+        public string NewSeName { get; set; }
 
     }
 }

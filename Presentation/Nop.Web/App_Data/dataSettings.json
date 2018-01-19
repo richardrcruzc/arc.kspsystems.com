@@ -1,5 +1,5 @@
 {
   "DataProvider": "sqlserver",
-  "DataConnectionString": "Data Source=(localdb)\\ProjectsV13;Initial Catalog=nop40;Integrated Security=True;Persist Security Info=False",
+  "DataConnectionString": "Data Source=localhost\\SQLEXPRESS;Initial Catalog=nop40Arc;Integrated Security=True;Persist Security Info=False",
   "RawDataSettings": {}
 }

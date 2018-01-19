@@ -29,7 +29,7 @@
   <ItemGroup>
     <None Remove="logo.jpg" />
     <None Remove="plugin.json" />
-    <None Remove="Views\BrowserInventory.cshtml" />
+    <None Remove="Views\BrowseInventory.cshtml" />
     <None Remove="Views\Groups\Create.cshtml" />
     <None Remove="Views\Groups\Edit.cshtml" />
     <None Remove="Views\Groups\List.cshtml" />
@@ -61,7 +61,7 @@
     <Content Include="plugin.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Views\BrowserInventory.cshtml">
+    <Content Include="Views\BrowseInventory.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Views\MainSearch.cshtml">
