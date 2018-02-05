@@ -13,6 +13,9 @@
             {
                 var controlId = $"checkout_attribute_{attribute.Id}";
                 var textPrompt = !string.IsNullOrEmpty(attribute.TextPrompt) ? attribute.TextPrompt : attribute.Name;
+                if (textPrompt == "Gift wrapping") {
+                    continue;
+                        }
                 <dt id="@($"checkout_attribute_label_{attribute.Id}")">
                     <label class="text-prompt">
                         @textPrompt

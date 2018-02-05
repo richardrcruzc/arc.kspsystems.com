@@ -32,9 +32,9 @@
             }
 
             @if (!String.IsNullOrEmpty(taxTypeSelectorHtml.ToHtmlString()) ||
-                !String.IsNullOrEmpty(currencySelectorHtml.ToHtmlString()) ||
-                !String.IsNullOrEmpty(languageSelectorHtml.ToHtmlString()) ||
-                !String.IsNullOrEmpty(headerSelectorWidgetHtml.ToHtmlString()))
+            !String.IsNullOrEmpty(currencySelectorHtml.ToHtmlString()) ||
+            !String.IsNullOrEmpty(languageSelectorHtml.ToHtmlString()) ||
+            !String.IsNullOrEmpty(headerSelectorWidgetHtml.ToHtmlString()))
             {
                 <div class="header-selectors-wrapper">
                     <label>@T("SevenSpikes.Themes.Pavilion.Header.Preferences")</label>
@@ -94,13 +94,21 @@
                     </div>
                 }
             }
-            <div class="search-box store-search-box @if (!showCategoriesInSideMenu){<text>full-width</text>}">
-                @await Component.InvokeAsync("SearchBox")
-            </div>
+                    <div class="search-box store-search-box @if (!showCategoriesInSideMenu){<text>full-width</text>}">
+                        @await Component.InvokeAsync("SearchBox")
+                        <div><br />
+                            
+                            @await Component.InvokeAsync("MainSearch")
+                        </div> 
+                    </div>
+
 
         </div>
+
     </div>
+
 </div>
+ 
 
 @if (isHomePage)
 {

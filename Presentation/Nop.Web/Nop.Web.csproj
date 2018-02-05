@@ -91,6 +91,7 @@
     <None Include="Themes\Pavilion\Views\Product\ProductTemplate.Simple.cshtml" />
     <None Include="Themes\Pavilion\Views\Product\RecentlyViewedProducts.cshtml" />
     <None Include="Themes\Pavilion\Views\Product\_AddToCart.cshtml" />
+    <None Include="Themes\Pavilion\Views\Product\_ProductDetailsPictures.cshtml" />
     <None Include="Themes\Pavilion\Views\Product\_ProductPrice.cshtml" />
     <None Include="Themes\Pavilion\Views\Product\_ProductTierPrices.cshtml" />
     <None Include="Themes\Pavilion\Views\Product\_ShareButton.cshtml" />
@@ -110,6 +111,7 @@
     <None Include="Themes\Pavilion\Views\Shared\_CategoryLine.TopMenu.cshtml" />
     <None Include="Themes\Pavilion\Views\Shared\_ColumnsTwo.cshtml" />
     <None Include="Themes\Pavilion\Views\Shared\_CurrentPageClass.cshtml" />
+    <None Include="Themes\Pavilion\Views\Shared\_GridPagerMessages.cshtml" />
     <None Include="Themes\Pavilion\Views\Shared\_Header.cshtml" />
     <None Include="Themes\Pavilion\Views\Shared\_OrderReviewData.cshtml" />
     <None Include="Themes\Pavilion\Views\Shared\_ProductBox.cshtml" />

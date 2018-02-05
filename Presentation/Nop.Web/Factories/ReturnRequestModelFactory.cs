@@ -189,7 +189,7 @@ namespace Nop.Web.Factories
                         ReturnRequestStatus = returnRequest.ReturnRequestStatus.GetLocalizedEnum(_localizationService, _workContext),
                         ProductId = product.Id,
                         ProductName = product.GetLocalized(x => x.Name),
-                        ProductSeName = product.GetSeName(),
+                        ProductSeName = System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}"), // product.GetSeName(),
                         Quantity = returnRequest.Quantity,
                         ReturnAction = returnRequest.RequestedAction,
                         ReturnReason = returnRequest.ReasonForReturn,

@@ -5,16 +5,7 @@
 =====================================================*/
 
 @media all and (min-width: 481px) {
-
-
-    .screen-only {
-        display: none;
-    }
-
-    .mobile-only {
-        display: block;
-    }
-
+	
 /* GLOBAL STYLES */
 /* GLOBAL FORMS */
 

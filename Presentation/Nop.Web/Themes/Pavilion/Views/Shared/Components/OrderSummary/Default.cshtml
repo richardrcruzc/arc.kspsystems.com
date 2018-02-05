@@ -257,7 +257,7 @@
                                 </div>
                             </div>
                         }
-                        @if (Model.GiftCardBox.Display)
+                        @*@if (Model.GiftCardBox.Display)
                         {
                             <div class="accordion-tab gift-cards">
                                 <div class="accordion-tab-title">
@@ -267,8 +267,8 @@
                                     @await Html.PartialAsync("_GiftCardBox", Model.GiftCardBox)
                                 </div>
                             </div>
-                        }
-						@await Html.PartialAsync("_CheckoutAttributes", Model)
+                        }*@
+						@*@await Html.PartialAsync("_CheckoutAttributes", Model)*@
                         @await Component.InvokeAsync("Widget", new { widgetZone = "order_summary_content_deals" })
                     </div>
                 } 

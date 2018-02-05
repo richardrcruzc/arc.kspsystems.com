@@ -532,7 +532,7 @@ namespace Nop.Web.Factories
                         Name = product.GetLocalized(x => x.Name),
                         ShortDescription = product.GetLocalized(x => x.ShortDescription),
                         FullDescription = product.GetLocalized(x => x.FullDescription),
-                        SeName = product.GetSeName(),
+                        SeName = System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}"), // product.GetSeName(),
                     }).ToList();
                 }
                 //product tags

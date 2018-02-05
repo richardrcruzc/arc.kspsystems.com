@@ -504,7 +504,7 @@ namespace Nop.Web.Factories
                     Enabled = _catalogSettings.CategoryBreadcrumbEnabled,
                     ProductId = product.Id,
                     ProductName = product.GetLocalized(x => x.Name),
-                    ProductSeName = product.GetSeName()
+                    ProductSeName = System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}") // product.GetSeName()
                 };
                 var productCategories = _categoryService.GetProductCategoriesByProductId(product.Id);
                 if (!productCategories.Any())
@@ -1117,13 +1117,15 @@ namespace Nop.Web.Factories
             var models = new List<ProductOverviewModel>();
             foreach (var product in products)
             {
+                var tmp = $"{product.Id}/{product.GetSeName()}-{product.Sku}";
+                var newSeName = System.Net.WebUtility.UrlDecode(tmp);
                 var model = new ProductOverviewModel
                 {
                     Id = product.Id,
                     Name = product.GetLocalized(x => x.Name),
                     ShortDescription = product.GetLocalized(x => x.ShortDescription),
                     FullDescription = product.GetLocalized(x => x.FullDescription),
-                    SeName = product.GetSeName(),
+                    SeName = newSeName, //product.GetSeName(),
                     Sku = product.Sku,
                     ProductType = product.ProductType,
                     MarkAsNew = product.MarkAsNew &&
@@ -1380,7 +1382,7 @@ namespace Nop.Web.Factories
 
             model.ProductId = product.Id;
             model.ProductName = product.GetLocalized(x => x.Name);
-            model.ProductSeName = product.GetSeName();
+            model.ProductSeName = System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}");// product.GetSeName();
 
             var productReviews = _catalogSettings.ShowProductReviewsPerStore
                 ? product.ProductReviews.Where(pr => pr.IsApproved && pr.StoreId == _storeContext.CurrentStore.Id).OrderBy(pr => pr.CreatedOnUtc)
@@ -1497,7 +1499,7 @@ namespace Nop.Web.Factories
 
             model.ProductId = product.Id;
             model.ProductName = product.GetLocalized(x => x.Name);
-            model.ProductSeName = product.GetSeName();
+            model.ProductSeName = System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}");// product.GetSeName();
             model.DisplayCaptcha = _captchaSettings.Enabled && _captchaSettings.ShowOnEmailProductToFriendPage;
             if (!excludeProperties)
             {

@@ -42,6 +42,7 @@
     <None Remove="Views\UsedIn.cshtml" />
     <None Remove="Views\UsedInAdditional.cshtml" />
     <None Remove="Views\WaterMarkedPicture.cshtml" />
+    <None Remove="Views\_CatalogSelectors.cshtml" />
   </ItemGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -110,6 +111,9 @@
     <Content Include="Views\Relations\List.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Views\_CatalogSelectors.cshtml">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
     <Content Include="Views\_ViewImports.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -120,6 +124,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Presentation\Nop.Web.Framework\Nop.Web.Framework.csproj" />
+    <ProjectReference Include="..\..\Presentation\Nop.Web\Nop.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>

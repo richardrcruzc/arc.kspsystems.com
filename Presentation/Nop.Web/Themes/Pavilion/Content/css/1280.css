@@ -6,15 +6,6 @@
 
 @media all and (min-width: 1281px) {
 
-
-    .screen-only {
-        display: block;
-    }
-
-    .mobile-only {
-        display: none;
-    }
-
 /* GLOBAL STYLES */
 
 .master-wrapper-content {

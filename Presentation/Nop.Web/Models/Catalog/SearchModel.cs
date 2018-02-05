@@ -16,7 +16,8 @@ namespace Nop.Web.Models.Catalog
             this.AvailableManufacturers = new List<SelectListItem>();
             this.AvailableVendors = new List<SelectListItem>();
         }
-
+        
+               public string ProductOrPart { get; set; }
         public string Warning { get; set; }
 
         public bool NoResults { get; set; }

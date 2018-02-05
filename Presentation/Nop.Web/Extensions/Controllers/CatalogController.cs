@@ -248,8 +248,10 @@ namespace Nop.Web.Controllers
 
         #region Searching
 
+        
+
         [HttpsRequirement(SslRequirement.No)]
-        public virtual IActionResult Search(SearchModel model, CatalogPagingFilteringModel command)
+        public virtual IActionResult Search(SearchModel model, CatalogPagingFilteringModel command )
         {
             //'Continue shopping' URL
             _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer,

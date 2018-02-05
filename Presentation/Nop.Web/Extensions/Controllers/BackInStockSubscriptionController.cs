@@ -172,7 +172,7 @@ namespace Nop.Web.Controllers
                         Id = subscription.Id,
                         ProductId = product.Id,
                         ProductName = product.GetLocalized(x => x.Name),
-                        SeName = product.GetSeName(),
+                        SeName = System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}") //product.GetSeName(),
                     };
                     model.Subscriptions.Add(subscriptionModel);
                 }

@@ -338,7 +338,7 @@ namespace Nop.Web.Factories
                 Sku = sci.Product.FormatSku(sci.AttributesXml, _productAttributeParser),
                 ProductId = sci.Product.Id,
                 ProductName = sci.Product.GetLocalized(x => x.Name),
-                ProductSeName = sci.Product.GetSeName(),
+                ProductSeName = System.Net.WebUtility.UrlDecode($"{sci.Id}/{sci.Product.GetSeName()}-{sci.Product.Sku}"), // sci.Product.GetSeName(),
                 Quantity = sci.Quantity,
                 AttributeInfo = _productAttributeFormatter.FormatAttributes(sci.Product, sci.AttributesXml),
             };
