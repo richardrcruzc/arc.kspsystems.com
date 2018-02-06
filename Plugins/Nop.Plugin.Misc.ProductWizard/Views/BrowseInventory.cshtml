@@ -5,7 +5,7 @@
 @inject SeoSettings seoSettings
 @inject CommonSettings commonSettings
 @{
-    Layout = "_ColumnsTwo";
+    Layout = "_ColumnsOne";
 
     //title
     Html.AddTitleParts(!String.IsNullOrEmpty(Model.MetaTitle) ? Model.MetaTitle : Model.Name);
@@ -24,7 +24,7 @@
     var breadcrumbDelimiter = commonSettings.BreadcrumbDelimiter;
 }
 @*category breadcrumb*@
-@section Breadcrumb
+@*@section Breadcrumb
     {
     @if (Model.DisplayCategoryBreadcrumb)
     {
@@ -53,23 +53,23 @@
         </div>
         @await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_after_breadcrumb", additionalData = Model.Id })
     }
-}
+}*@
 <div class="page category-page">
-    <div class="page-title">
+    @*<div class="page-title">
         <h1>@Model.Name</h1>
-    </div>
+    </div>*@
     <div class="page-body">
-        @await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_top", additionalData = Model.Id })
+        @*@await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_top", additionalData = Model.Id })*@
         @*description*@
-        @if (!String.IsNullOrWhiteSpace(Model.Description))
+        @*@if (!String.IsNullOrWhiteSpace(Model.Description))
         {
             <div class="category-description">
                 @Html.Raw(Model.Description)
             </div>
-        }
-        @await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_before_subcategories", additionalData = Model.Id })
+        }*@
+        @*@await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_before_subcategories", additionalData = Model.Id })*@
         @*subcategories*@
-        @if (Model.SubCategories.Count > 0)
+        @*@if (Model.SubCategories.Count > 0)
         {
             <div class="category-grid sub-category-grid">
                 <div class="item-grid">
@@ -93,10 +93,10 @@
                     }
                 </div>
             </div>
-        }
-        @await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_before_featured_products", additionalData = Model.Id })
+        }*@
+        @*@await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_before_featured_products", additionalData = Model.Id })*@
         @*featured products*@
-        @if (Model.FeaturedProducts.Count > 0)
+        @*@if (Model.FeaturedProducts.Count > 0)
         {
             <div class="product-grid featured-product-grid">
                 <div class="title">
@@ -111,13 +111,13 @@
                     }
                 </div>
             </div>
-        }
-        @await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_after_featured_products", additionalData = Model.Id })
+        }*@
+        @*@await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_after_featured_products", additionalData = Model.Id })*@
         @if (Model.Products.Count > 0)
         {
             @await Html.PartialAsync("~/Views/catalog/_CatalogSelectors.cshtml", Model.PagingFilteringContext)
         }
-        @await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_before_filters", additionalData = Model.Id })
+        @*@await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_before_filters", additionalData = Model.Id })*@
         @*<div class="product-filters">
                 @if (Model.PagingFilteringContext.PriceRangeFilter.Enabled)
                 {
@@ -128,7 +128,7 @@
                     @await Html.PartialAsync("_FilterSpecsBox", Model.PagingFilteringContext.SpecificationFilter)
                 }
             </div>*@
-        @await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_before_product_list", additionalData = Model.Id })
+        @*@await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_before_product_list", additionalData = Model.Id })*@
 
         @if (Model.Products.Count > 0)
         {
@@ -152,16 +152,16 @@
                 @pager
             </div>
         }
-        @await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_bottom", additionalData = Model.Id })
+        @*@await Component.InvokeAsync("Widget", new { widgetZone = "categorydetails_bottom", additionalData = Model.Id })*@
     </div>
 </div>
 
-@section AsidePageTitle
+@*@section AsidePageTitle
     {
     <div class="page-title">
         <h1>@Model.Name</h1>
     </div>
-}
+}*@
 
 
 @*<link href="~/lib/kendo/2014.1.318/kendo.common.min.css" rel="stylesheet" />
@@ -175,7 +175,7 @@
     var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
     var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
 
-    Layout = "_ColumnsTwo";
+    Layout = "_ColumnsOne";
 
     //title
     Html.AddTitleParts(T("PageTitle.Search").Text);
