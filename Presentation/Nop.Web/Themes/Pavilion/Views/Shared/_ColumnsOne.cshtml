@@ -45,12 +45,12 @@
         (controllerName.Equals("vendor", StringComparison.InvariantCultureIgnoreCase) &&
                         actionName.Equals("info", StringComparison.InvariantCultureIgnoreCase));
 }
-@*@if (IsSectionDefined("Breadcrumb"))
+@if (IsSectionDefined("Breadcrumb"))
 {
     @section Breadcrumb {
         @RenderSection("Breadcrumb")
     }
-}*@
+}
 <div class="center-1">
     @*@await Component.InvokeAsync("Widget", new { widgetZone = "main_column_before" })*@
     @RenderBody()

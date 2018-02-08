@@ -31,7 +31,7 @@
         </a>
     </div>
     <div class="details">
-        @if (Model.ReviewOverviewModel.AllowCustomerReviews)
+        @*@if (Model.ReviewOverviewModel.AllowCustomerReviews)
         {
             var ratingPercent = 0;
             if (Model.ReviewOverviewModel.TotalReviews != 0)
@@ -44,7 +44,7 @@
                     </div>
                 </div>
             </div>
-        }
+        }*@
         <div class="attribute-squares-wrapper"></div>
         <h2 class="product-title">
             <a href="@Url.RouteUrl("Product", new { SeName = Model.SeName })">@Model.Name</a>
