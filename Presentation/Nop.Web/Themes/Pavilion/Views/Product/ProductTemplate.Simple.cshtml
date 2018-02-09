@@ -61,7 +61,7 @@
             <div itemscope itemtype="http://schema.org/Product" data-productid="@Model.Id">
                 <div class="product-essential">
                     @await Component.InvokeAsync("Widget", new { widgetZone = "productdetails_before_pictures", additionalData = Model.Id })
-                    @{
+                    @*@{
                         var cloudZoom = await Component.InvokeAsync("Widget", new { widgetZone = "sevenspikes_cloud_zoom" });
                     }
                     @if (!String.IsNullOrEmpty(cloudZoom.ToHtmlString()))
@@ -69,9 +69,9 @@
                         @cloudZoom
                     }
                     else
-                    {
+                    {*@
                     	@await Html.PartialAsync("_ProductDetailsPictures", Model)
-                    }
+                    @*}*@
                     @await Component.InvokeAsync("Widget", new { widgetZone = "productdetails_after_pictures", additionalData = Model.Id })
                     <div class="overview">
                         @await Component.InvokeAsync("Widget", new { widgetZone = "productdetails_overview_top", additionalData = Model.Id })
@@ -127,6 +127,10 @@
                             dataDictAddToCart.TemplateInfo.HtmlFieldPrefix = $"addtocart_{Model.Id}";
                             @await Html.PartialAsync("_AddToCart", Model.AddToCart, dataDictAddToCart)
                         }
+                           <div>
+                            @Model.StockAvailability
+                            @await Component.InvokeAsync("UsedInProduct", new { id = Model.Id, display = 0 })
+                        </div>
                         <!--wishlist, compare, email a friend-->
                         <div class="overview-buttons">
                             @await Component.InvokeAsync("Widget", new { widgetZone = "productdetails_inside_overview_buttons_before", additionalData = Model.Id })

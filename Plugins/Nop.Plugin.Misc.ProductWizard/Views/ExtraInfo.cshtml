@@ -1,0 +1,20 @@
+﻿@model Nop.Plugin.Misc.ProductWizard.Models.LegacyModel
+
+
+<div class="manufacturer">
+    @if (!string.IsNullOrWhiteSpace(Model.ManufacturerName))
+    {
+        <div>
+            Manufacturer: @Model.ManufacturerName
+        </div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.PartNumber))
+    {
+        <div>
+            Part Number:  @Model.PartNumber
+        </div>
+        <div>
+            <br />
+        </div>
+    }
+    </div>

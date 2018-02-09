@@ -8,8 +8,9 @@
     <div class="picture">
         @if (Model.DefaultPictureZoomEnabled)
     {
+
         <a href="@Model.DefaultPictureModel.FullSizeImageUrl" title="@Model.DefaultPictureModel.Title" id="main-product-img-lightbox-anchor-@Model.Id">
-            @*<img alt="@Model.DefaultPictureModel.AlternateText" src="@Model.DefaultPictureModel.ImageUrl" title="@Model.DefaultPictureModel.Title" itemprop="image" id="main-product-img-@Model.Id" />*@
+            <img alt="@Model.DefaultPictureModel.AlternateText" src="@await Component.InvokeAsync("WaterMarkedPicture", new {ImageUrl = @Model.DefaultPictureModel.ImageUrl })" title="@Model.DefaultPictureModel.Title" itemprop="image" id="main-product-img-@Model.Id" />
             <img alt="@Model.DefaultPictureModel.AlternateText" src="@await Component.InvokeAsync("WaterMarkedPicture", new {ImageUrl = @Model.DefaultPictureModel.ImageUrl })" title="@Model.DefaultPictureModel.Title" itemprop="image" id="main-product-img-@Model.Id" />
 
             @*@await Component.InvokeAsync("WaterMarkedPicture", new
@@ -22,7 +23,7 @@
         </a>
         <script type="text/javascript" asp-location="Footer">
                 $(document).ready(function () {
-                    $('#main-product-img-lightbox-anchor-@Model.Id').magnificPopup(
+                    $('#VVXXmain-product-img-lightbox-anchor-@Model.Id').magnificPopup(
                         {
                             type: 'image',
                             removalDelay: 300,
@@ -40,15 +41,9 @@
 }
 else
 {
-    @*<img alt="@Model.DefaultPictureModel.AlternateText" src="@Model.DefaultPictureModel.ImageUrl" title="@Model.DefaultPictureModel.Title" itemprop="image" id="main-product-img-@Model.Id" />*@
+    <img alt="@Model.DefaultPictureModel.AlternateText" src="@await Component.InvokeAsync("WaterMarkedPicture", new { ImageUrl =@Model.DefaultPictureModel.ImageUrl })" title="@Model.DefaultPictureModel.Title" itemprop="image" id="main-product-img-@Model.Id" />
 
-    @await Component.InvokeAsync("WaterMarkedPicture", new
-{
-    AlternateText = @Model.DefaultPictureModel.AlternateText,
-    ImageUrl = @Model.DefaultPictureModel.ImageUrl,
-    Title = @Model.DefaultPictureModel.Title,
-    id = @Model.Id
-})
+ 
 
 }
     </div>
@@ -57,14 +52,17 @@ else
         <div class="picture-thumbs">
             @foreach (var picture in Model.PictureModels)
             {
-                <div class="thumb-item">
-                    <img src="@picture.ThumbImageUrl" alt="@picture.AlternateText" title="@picture.Title" data-defaultsize="@picture.ImageUrl" data-fullsize="@picture.FullSizeImageUrl"/>
-                </div>
+            <div class="thumb-item">
+                
+                <img src="@await Component.InvokeAsync("WaterMarkedPicture", new { ImageUrl = @picture.ThumbImageUrl })" alt="@picture.AlternateText" title="@picture.Title" data-defaultsize="@await Component.InvokeAsync("WaterMarkedPicture", new { ImageUrl = @picture.ImageUrl })" data-fullsize="@await Component.InvokeAsync("WaterMarkedPicture", new { ImageUrl = @picture.FullSizeImageUrl })" />
+                @*<img src="@picture.ThumbImageUrl" alt="@picture.AlternateText" title="@picture.Title" data-defaultsize="@picture.ImageUrl" data-fullsize="@picture.FullSizeImageUrl" />*@
+            </div>
             }
         </div>
         <script type="text/javascript" asp-location="Footer">
             $(document).ready(function () {
                 $('.thumb-item img').on('click', function () {
+                     
                     $('#main-product-img-@Model.Id').attr('src', $(this).attr('data-defaultsize'));
                     $('#main-product-img-@Model.Id').attr('title', $(this).attr('title'));
                     $('#main-product-img-@Model.Id').attr('alt', $(this).attr('alt'));

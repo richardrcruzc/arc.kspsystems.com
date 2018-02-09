@@ -13,5 +13,11 @@ namespace Nop.Plugin.Misc.ProductWizard.Models
         public int ItemId { get; set; }
         public string ProductName { get; set; }
     }
+
+    public class LegacyModel
+    {
+        public string ManufacturerName { get; set; }
+        public string PartNumber { get; set; }
+    }
 }
 

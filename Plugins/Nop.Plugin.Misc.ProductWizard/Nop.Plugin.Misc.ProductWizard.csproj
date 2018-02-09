@@ -30,6 +30,8 @@
     <None Remove="logo.jpg" />
     <None Remove="plugin.json" />
     <None Remove="Views\BrowseInventory.cshtml" />
+    <None Remove="Views\ExtraInfo.cshtml" />
+    <None Remove="Views\ExtraInfo\Default.cshtml" />
     <None Remove="Views\Groups\Create.cshtml" />
     <None Remove="Views\Groups\Edit.cshtml" />
     <None Remove="Views\Groups\List.cshtml" />
@@ -63,6 +65,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Views\BrowseInventory.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\ExtraInfo.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\ExtraInfo\Default.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Views\MainSearch.cshtml">
