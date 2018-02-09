@@ -26,7 +26,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Components
             if (peoduct != null)
             {
                 model.PartNumber = peoduct.Sku;
-                model.ManufacturerName = peoduct.ManufacturerPartNumber;
+                if (peoduct.ProductManufacturers.Count>0)
+                model.ManufacturerName = peoduct.ProductManufacturers.FirstOrDefault().Manufacturer.Name;
 
             }
 
