@@ -177,6 +177,87 @@ namespace Nop.Web.Controllers
 
             return View(productTemplateViewPath, model);
         }
+
+        [HttpsRequirement(SslRequirement.No)]
+        public virtual IActionResult Itendetails(int itemid)
+        {
+            var productId = itemid;
+            int updatecartitemid = 0;
+
+            var product = _productService.GetProductById(productId);
+            if (product == null || product.Deleted)
+                return InvokeHttp404();
+
+            var notAvailable =
+                //published?
+                (!product.Published && !_catalogSettings.AllowViewUnpublishedProductPage) ||
+                //ACL (access control list) 
+                !_aclService.Authorize(product) ||
+                //Store mapping
+                !_storeMappingService.Authorize(product) ||
+                //availability dates
+                !product.IsAvailable();
+            //Check whether the current user has a "Manage products" permission (usually a store owner)
+            //We should allows him (her) to use "Preview" functionality
+            if (notAvailable && !_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+                return InvokeHttp404();
+
+            //visible individually?
+            if (!product.VisibleIndividually)
+            {
+                //is this one an associated products?
+                var parentGroupedProduct = _productService.GetProductById(product.ParentGroupedProductId);
+                if (parentGroupedProduct == null)
+                    return RedirectToRoute("HomePage");
+
+                return RedirectToRoute("Product", new { SeName = parentGroupedProduct.GetSeName() });
+            }
+
+            //update existing shopping cart or wishlist  item?
+            ShoppingCartItem updatecartitem = null;
+            if (_shoppingCartSettings.AllowCartItemEditing && updatecartitemid > 0)
+            {
+                var cart = _workContext.CurrentCustomer.ShoppingCartItems
+                    .LimitPerStore(_storeContext.CurrentStore.Id)
+                    .ToList();
+                updatecartitem = cart.FirstOrDefault(x => x.Id == updatecartitemid);
+                //not found?
+                if (updatecartitem == null)
+                {
+                    return RedirectToRoute("Product", new { SeName = product.GetSeName() });
+                }
+                //is it this product?
+                if (product.Id != updatecartitem.ProductId)
+                {
+                    return RedirectToRoute("Product", new { SeName = product.GetSeName() });
+                }
+            }
+
+            //save as recently viewed
+            _recentlyViewedProductsService.AddProductToRecentlyViewedList(product.Id);
+
+            //display "edit" (manage) link
+            if (_permissionService.Authorize(StandardPermissionProvider.AccessAdminPanel) &&
+                _permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+            {
+                //a vendor should have access only to his products
+                if (_workContext.CurrentVendor == null || _workContext.CurrentVendor.Id == product.VendorId)
+                {
+                    DisplayEditLink(Url.Action("Edit", "Product", new { id = product.Id, area = AreaNames.Admin }));
+                }
+            }
+
+            //activity log
+            _customerActivityService.InsertActivity("PublicStore.ViewProduct", _localizationService.GetResource("ActivityLog.PublicStore.ViewProduct"), product.Name);
+
+            //model
+            var model = _productModelFactory.PrepareProductDetailsModel(product, updatecartitem, false);
+            //template
+            var productTemplateViewPath = _productModelFactory.PrepareProductTemplateViewPath(product);
+
+            return View(productTemplateViewPath, model);
+            //return RedirectToAction("ProductDetails", new { productId = itemid, updatecartitemid=0 });
+        }
         [HttpsRequirement(SslRequirement.No)]
         public virtual IActionResult ProductDetails(int productId, int updatecartitemid = 0)
         {

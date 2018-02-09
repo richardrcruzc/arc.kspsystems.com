@@ -19,7 +19,10 @@
         <div class="product-content">
             <div class="gallery">
                 <!--product pictures-->
-                @await Component.InvokeAsync("NopQuickViewProductPictures", new { model = Model })
+                @*@await Component.InvokeAsync("NopQuickViewProductPictures", new { model = Model })*@
+                <div class="picture">
+                    <img alt="@Model.DefaultPictureModel.AlternateText" src="@await Component.InvokeAsync("WaterMarkedPicture", new { ImageUrl = @Model.DefaultPictureModel.ImageUrl })" title="@Model.DefaultPictureModel.Title" />
+                </div>
 
                 <div class="links-panel">
                     <a href="@Url.RouteUrl("Product", new { SeName = Model.SeName })" class="link-to-product-page">@T("SevenSpikes.QuickView.Public.GoToProductPageLink")</a>

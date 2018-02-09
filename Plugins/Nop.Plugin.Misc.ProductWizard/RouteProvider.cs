@@ -23,14 +23,18 @@ namespace Nop.Plugin.Misc.ProductWizard
                 "{productId:min(1)}/{productName:required}-{PartNumber}",
          new { controller = "Product", action = "UrlRecordSlug" });
 
-          
+            routeBuilder.MapLocalizedRoute(
+                "Nop.Plugin.Misc.ProductWizard.Itendetails",
+                "anon/itemdetails.aspx",
+         new { controller = "Product", action = "Itendetails" });
+
 
         }
 
-    /// <summary>
-    /// Gets a priority of route provider
-    /// </summary>
-    public int Priority
+        /// <summary>
+        /// Gets a priority of route provider
+        /// </summary>
+        public int Priority
     {
         get { return -1; }
     }
