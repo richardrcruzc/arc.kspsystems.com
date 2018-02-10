@@ -617,9 +617,20 @@ namespace Nop.Services.Catalog
                     .Select(x => Convert.ToInt32(x.Trim()))
                     .ToList();
             }
+
+            var legacyIds = _dbContext.SqlQuery<int>($"select [ItemId] from [dbo].[LegacyIds]  (NOLOCK) where [LegacyCode] ='{keywords}'");
+
+            var _tmp = _productRepository.TableNoTracking.Where(x => legacyIds.Contains(x.Id));
+            var pg = new PagedList<Product>(_tmp, pageIndex, pageSize, _tmp.Count());
+
+            // products.Add(_tmp);
             //return products
             var totalRecords = pTotalRecords.Value != DBNull.Value ? Convert.ToInt32(pTotalRecords.Value) : 0;
-            return new PagedList<Product>(products, pageIndex, pageSize, totalRecords);
+            var pa = new PagedList<Product>(products, pageIndex, pageSize, totalRecords); 
+
+            pa.AddRange(pg);
+
+            return pa;
         }
 
         #endregion
