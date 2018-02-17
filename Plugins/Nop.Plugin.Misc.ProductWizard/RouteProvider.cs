@@ -28,6 +28,13 @@ namespace Nop.Plugin.Misc.ProductWizard
                 "anon/itemdetails.aspx",
          new { controller = "Product", action = "Itendetails" });
 
+            routeBuilder.MapLocalizedRoute(
+           "Nop.Plugin.Misc.ProductWizard.SearchOtro",
+           "Searchfilter",
+    new { controller = "catalog", action = "SearchTermAutoComplete" });
+
+
+           
 
         }
 

@@ -73,8 +73,8 @@ namespace Nop.Web.Infrastructure
             routeBuilder.MapLocalizedRoute("ProductSearch", "search/",
 				new { controller = "Catalog", action = "Search" });
 
-            routeBuilder.MapLocalizedRoute("ProductSearchAutoComplete", "catalog/searchtermautocomplete",
-				new { controller = "Catalog", action = "SearchTermAutoComplete" });
+            routeBuilder.MapLocalizedRoute("ProductSearchAutoComplete", "filterSearch/",
+				new { controller = "Catalog", action = "SearchOtro" });
 
             //change currency (AJAX link)
             routeBuilder.MapLocalizedRoute("ChangeCurrency", "changecurrency/{customercurrency:min(0)}",

@@ -96,10 +96,12 @@
             }
                     <div class="search-box store-search-box @if (!showCategoriesInSideMenu){<text>full-width</text>}">
                         @await Component.InvokeAsync("SearchBox")
-                        <div><br />
-                            
+                        @*@await Component.InvokeAsync("SearchBoxExt")*@
+                        <div>
+                            <br />
+
                             @await Component.InvokeAsync("MainSearch")
-                        </div> 
+                        </div>
                     </div>
 
 
