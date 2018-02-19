@@ -86,6 +86,7 @@
                         @{var counter = 0;}
                         @foreach (var item in Model.Items)
                         {
+                            var itemProductSeName = item.ProductId + "/" + item.ProductName + "-" + item.Sku;
                             counter++;
                             <tr class="cart-item-row">
                                 <td>
@@ -113,11 +114,12 @@
                                 @if (Model.ShowProductImages)
                                 {
                                     <td class="product-picture">
-                                        <a href="@Url.RouteUrl("Product", new {SeName = item.ProductSeName})"><img alt="@item.Picture.AlternateText" src="@item.Picture.ImageUrl" title="@item.Picture.Title" /></a>
+                                         
+                                        <a href="@System.Net.WebUtility.UrlDecode(Url.RouteUrl("Product", new {SeName = itemProductSeName}))"><img alt="@item.Picture.AlternateText" src="@item.Picture.ImageUrl" title="@item.Picture.Title" /></a>
                                     </td>
                                 }
                                 <td class="product">
-                                    <a href="@Url.RouteUrl("Product", new {SeName = item.ProductSeName})" class="product-name">@item.ProductName</a>
+                                    <a href="@System.Net.WebUtility.UrlDecode(Url.RouteUrl("Product", new {SeName = itemProductSeName}))" class="product-name">@item.ProductName</a>
                                     @if (!String.IsNullOrEmpty(item.AttributeInfo))
                                     {
                                         <div class="attributes">
@@ -141,7 +143,7 @@
                                         var editCartItemUrl = Url.RouteUrl("Product", new { SeName = item.ProductSeName });
                                         editCartItemUrl = webHelper.ModifyQueryString(editCartItemUrl, "updatecartitemid=" + item.Id, null);
                                         <div class="edit-item">
-                                            <a href="@editCartItemUrl">@T("Common.Edit")</a>
+                                            <a href="@Html.Raw(editCartItemUrl)">@T("Common.Edit")</a>
                                         </div>
                                     }
                                     @if (item.Warnings.Count > 0)
@@ -222,7 +224,7 @@
                 //tax info is already included in the price (incl/excl tax). that's why we display only shipping info here
                 //of course, you can modify appropriate locales to include VAT info there
                 <div class="tax-shipping-info">
-                    @T(inclTax ? "ShoppingCart.TaxShipping.InclTax" : "ShoppingCart.TaxShipping.ExclTax", Url.RouteUrl("Topic", new { SeName = Html.GetTopicSeName("shippinginfo") }))
+                    @T(inclTax ? "ShoppingCart.TaxShipping.InclTax" : "ShoppingCart.TaxShipping.ExclTax", Html.Raw(Url.RouteUrl("Topic", new { SeName = Html.GetTopicSeName("shippinginfo") })))
                 </div>
             }
         
@@ -311,7 +313,7 @@
 	                                }
 	                                else
 	                                {
-	                                    <a class="read" id="read-terms" href="@Url.RouteUrl("Topic", new {SeName = Html.GetTopicSeName("conditionsofuse") })">@T("Checkout.TermsOfService.Read")</a>
+	                                    <a class="read" id="read-terms" href="@Html.Raw(Url.RouteUrl("Topic", new {SeName = Html.GetTopicSeName("conditionsofuse") }))">@T("Checkout.TermsOfService.Read")</a>
 	                                }
                                 </div>
                             </div>

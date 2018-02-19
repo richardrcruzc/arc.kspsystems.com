@@ -112,7 +112,9 @@
                                 @{var counter = 0;}
                                 @foreach (var item in Model.Items)
                                 {
-                                	counter++;
+                                    var itemProductSeName = item.ProductId + "/" + item.ProductName + "-" + item.Sku;
+
+                                    counter++;
 	                                <tr class="cart-item-row">
 	                                    <td>
 	                                        <span class="item-count">@counter</span>
@@ -138,11 +140,11 @@
                                         @if (Model.ShowProductImages)
                                         {
                                             <td class="product-picture">
-                                                <a href="@Url.RouteUrl("Product", new { SeName = item.ProductSeName })"><img alt="@item.Picture.AlternateText" src="@item.Picture.ImageUrl" title="@item.Picture.Title" /></a>
+                                                <a href="@Url.RouteUrl("Product", new { SeName = itemProductSeName })"><img alt="@item.Picture.AlternateText" src="@item.Picture.ImageUrl" title="@item.Picture.Title" /></a>
                                             </td>
                                         }
                                         <td class="product">
-                                            <a href="@Url.RouteUrl("Product", new { SeName = item.ProductSeName })" class="product-name">@item.ProductName</a>
+                                            <a href="@Url.RouteUrl("Product", new { SeName = itemProductSeName })" class="product-name">@item.ProductName</a>
                                             @if (!String.IsNullOrEmpty(item.AttributeInfo))
                                             {
                                                 <div class="attributes">
