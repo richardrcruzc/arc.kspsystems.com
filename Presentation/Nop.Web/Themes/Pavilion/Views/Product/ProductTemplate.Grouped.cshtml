@@ -195,6 +195,10 @@
                                     @await Html.PartialAsync("_ProductTierPrices", variant.TierPrices)
                                     <!--delivery-->
                                     @await Html.PartialAsync("_DeliveryInfo", variant)
+
+                                    <div>
+                                        @await Component.InvokeAsync("UsedInProduct", new { id = Model.Id })
+                                    </div>
                                 </div>
                         </div>
                     }

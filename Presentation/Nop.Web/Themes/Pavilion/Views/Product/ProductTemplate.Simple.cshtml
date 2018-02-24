@@ -176,17 +176,18 @@
                     </div>
                 }
                 
-                <div class="product-collateral">
-                    @if (!String.IsNullOrEmpty(Model.FullDescription))
-                    {
-                        <div class="full-description" itemprop="description">
-                            @Html.Raw(Model.FullDescription)
-                        </div>
-                    }
-                    @await Html.PartialAsync("_ProductTierPrices", Model.TierPrices)
-                    @await Html.PartialAsync("_ProductSpecifications", Model.ProductSpecifications)
-                    @await Html.PartialAsync("_ProductTags", Model.ProductTags)
-                </div>
+                    <div class="product-collateral">
+                        @if (!String.IsNullOrEmpty(Model.FullDescription))
+    {
+                    <div class="full-description" itemprop="description">
+                        @Html.Raw(Model.FullDescription)
+                    </div>
+}
+                        @await Component.InvokeAsync("UsedInProduct", new { id = Model.Id, display = 1 })
+                        @await Html.PartialAsync("_ProductTierPrices", Model.TierPrices)
+                        @await Html.PartialAsync("_ProductSpecifications", Model.ProductSpecifications)
+                        @await Html.PartialAsync("_ProductTags", Model.ProductTags)
+                    </div>
                 @await Component.InvokeAsync("ProductsAlsoPurchased", new { productId = Model.Id })
                 @await Component.InvokeAsync("RelatedProducts", new { productId = Model.Id })
             </div>
