@@ -743,7 +743,7 @@ label, label + * {
 }
 .header-logo a img {
 	max-width: 100%;
-	background-color: #f74258;
+	background: none !important;
 }
 
 .mini-shopping-cart {
@@ -852,13 +852,18 @@ label, label + * {
 	outline-color: #f74258;
 }
 
+.store-search-box-browse {
+    float: left;
+}
+
 .store-search-box {
-	position: relative;
+    position: relative;
+    width: 100%;
 }
 .store-search-box form {
-	display: inline-block;
-	position: relative;
-	font-size: 0;
+    position: relative;
+    font-size: 0;
+    float: right;
 }
 .store-search-box form:after {
 	content: "";
@@ -5633,4 +5638,25 @@ label, label + * {
 	margin: 20px 0;
 	padding: 0 30px;
 	color: #999;
+}
+
+@media all and (max-width: 1024px) {
+    .store-search-box-browse {
+        float: none;
+        margin-top: 10px;
+    }
+
+    .store-search-box form {
+        float: none;
+    }
+
+    .header-logo a {
+         max-width: 25%;
+    }
+}
+
+@media all and (max-width: 480px) {
+    .header-logo a {
+        max-width: 100%;
+    }
 }
