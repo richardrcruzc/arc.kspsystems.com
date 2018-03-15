@@ -12,12 +12,12 @@
 	display: none;
 }
 .header .header-logo {
-	position: absolute;
+	position: relative;
 	top: 53px;
-	z-index: 1020;
+	/*z-index: 1020;*/
 	width: 100%;
-	height: 110px;
-	background-color: #fff;
+	/*height: 110px;*/
+    background: linear-gradient(#10759f, #0a5a8a);
 	line-height: 110px;
 }
 .responsive-nav-wrapper-parent {
@@ -52,7 +52,7 @@
 }
 
 .two-columns-area {
-	margin: 160px 0 25px;
+	margin: 53px 0 25px;
 }
 .admin-header-links ~ .two-columns-area {
 	margin-top: 205px;
