@@ -31,5 +31,6 @@
   "Shipping.UPS",
   "Widgets.GoogleAnalytics",
   "Widgets.NivoSlider",
-  "Widgets.GoDaddyApi"
+  "Widgets.GoDaddyApi",
+  "Payments.AuthorizeNet"
 ]

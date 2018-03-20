@@ -12,6 +12,7 @@ using Nop.Core.Domain.Media;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Seo;
 using Nop.Core.Domain.Vendors;
+using Nop.Data;
 using Nop.Services.Catalog;
 using Nop.Services.Customers;
 using Nop.Services.Directory;
@@ -38,7 +39,7 @@ namespace Nop.Web.Factories
     public partial class ProductModelFactory : IProductModelFactory
     {
         #region Fields
-        
+        private readonly IDbContext _dbContext;
         private readonly ISpecificationAttributeService _specificationAttributeService;
         private readonly ICategoryService _categoryService;
         private readonly IManufacturerService _manufacturerService;
@@ -77,7 +78,8 @@ namespace Nop.Web.Factories
 
         #region Ctor
 
-        public ProductModelFactory(ISpecificationAttributeService specificationAttributeService,
+        public ProductModelFactory(IDbContext dbContext,
+            ISpecificationAttributeService specificationAttributeService,
             ICategoryService categoryService,
             IManufacturerService manufacturerService,
             IProductService productService,
@@ -111,6 +113,7 @@ namespace Nop.Web.Factories
             SeoSettings seoSettings,
             IStaticCacheManager cacheManager)
         {
+            this._dbContext = dbContext;
             this._specificationAttributeService = specificationAttributeService;
             this._categoryService = categoryService;
             this._manufacturerService = manufacturerService;
@@ -1197,15 +1200,108 @@ namespace Nop.Web.Factories
                 DisplayDiscontinuedMessage = !product.Published && _catalogSettings.DisplayDiscontinuedMessageForUnpublishedProducts
             };
 
-            //automatically generate product description?
+            ////automatically generate product description?
+            //if (_seoSettings.GenerateProductMetaDescription && string.IsNullOrEmpty(model.MetaDescription))
+            //{
+            //    //based on short description
+            //    model.MetaDescription = model.ShortDescription;
+            //}
+
             if (_seoSettings.GenerateProductMetaDescription && string.IsNullOrEmpty(model.MetaDescription))
             {
-                //based on short description
-                model.MetaDescription = model.ShortDescription;
+                var legacy = string.Empty;
+                var firstlegacy = string.Empty;
+                string temp = $"{model.Name} {model.Sku}"; 
+                string temp_copiers = $"{model.Name} Toner, Parts, and Supplies. ";
+                var isCopier = false;
+                model.MetaDescription = $"{model.Name} Toner, Parts, Supplies, and Accessories";
+
+
+                foreach (var cat in product.ProductCategories.ToList())
+                {
+                    if (cat.Category.Name.Contains("Copier") ||
+                       cat.Category.Name.Contains("Copiers - New") ||
+                       cat.Category.Name.Contains("Copiers - Refurbished"))
+                    {
+                        isCopier = true;
+                        break;
+                    }
+                }
+                if (isCopier)
+                {
+                 var ListItemIds = _dbContext.SqlQuery<int>($"SELECT ItemIdPart FROM ItemsCompatability  WHERE(ItemsCompatability.ItemIdPart = {model.Id})  UNION  SELECT GroupID, ItemID FROM[Groups - Items]  WHERE([Groups - Items].GroupID IN(SELECT GroupID FROM[Relations - Groups - Items] WHERE(ItemID =  {model.Id}) AND(Direction = 'A')))  UNION  SELECT GroupID, ItemID FROM[Relations - Groups - Items]   WHERE([Relations - Groups - Items].Direction = 'B') AND([Relations - Groups - Items].GroupID IN(SELECT GroupID FROM[Groups - Items] WHERE(ItemID =  {model.Id})))");
+                    int[] arrayIds = ListItemIds.ToArray();
+                   
+                    var exProducts = _productService.GetProductsByIds(arrayIds).ToList();
+                    foreach (var pr in exProducts)
+                    {
+                        var prCat = pr.ProductCategories.FirstOrDefault();
+                        if (prCat.Category.Name.Contains("Copier"))
+                            temp_copiers = $"{temp_copiers} Imaging Units, ";
+                        if (prCat.Category.Name.Contains("Drums"))
+                            temp_copiers = $"{temp_copiers} Drums Units, ";
+                        if (prCat.Category.Name.Contains("Fusing Units"))
+                            temp_copiers = $"{temp_copiers} Fusing Units, ";
+                        if (prCat.Category.Name.Contains("PM Kits"))
+                            temp_copiers = $"{temp_copiers} PM Kits, ";
+                        if (prCat.Category.Name.Contains("Developing Units"))
+                            temp_copiers = $"{temp_copiers} Developing Units, ";
+                        if (prCat.Category.Name.Contains("Staples"))
+                            temp_copiers = $"{temp_copiers} Staples, ";
+                    }
+                }
+
+                temp_copiers = temp_copiers.Trim().TrimEnd(',');
+
+                if (!isCopier)
+                {
+                    //look for all legacy
+                    var legacyies = _dbContext.SqlQuery<List<string>>($"select [LegacyCode] from LegacyIds where [ItemId]={model.Id}").ToList();
+                    foreach (var leg in legacyies)
+                    {
+                        temp = $"{temp} {leg} ";
+                        legacy = $"{legacy} {leg} ";
+
+                        if (model.Sku.Contains("TN"))
+                        {
+                            if (!leg.Contains("TN"))
+                            {
+                                firstlegacy = leg.ToString();
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if (leg.Contains("TN"))
+                            {
+                                firstlegacy = leg.ToString();
+                                break;
+                            }
+                            if (firstlegacy.Length == 0 && legacyies.Count() > 0)
+                            {
+                                firstlegacy = leg.ToString();
+                            }
+
+                        }
+
+                    }
+                }
+                //PRICE TO REGULAR ITEMS
+                temp =$"{temp} Price: {model.ProductPrice.Price} For Use In: ";
+
+                if (!isCopier)
+                    model.MetaDescription = temp;  
+                else
+                {
+                    model.MetaDescription = temp_copiers + ". Free Shipping on orders over $99."; 
+                } 
             }
 
-            //shipping info
-            model.IsShipEnabled = product.IsShipEnabled;
+
+
+
+                //shipping info
+                model.IsShipEnabled = product.IsShipEnabled;
             if (product.IsShipEnabled)
             {
                 model.IsFreeShipping = product.IsFreeShipping;

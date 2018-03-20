@@ -9,13 +9,11 @@
     var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
 }
 
-
-<img src="~/images/search-img.png" />
-
-
+<div class="store-search-box-browse">
 <select id="Brands"></select>
 <select id="CopiersAccesories"></select>
 <select id="Categories"></select>
+</div>
  
 
 <span id="search-loading-progress" style="display: none;" class="please-wait">@T("Common.Wait...")</span>
