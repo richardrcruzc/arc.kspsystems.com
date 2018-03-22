@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Shipping rate computation",
+  "FriendlyName": "ship on trac",
+  "SystemName": "Shipping.Ontrac",
+  "Version": "1.0",
+  "SupportedVersions": [ "4.00" ],
+  "Author": "nopCommerce team/richard-cruz@hotmail.com",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Shipping.Ontrac.dll",
+  "Description": "This plugin offers shipping rates by ship on trac"
+}

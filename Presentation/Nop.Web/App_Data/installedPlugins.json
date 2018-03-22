@@ -32,5 +32,6 @@
   "Widgets.GoogleAnalytics",
   "Widgets.NivoSlider",
   "Widgets.GoDaddyApi",
-  "Payments.AuthorizeNet"
+  "Payments.AuthorizeNet",
+  "Shipping.Ontrac"
 ]
