@@ -33,5 +33,7 @@
   "Widgets.NivoSlider",
   "Widgets.GoDaddyApi",
   "Payments.AuthorizeNet",
-  "Shipping.Ontrac"
+  "Shipping.Ontrac",
+  "DiscountRequirement.MustUseShippingProvider",
+  "DiscountRequirement.ShippingType"
 ]

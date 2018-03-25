@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Discount requirements",
+  "FriendlyName": "Must use shipping provider",
+  "SystemName": "DiscountRequirement.MustUseShippingProvider",
+  "Version": "1.00",
+  "SupportedVersions": [ "4.00" ],
+  "Author": "Ella Software",
+  "DisplayOrder": 1,
+  "FileName": "EllaSoftware.Plugin.DiscountRules.ShippingProvider.dll",
+  "Description": "This plugin allows you to configure discounts for certain shipping provider"
+}

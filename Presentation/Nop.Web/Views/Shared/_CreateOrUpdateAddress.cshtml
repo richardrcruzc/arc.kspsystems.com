@@ -32,6 +32,13 @@
 }
 <input asp-for="Id" type="hidden"/>
 <div class="edit-address">
+    @if (ViewData.TemplateInfo.HtmlFieldPrefix == "ShippingNewAddress")
+    {
+        if (Model.CustomAddressAttributes.Count > 0)
+        {
+            @await Html.PartialAsync("_AddressAttributes", Model.CustomAddressAttributes)
+        }
+    }
     <div class="inputs">
         <label asp-for="FirstName" asp-postfix=":"></label>
         <input asp-for="FirstName" />
@@ -153,8 +160,5 @@
             <span asp-validation-for="FaxNumber"></span>
         </div>
     }
-    @if (Model.CustomAddressAttributes.Count > 0)
-    {
-        @await Html.PartialAsync("_AddressAttributes", Model.CustomAddressAttributes)
-    }
+
 </div>

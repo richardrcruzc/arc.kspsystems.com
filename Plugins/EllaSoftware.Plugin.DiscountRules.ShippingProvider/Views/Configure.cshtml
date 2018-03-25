@@ -1,0 +1,112 @@
+﻿@model EllaSoftware.Plugin.DiscountRules.ShippingProvider.Models.RequirementModel
+@{
+    Layout = "";
+}
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#saveshippingproviderrequirement@(Model.RequirementId)').click(function () {
+
+
+            var shippingAmount = $("#@Html.IdFor(model => model.ShippingAmount)").val();
+
+            var shippingAmountExcludeTax = $("#@Html.IdFor(model => model.ShippingAmountExcludeTax)").val();
+
+
+            var shippingTypeName = $("#@Html.IdFor(model => model.ShippingTypeName)").val();
+
+            var shippingProviderName = $("#@Html.IdFor(model => model.ShippingProviderName)").val();
+            var discountId = @Model.DiscountId;
+            var requirementId = @Model.RequirementId;
+
+            var postData = {
+                discountId: discountId,
+                discountRequirementId: requirementId,
+                shippingProviderName: shippingProviderName,
+                shippingTypeName: shippingTypeName,
+                shippingAmount: shippingAmount,
+                shippingAmountExcludeTax: shippingAmountExcludeTax
+            };
+            addAntiForgeryToken(postData);
+
+            $.ajax({
+                cache:false,
+                type: "POST",
+                url: "@(Url.Action("Configure", "DiscountRulesMustUseShippingProvider"))",
+                data: postData,
+                success: function (data) {
+                    $('#pnl-save-requirement-result@(Model.RequirementId)').fadeIn("slow").delay(1000).fadeOut("slow");
+                    //notify parent if it's a new requirement
+                    @if (Model.RequirementId == 0)
+                    {
+                        <text>$("#discountRequirementContainer").trigger('nopnewdiscountruleadded', [data.NewRequirementId]);</text>
+                    }
+                },
+                error:function (xhr, ajaxOptions, thrownError){
+                    alert('@Html.Raw(JavaScriptEncoder.Default.Encode(T("Admin.Promotions.Discounts.Requirements.FailedToSave").Text))');
+                }
+            });
+        });
+    });
+</script>
+<div class="form-group">
+    <div class="col-md-3 requirement-label-col">
+        <nop-label asp-for="ShippingProviderName" />
+    </div>
+    <div class="col-md-9 requirement-data-col">
+        <div class="requirement-data-input">
+            <nop-select asp-for="ShippingProviderName" asp-items="Model.AvailableShippingProviders" />
+        </div>
+
+    </div>
+</div>
+
+<div class="form-group">
+    <div class="col-md-3 requirement-label-col">
+        <nop-label asp-for="ShippingTypeName" />
+    </div>
+    <div class="col-md-9 requirement-data-col">
+        <div class="requirement-data-input">
+            <nop-editor asp-for="ShippingTypeName" />
+        </div>
+        
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-3 requirement-label-col">
+        <nop-label asp-for="ShippingAmount" />
+    </div>
+    <div class="col-md-9 requirement-data-col">
+        <div class="requirement-data-input">
+            <nop-editor asp-for="ShippingAmount" />
+        </div>
+
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-3 requirement-label-col">
+        <nop-label asp-for="ShippingAmountExcludeTax" />
+    </div>
+    <div class="col-md-9 requirement-data-col">
+        <div class="requirement-data-input">
+            <nop-editor asp-for="ShippingAmountExcludeTax" />
+        </div>
+
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-3 requirement-label-col">
+
+        <div class="requirement-data-buttons">
+            <input type="button" id="saveshippingproviderrequirement@(Model.RequirementId)" class="btn btn-primary" value="@T("Admin.Common.Save")" />
+        </div>
+    </div>
+</div>
+ 
+
+<div class="form-group">
+    <div class="col-md-offset-3 col-md-9 requirement-messages-col">
+        <div id="pnl-save-requirement-result@(Model.RequirementId)" style="display: none;" class="text-green margin-t-5">
+            @T("Admin.Promotions.Discounts.Requirements.Saved")
+        </div>
+    </div>
+</div>

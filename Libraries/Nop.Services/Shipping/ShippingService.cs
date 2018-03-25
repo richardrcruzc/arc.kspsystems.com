@@ -918,6 +918,94 @@ namespace Nop.Services.Shipping
                             so.ShippingRateComputationMethodSystemName = srcm.PluginDescriptor.SystemName;
                         if (_shoppingCartSettings.RoundPricesDuringCalculation)
                             so.Rate = RoundingHelper.RoundPrice(so.Rate);
+
+
+                        var qty = cart.AsEnumerable().Sum(x => x.Quantity);
+
+                        if (so.ShippingRateComputationMethodSystemName.Contains("CANADA"))
+                        {
+                            if (qty > 1)
+                            {
+                                so.Rate *= 0.75M;
+                            }
+
+                        }
+                        else
+                        {
+                            
+                            if (qty == 1)
+                            {
+                                 so.Rate *= 1M;
+                            }
+                            if (qty == 2)
+                            {
+                                 so.Rate *= 0.58M;
+                            }
+                            else if (qty == 3)
+                            {
+                                 so.Rate *= 0.425M;
+                            }
+                            else if (qty == 4)
+                            {
+                                 so.Rate *= 0.353M;
+                            }
+                            else if (qty == 5)
+                            {
+                                 so.Rate *= 0.31M;
+                            }
+                            else if (qty == 6M)
+                            {
+                                 so.Rate *= 0.28M;
+                            }
+                            else if (qty == 7)
+                            {
+                                 so.Rate *= 0.26M;
+                            }
+                            else if (qty == 8)
+                            {
+                                 so.Rate *= 0.253M;
+                            }
+                            else if (qty == 9)
+                            {
+                                 so.Rate *= 0.245M;
+                            }
+                            else if (qty == 10)
+                            {
+                                 so.Rate *= 0.24M;
+                            }
+                            else if (qty == 11)
+                            {
+                                 so.Rate *= 0.235M;
+                            }
+                            else if (qty >= 12)
+                            {
+                                 so.Rate *= 0.233M;
+                            }
+
+
+                            if (so.ShippingRateComputationMethodSystemName.Contains("Ground"))
+                            {
+                                so.Rate *= 0.95M;
+                            }
+                            else if (so.ShippingRateComputationMethodSystemName.Contains("3 Day"))
+                            {
+                                so.Rate *= 0.85M;
+                            }
+                            else if (so.ShippingRateComputationMethodSystemName.Contains("2nd Day"))
+                            {
+                                so.Rate *= 0.75M;
+                            }
+                            else if (so.ShippingRateComputationMethodSystemName.Contains("Next Day"))
+                            {
+                                so.Rate *= 0.68M;
+                            }
+
+                        }
+
+
+
+
+
                         result.ShippingOptions.Add(so);
                     }
                 }
