@@ -28,12 +28,12 @@
   "ProductWizard",
   "Shipping.FedEx",
   "Shipping.FixedOrByWeight",
-  "Shipping.UPS",
   "Widgets.GoogleAnalytics",
   "Widgets.NivoSlider",
   "Widgets.GoDaddyApi",
   "Payments.AuthorizeNet",
   "Shipping.Ontrac",
   "DiscountRequirement.MustUseShippingProvider",
-  "DiscountRequirement.ShippingType"
+  "DiscountRequirement.ShippingType",
+  "Shipping.UPS"
 ]

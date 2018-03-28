@@ -1003,7 +1003,14 @@ namespace Nop.Services.Shipping
                         }
 
 
+                        //discount ground >=99
 
+                        if (so.Name.ToLower().Contains("ground"))
+                        {
+                            var totalCart = cart.AsQueryable().Sum(x => x.Product.Price * x.Quantity);
+                            if(totalCart>=99)
+                            so.Rate = 0;
+                        }
 
 
                         result.ShippingOptions.Add(so);

@@ -1227,7 +1227,11 @@ namespace Nop.Web.Factories
                             var shippingRate = _orderTotalCalculationService.AdjustShippingRate(shippingOption.Rate, cart, out List<DiscountForCaching> _);
                             shippingRate = _taxService.GetShippingPrice(shippingRate, _workContext.CurrentCustomer);
                             shippingRate = _currencyService.ConvertFromPrimaryStoreCurrency(shippingRate, _workContext.WorkingCurrency);
-                            var shippingRateString = _priceFormatter.FormatShippingPrice(shippingRate, true);
+
+                            var shippingRateString = _priceFormatter.FormatShippingPrice(shippingOption.Rate, true);
+                            //for ground discount 
+                            if (shippingOption.Name.ToLower().Contains("ground"))
+                              shippingRateString = _priceFormatter.FormatShippingPrice(shippingRate, true);
 
                             model.ShippingOptions.Add(new EstimateShippingResultModel.ShippingOptionModel
                             {

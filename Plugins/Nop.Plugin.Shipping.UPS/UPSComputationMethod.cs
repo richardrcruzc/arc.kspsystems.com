@@ -547,9 +547,11 @@ namespace Nop.Plugin.Shipping.UPS
             switch (serviceId)
             {
                 case "01":
-                    return "UPS Next Day Air";
+                    //return "UPS Next Day Air";
+                    return "Next Day Air";
                 case "02":
-                    return "UPS 2nd Day Air";
+                    return "2nd Day Air";
+                //return "UPS 2nd Day Air";
                 case "03":
                     return "UPS Ground";
                 case "07":
@@ -559,11 +561,14 @@ namespace Nop.Plugin.Shipping.UPS
                 case "11":
                     return "UPS Standard";
                 case "12":
-                    return "UPS 3 Day Select";
+                    return "3 Day Select";
+                    //return "UPS 3 Day Select";
                 case "13":
-                    return "UPS Next Day Air Saver";
+                    //return "UPS Next Day Air Saver";
+                    return "Next Day Air Saver";
                 case "14":
                     return "UPS Next Day Air Early A.M.";
+               
                 case "54":
                     return "UPS Worldwide Express Plus";
                 case "59":

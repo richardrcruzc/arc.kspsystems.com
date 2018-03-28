@@ -1229,7 +1229,7 @@ namespace Nop.Web.Factories
                 }
                 if (isCopier)
                 {
-                 var ListItemIds = _dbContext.SqlQuery<int>($"SELECT ItemIdPart FROM ItemsCompatability  WHERE(ItemsCompatability.ItemIdPart = {model.Id})  UNION  SELECT GroupID, ItemID FROM[Groups - Items]  WHERE([Groups - Items].GroupID IN(SELECT GroupID FROM[Relations - Groups - Items] WHERE(ItemID =  {model.Id}) AND(Direction = 'A')))  UNION  SELECT GroupID, ItemID FROM[Relations - Groups - Items]   WHERE([Relations - Groups - Items].Direction = 'B') AND([Relations - Groups - Items].GroupID IN(SELECT GroupID FROM[Groups - Items] WHERE(ItemID =  {model.Id})))");
+                 var ListItemIds = _dbContext.SqlQuery<int>($"SELECT ItemIdPart FROM ItemsCompatability  WHERE(ItemsCompatability.ItemIdPart = {model.Id})  UNION  SELECT   ItemID FROM[Groups-Items]  WHERE([Groups-Items].GroupID IN(SELECT GroupID FROM[Relations-Groups-Items] WHERE(ItemID =  {model.Id}) AND(Direction = 'A')))  UNION  SELECT   ItemID FROM[Relations-Groups-Items]   WHERE([Relations-Groups-Items].Direction = 'B') AND([Relations-Groups-Items].GroupID IN(SELECT GroupID FROM[Groups-Items] WHERE(ItemID =  {model.Id})))");
                     int[] arrayIds = ListItemIds.ToArray();
                    
                     var exProducts = _productService.GetProductsByIds(arrayIds).ToList();
@@ -1256,7 +1256,7 @@ namespace Nop.Web.Factories
                 if (!isCopier)
                 {
                     //look for all legacy
-                    var legacyies = _dbContext.SqlQuery<List<string>>($"select [LegacyCode] from LegacyIds where [ItemId]={model.Id}").ToList();
+                    var legacyies = _dbContext.SqlQuery<string>($"select [LegacyCode] from LegacyIds where [ItemId]={model.Id}").ToList();
                     foreach (var leg in legacyies)
                     {
                         temp = $"{temp} {leg} ";
@@ -1286,8 +1286,26 @@ namespace Nop.Web.Factories
 
                     }
                 }
+
+
                 //PRICE TO REGULAR ITEMS
-                temp =$"{temp} Price: {model.ProductPrice.Price} For Use In: ";
+                //price
+                model.ProductPrice = PrepareProductPriceModel(product);
+
+                temp = $"{temp} Price: {model.ProductPrice.Price} For Use In: ";
+
+                if (!isCopier)
+                {
+                    var forUseIn = _dbContext.SqlQuery<int>($"SELECT ItemIdPart FROM ItemsCompatability  WHERE(ItemsCompatability.ItemIdPart = {model.Id})  UNION  SELECT  ItemID FROM[Groups-Items]  WHERE([Groups-Items].GroupID IN(SELECT GroupID FROM[Relations-Groups-Items] WHERE(ItemID =  {model.Id}) AND(Direction = 'A')))  UNION  SELECT  ItemID FROM[Relations-Groups-Items]   WHERE([Relations-Groups-Items].Direction = 'B') AND([Relations-Groups-Items].GroupID IN(SELECT GroupID FROM[Groups-Items] WHERE(ItemID =  {model.Id})))");
+                    int[] forUseInIds = forUseIn.ToArray();
+
+                    var forUseInProducts = _productService.GetProductsByIds(forUseInIds).ToList();
+                    foreach (var pr in forUseInProducts)
+                    {
+                        temp = $"{temp} {pr.Name}";
+                    }
+                }
+
 
                 if (!isCopier)
                     model.MetaDescription = temp;  
@@ -1295,11 +1313,7 @@ namespace Nop.Web.Factories
                 {
                     model.MetaDescription = temp_copiers + ". Free Shipping on orders over $99."; 
                 } 
-            }
-
-
-
-
+            } 
                 //shipping info
                 model.IsShipEnabled = product.IsShipEnabled;
             if (product.IsShipEnabled)
