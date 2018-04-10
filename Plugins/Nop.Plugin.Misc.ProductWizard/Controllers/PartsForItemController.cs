@@ -192,6 +192,9 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
         public virtual IActionResult BrowseInventory(int rid, int cid, Web.Models.Catalog.CatalogPagingFilteringModel command)
         {
+            var prodsInCategory = new List<int>();
+
+
             ViewBag.Rid = rid;
             ViewBag.Cid = cid;
             var allCategoryIds = new List<int>();
@@ -203,26 +206,27 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                 // var products = _productService.SearchProducts(orderBy: ProductSortingEnum.NameDesc);
                 //ItemsCompatability
-                var ic = _iRepository.TableNoTracking.Where(x => x.ItemId == rid).Select(x => x.ItemId).ToList();
+               var ic = _iRepository.TableNoTracking.Where(x => x.ItemId == rid && x.Deleted==false).Select(x => x.ItemIdPart).ToList();
+
                 //GroupsItems
-                var gpi = _gpiRepository.TableNoTracking.Where(x => x.ItemId == rid).Select(x => x.GroupId).ToList();
+                var gpi = _gpiRepository.TableNoTracking.Where(x => x.ItemId == rid && x.Deleted==false).Select(x => x.GroupId).ToList();
+             
                 //RelationsGroupsItems>
-                var rgp = _rgpRepository.TableNoTracking.Where(x => x.Direction == "B" && gpi.Contains(x.GroupId)).Select(x => x.ItemId).ToList();
+                var rgp = _rgpRepository.TableNoTracking.Where(x => x.Direction == "B" && x.Deleted == false && gpi.Contains(x.GroupId)).Select(x => x.ItemId).ToList();
 
 
 
                 rgp.AddRange(ic);
                 //var catergories
                 //query = products.Where(x => ic.Contains(x.Id) || rgp.Contains(x.Id)) ;
-            // var distinct = rgp.Distinct();
-            // query = _productService.GetProductsByIds(distinct.ToArray());
+                // var distinct = rgp.Distinct();
+                // query = _productService.GetProductsByIds(distinct.ToArray());
 
-
-                rgp.AddRange(ic);
+                prodsInCategory.AddRange(rgp);
 
                 //var catergories
 
-                 var queryC = _productService.GetProductsByIds(rgp.ToArray()).Select(x => new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id }).ToList();
+                var queryC = _productService.GetProductsByIds(rgp.ToArray()).Select(x => new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id }).ToList();
 
                 //  var catergories = products.Where(x => ic.Contains(x.Id) || rgp.Contains(x.Id)).Select(x=> new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id}).ToList();
                // query.Insert(0, new { Name = "All Categories", Id = 0 });
@@ -253,11 +257,26 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             }
             else
             {
+              
 
-                var tmp = _categoryService.GetProductCategoriesByCategoryId(cid).Select(x => x.Product.Id);
-                var distinct = tmp.Distinct();
+                var prodIds = _iRepository.TableNoTracking.Where(x => x.ItemId == rid && x.Deleted == false).Select(x => x.ItemIdPart).ToList();
 
-                query = _productService.GetProductsByIds(distinct.ToArray());
+                              
+                foreach (var p in prodIds)
+                {
+                    var tp = _productService.GetProductById(p);
+                    if (tp != null)
+                    {
+                        if (tp.ProductCategories.FirstOrDefault() != null && tp.ProductCategories.FirstOrDefault().Category.Id == cid)
+                        {
+                            prodsInCategory.Add(p);
+                        }
+                    }
+
+                }
+                
+
+                query = _productService.GetProductsByIds(prodsInCategory.ToArray());
                 if(query.FirstOrDefault()!=null && query.FirstOrDefault().ProductCategories.FirstOrDefault()!=null)
                 category = query.FirstOrDefault().ProductCategories.FirstOrDefault().Category;
             }
@@ -441,7 +460,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                 pageSize: command.PageSize);
 
             var products = SearchProductsUseLinq(ref filterableSpecificationAttributeOptionIds, true, command.PageNumber - 1, command.PageSize,
-                allCategoryIds, allIds, 0, 0, 0,0,null,false,false, _catalogSettings.IncludeFeaturedProductsInNormalLists,
+                null, prodsInCategory, 0, 0, 0,0,null,false,false, _catalogSettings.IncludeFeaturedProductsInNormalLists,
                 minPriceConverted, maxPriceConverted, 0, null, false, false, false, false, false,new int[0], 0, alreadyFilteredSpecOptionIds,
                 (ProductSortingEnum)command.OrderBy,false,true);
 

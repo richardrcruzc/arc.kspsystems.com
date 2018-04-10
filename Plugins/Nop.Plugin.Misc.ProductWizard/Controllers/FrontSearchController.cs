@@ -94,13 +94,13 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
         public virtual IActionResult GetCategories(int id)
         {
-           // var products = _productService.SearchProducts(orderBy: ProductSortingEnum.NameDesc);
-            //ItemsCompatability
-            var ic = _iRepository.TableNoTracking.Where(x => x.ItemId == id).Select(x=>x.ItemId).ToList();
+             //ItemsCompatability
+            var ic = _iRepository.TableNoTracking.Where(x => x.ItemId == id&& x.Deleted==false).Select(x=>x.ItemIdPart).ToList();
+
             //GroupsItems
-            var gpi = _gpiRepository.TableNoTracking.Where(x => x.ItemId == id).Select(x=>x.GroupId).ToList();
+            var gpi = _gpiRepository.TableNoTracking.Where(x => x.ItemId == id && x.Deleted == false).Select(x=>x.GroupId).ToList();
             //RelationsGroupsItems>
-            var rgp = _rgpRepository.TableNoTracking.Where(x=>x.Direction=="B" && gpi.Contains(x.GroupId)).Select(x=>x.ItemId).ToList();
+            var rgp = _rgpRepository.TableNoTracking.Where(x=>x.Direction=="B" && x.Deleted == false && gpi.Contains(x.GroupId)).Select(x=>x.ItemId).ToList();
 
             rgp.AddRange(ic);
 
@@ -108,12 +108,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
             var query = _productService.GetProductsByIds(rgp.ToArray()).Select(x => new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id }).ToList();
 
-          //  var catergories = products.Where(x => ic.Contains(x.Id) || rgp.Contains(x.Id)).Select(x=> new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id}).ToList();
-            query.Insert(0, new {Name= "All Categories", Id=0 });
-
-            //var catergories = query.GroupBy(x => x.Name, x => x.Id, (key, g) => new { Id = key, Name = g.ToList() })
-            // .Select(x => new { x.Name, x.Id }).ToList();
-
+             query.Insert(0, new {Name= "All Categories", Id=0 });
+ 
             
            
 

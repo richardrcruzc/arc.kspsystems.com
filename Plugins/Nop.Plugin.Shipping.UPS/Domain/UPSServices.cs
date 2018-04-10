@@ -25,7 +25,7 @@ namespace Nop.Plugin.Shipping.UPS.Domain
             {"UPS Ground", "03"},
             {"UPS Worldwide Express", "07"},
             {"UPS Worldwide Expedited", "08"},
-            {"UPS Standard", "11"},
+            {"UPS Canada Standard", "11"},
             {"3 Day Select", "12"},
             {"Next Day Air Saver", "13"},
             {"UPS Next Day Air Early A.M.", "14"},

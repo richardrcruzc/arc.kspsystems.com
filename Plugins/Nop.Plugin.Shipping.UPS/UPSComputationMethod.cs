@@ -559,7 +559,8 @@ namespace Nop.Plugin.Shipping.UPS
                 case "08":
                     return "UPS Worldwide Expedited";
                 case "11":
-                    return "UPS Standard";
+                    return "UPS Canada Standard";
+                    //return "UPS Standard";
                 case "12":
                     return "3 Day Select";
                     //return "UPS 3 Day Select";
