@@ -1572,6 +1572,41 @@ namespace Nop.Services.Orders
 
                     if (order.PaymentStatus == PaymentStatus.Paid)
                         ProcessOrderPaid(order);
+
+
+                    //move attribute from customer to order
+
+                    var customerId = _workContext.CurrentCustomer.Id;
+                    var gAttrs = _genericAttributeService.GetAttributesForEntity(customerId, "Customer").ToList();
+                    foreach (var attr in gAttrs)
+                    {
+
+                        if (attr.Key == "OrderNoteExt")
+                        {
+                            _genericAttributeService.SaveAttribute(order, "OrderNoteExt", attr.Value);
+                            _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, "OrderNoteExt", "");
+                        }
+                        else if (attr.Key == "ShipToCompanyNameExt")
+                        {
+                            _genericAttributeService.SaveAttribute(order, "ShipToCompanyNameExt", attr.Value);
+                            _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, "ShipToCompanyNameExt", "");
+                        }
+                        else if (attr.Key == "DropShipExt")
+                        {
+                            _genericAttributeService.SaveAttribute(order, "DropShipExt", attr.Value);
+                            _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, "DropShipExt", "");
+                        }
+                        else if (attr.Key == "ResidentialAddressExt")
+                        {
+                            _genericAttributeService.SaveAttribute(order, "ResidentialAddressExt", attr.Value);
+                            _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, "ResidentialAddressExt", "");
+                        }
+
+
+                    }
+                    //
+
+
                 }
                 else
                     foreach (var paymentError in processPaymentResult.Errors)

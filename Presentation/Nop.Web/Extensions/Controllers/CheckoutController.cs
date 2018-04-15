@@ -915,6 +915,7 @@ namespace Nop.Web.Controllers
                         Order = placeOrderResult.PlacedOrder
                     };
                     _paymentService.PostProcessPayment(postProcessPaymentRequest);
+ 
 
                     if (_webHelper.IsRequestBeingRedirected || _webHelper.IsPostBeingDone)
                     {
@@ -1621,6 +1622,7 @@ namespace Nop.Web.Controllers
                         //payment method could be null if order total is 0
                         //success
                         return Json(new { success = 1 });
+                     
 
                     if (paymentMethod.PaymentMethodType == PaymentMethodType.Redirection)
                     {

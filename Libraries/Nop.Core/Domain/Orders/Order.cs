@@ -493,7 +493,9 @@ namespace Nop.Core.Domain.Orders
                 return ParseTaxRates(TaxRates);
             }
         }
-        
+
         #endregion
+
+
     }
 }

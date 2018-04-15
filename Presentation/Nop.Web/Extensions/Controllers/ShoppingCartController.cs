@@ -625,6 +625,14 @@ namespace Nop.Web.Controllers
 
         #endregion
 
+        [HttpsRequirement(SslRequirement.Yes)]
+        public virtual IActionResult SaveOrderExtInfo(string AttributeName, string AttributeValue)
+        {
+            _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, AttributeName, AttributeValue);
+            return Ok();
+        }
+
+
         #region Shopping cart
 
         //add product to cart using AJAX

@@ -189,5 +189,18 @@ namespace Nop.Web.Models.ShoppingCart
         }
 
         #endregion
+
+
     }
-}
+
+
+    public partial class ExtraOrderInfoModel : BaseNopModel
+    {
+        public int CustomerId { get; set; }
+        public string Note { get; set; }
+        public bool DropShip { get; set; }
+        public bool ResidentialAddress { get; set; }
+        public string ShipToCompanyName { get; set; }
+        public bool ShowNote { get; set; }
+    }
+    }

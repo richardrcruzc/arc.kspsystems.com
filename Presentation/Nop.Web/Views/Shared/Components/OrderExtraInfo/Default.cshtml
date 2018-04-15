@@ -1,0 +1,80 @@
+﻿@model ExtraOrderInfoModel
+
+@if (Model.ShowNote == true)
+{
+
+    <div class="accordion-tab coupon-codes">
+        <div class="accordion-tab-title">
+            <strong>Note:</strong>
+        </div>
+
+        <div class="accordion-tab-content">
+            <div class="inputs">
+                <textarea name="OrderNoteExt" id="OrderNoteExt" class="OrderNoteExtClass" type="text" onblur="saveOrderNoteExt(this)">@Model.Note</textarea>
+            </div>
+        </div>
+
+    </div>
+     
+}
+else
+{
+
+    <div class="inputs custom-attributes">
+        <div><label>Shipping Information:</label><br /></div>
+
+        <ul class="option-list">
+            <li> <input type="checkbox" class="checkDropShip" name="DropShipExt" id="DropShipExt" @(Model.DropShip ? "checked" : "")><label>Drop Ship</label></li>
+            <li><input type="checkbox" name="ResidentialAddressExt" id="ResidentialAddressExt" @(Model.ResidentialAddress ? "checked" : "")>  <label>Residential Address</label></li>
+        </ul>
+        <div>
+            <div id="divDropShip" style="display:none">
+                <br /><br />
+                <div><label>Ship-To Company Name:</label></div>
+
+                <input name="ShipToCompanyNameExt" id="ShipToCompanyNameExt" type="text" class="form-control"  value="@Model.ShipToCompanyName" onblur="saveShipToCompanyNameExt(this)" />
+            </div>
+        </div>
+    </div>
+}
+
+
+<script type="text/javascript" asp-location="Footer">
+    function saveOrderNoteExt(valuee) {
+        saveAttributesEx("OrderNoteExt", valuee.value);
+    } 
+    function saveShipToCompanyNameExt(valuee) {
+        
+        saveAttributesEx("ShipToCompanyNameExt", valuee.value);
+    } 
+    $(document).ready(function () {
+        $('.checkDropShip').click(function () {
+            $("#divDropShip").toggle(this.checked);
+
+            saveAttributesEx("DropShipExt", this.checked);
+        });
+
+        $('#ResidentialAddressExt').click(function () {
+            saveAttributesEx("ResidentialAddressExt", this.checked);
+        });
+    });
+
+    function saveAttributesEx(attr, attrValue) {
+        var subscribeProgress = $("#subscribe-loading-progress");
+        subscribeProgress.show();
+        //alert("attrib:" + attr + " attrValue:" + attrValue)
+
+        $.ajax({
+            cache: false,
+            type: "GET",
+            url: "/ShoppingCart/SaveOrderExtInfo",
+            data: { AttributeName: attr, AttributeValue: attrValue },
+            success: function (data) {
+                subscribeProgress.hide();
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('Failed to subscribe.');
+                subscribeProgress.hide();
+            }
+        });    }
+</script>

@@ -106,6 +106,11 @@
                         <h2 class="title">@T("Checkout.ShippingMethod")</h2>
                     </div>
                     <div id="checkout-step-shipping-method" class="step a-item" style="display: none;">
+
+
+                        @await Component.InvokeAsync("OrderExtraInfo") 
+
+
                         <form id="co-shipping-method-form" action="">
                             <div id="checkout-shipping-method-load">
                                 @*shipping methods content will be loaded here*@
@@ -115,13 +120,14 @@
                             </script>
                             <div class="buttons" id="shipping-method-buttons-container">
                                 <p class="back-link">
-                                    <a href="#" onclick="Checkout.back(); return false;"><small>&laquo; </small>@T("Common.Back")</a></p>
+                                    <a href="#" onclick="Checkout.back(); return false;"><small>&laquo; </small>@T("Common.Back")</a>
+                                </p>
                                 <input type="button" class="button-1 shipping-method-next-step-button" onclick="ShippingMethod.save()" value="@T("Common.Continue")" />
                                 <span id="shipping-method-please-wait" class="please-wait" style="display: none;">@T("Common.LoadingNextStep")</span>
                             </div>
                         </form>
                     </div>
-                </li>
+</li>
             }
             <li id="opc-payment_method" class="tab-section">
                 <div class="step-title">
@@ -167,6 +173,7 @@
                     </div>
                 </div>
             </li>
+           
             <li id="opc-confirm_order" class="tab-section">
                 <div class="step-title">
                     <span class="number">@confirmOrderStepNumber</span>
@@ -199,5 +206,7 @@
             Accordion.hideSection('#opc-billing');
             Billing.save();
         }
+
+        
     </script>
 </div>
