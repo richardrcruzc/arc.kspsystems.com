@@ -355,6 +355,35 @@ namespace Nop.Web.Factories
                 foreach (var error in getShippingOptionResponse.Errors)
                     model.Warnings.Add(error);
             }
+            var lowesRate = 0M;
+            var LowesName = string.Empty;
+            var onlyIfTwo = 0;
+            var sModel = new Nop.Web.Models.Checkout.CheckoutShippingMethodModel.ShippingMethodModel();
+            foreach (var lowes in model.ShippingMethods.Where(x => x.Name.ToLower().Contains("ground")))
+            {
+                var price = Convert.ToDecimal(lowes.Fee.Replace(",", "").Replace("$", ""));
+                if (lowes.Name.ToLower().Contains("ground"))
+                {
+                    if (price > 0)
+                        if (lowesRate <= price)
+                        {
+                            sModel = lowes;
+                            LowesName = lowes.Name;
+                            lowesRate = price;
+                            onlyIfTwo++;
+                        }
+                }
+
+            }
+
+
+
+            if (onlyIfTwo > 1)
+            {
+
+                model.ShippingMethods.Remove(sModel);
+            }
+
 
             return model;
         }

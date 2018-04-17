@@ -255,9 +255,9 @@ namespace Nop.Plugin.Shipping.Ontrac
                 case "C":
                     return "Ground";
                 case "S":
-                    return "Ontrac Sunrise - 10:30AM Delivery";              
+                    return "Sunrise - 10:30AM Delivery";              
                 case "G":
-                    return "Ontrac Sunrise Gold - 8:00AM Delivery";
+                    return "Sunrise Gold - 8:00AM Delivery";
                
                 default:
                     return "Unknown";
@@ -439,8 +439,9 @@ namespace Nop.Plugin.Shipping.Ontrac
                 {
                     foreach (var shippingOption in shippingOptions)
                     {
-                        if (!shippingOption.Name.ToLower().StartsWith("ontrac"))
-                            shippingOption.Name = $"Ontrac {shippingOption.Name}";
+                        //if (!shippingOption.Name.ToLower().StartsWith("ontrac"))
+                        //    shippingOption.Name = "Ontrac {shippingOption.Name}";
+                        
                         shippingOption.Rate += _ontracSettings.AdditionalHandlingCharge;
                         response.ShippingOptions.Add(shippingOption);
                     }
@@ -458,8 +459,8 @@ namespace Nop.Plugin.Shipping.Ontrac
                 {
                     foreach (var shippingOption in shippingOptions)
                     {
-                        if (!shippingOption.Name.ToLower().StartsWith("ontrac"))
-                            shippingOption.Name = $"Ontrac {shippingOption.Name}";
+                        //if (!shippingOption.Name.ToLower().StartsWith("ontrac"))
+                        //    shippingOption.Name = $"Ontrac {shippingOption.Name}";
                         shippingOption.Rate += _ontracSettings.AdditionalHandlingCharge;
                         response.ShippingOptions.Add(shippingOption);
                     }
@@ -477,8 +478,8 @@ namespace Nop.Plugin.Shipping.Ontrac
                 {
                     foreach (var shippingOption in shippingOptions)
                     {
-                        if (!shippingOption.Name.ToLower().StartsWith("ontrac"))
-                            shippingOption.Name = $"Ontrac {shippingOption.Name}";
+                        //if (!shippingOption.Name.ToLower().StartsWith("ontrac"))
+                        //    shippingOption.Name = $"Ontrac {shippingOption.Name}";
                         shippingOption.Rate += _ontracSettings.AdditionalHandlingCharge;
                         response.ShippingOptions.Add(shippingOption);
                     }

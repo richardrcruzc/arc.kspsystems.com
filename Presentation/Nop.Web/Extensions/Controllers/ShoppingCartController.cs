@@ -1555,8 +1555,40 @@ namespace Nop.Web.Controllers
             {
                 return Content(errors.ToString());
             }
-            
+
+            var lowesRate = 0M;
+            var LowesName = string.Empty;
+            var onlyIfTwo = 0;
+            var sModel = new Nop.Web.Models.ShoppingCart.EstimateShippingResultModel.ShippingOptionModel();
+
+
             var model = _shoppingCartModelFactory.PrepareEstimateShippingResultModel(cart, countryId, stateProvinceId, zipPostalCode);
+            foreach (var lowes in model.ShippingOptions.Where(x=>x.Name.ToLower().Contains("ground")))
+            {
+                var price = Convert.ToDecimal(lowes.Price.Replace(",", "").Replace("$", ""));
+                if(lowes.Name.ToLower().Contains("ground"))
+                {
+                    if (price > 0)
+                    if (lowesRate <= price)
+                    {
+                        sModel = lowes;
+                        LowesName = lowes.Name;
+                        lowesRate = price;
+                            onlyIfTwo++;
+                    }
+                }
+
+            }
+
+           
+
+            if (onlyIfTwo > 1)
+            {
+
+                model.ShippingOptions.Remove(sModel);
+            }
+
+
             return PartialView("_EstimateShippingResult", model);
         }
         

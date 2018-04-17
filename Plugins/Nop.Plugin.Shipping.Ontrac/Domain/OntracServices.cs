@@ -21,9 +21,12 @@ namespace Nop.Plugin.Shipping.Ontrac.Domain
         private static readonly Dictionary<string, string> _services = new Dictionary<string, string>
         {
             {"Ground", "C"},
-            {"Ontrac Sunrise - 10:30AM Delivery", "S"},
-            {"Ontrac Sunrise Gold - 8:00AM Delivery", "G"},            
+            {"Sunrise - 10:30AM Delivery", "S"},
+            {"Sunrise Gold - 8:00AM Delivery", "G"},            
         };
+          //{"Ground", "C"},
+          //  {"Ontrac Sunrise - 10:30AM Delivery", "S"},
+          //  {"Ontrac Sunrise Gold - 8:00AM Delivery", "G"},    
 
         #endregion
     

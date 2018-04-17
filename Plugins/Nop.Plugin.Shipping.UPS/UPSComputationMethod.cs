@@ -553,13 +553,13 @@ namespace Nop.Plugin.Shipping.UPS
                     return "2nd Day Air";
                 //return "UPS 2nd Day Air";
                 case "03":
-                    return "UPS Ground";
+                    return "Ground";
                 case "07":
-                    return "UPS Worldwide Express";
+                    return "Worldwide Express";
                 case "08":
-                    return "UPS Worldwide Expedited";
+                    return "Worldwide Expedited";
                 case "11":
-                    return "UPS Canada Standard";
+                    return "Canada Standard";
                     //return "UPS Standard";
                 case "12":
                     return "3 Day Select";
@@ -568,22 +568,22 @@ namespace Nop.Plugin.Shipping.UPS
                     //return "UPS Next Day Air Saver";
                     return "Next Day Air Saver";
                 case "14":
-                    return "UPS Next Day Air Early A.M.";
+                    return "Next Day Air Early A.M.";
                
                 case "54":
-                    return "UPS Worldwide Express Plus";
+                    return "Worldwide Express Plus";
                 case "59":
-                    return "UPS 2nd Day Air A.M.";
+                    return "2nd Day Air A.M.";
                 case "65":
-                    return "UPS Saver";
+                    return "Saver";
                 case "82": //82-86, for Polish Domestic Shipments
-                    return "UPS Today Standard";
+                    return "Today Standard";
                 case "83":
-                    return "UPS Today Dedicated Courier";
+                    return "Today Dedicated Courier";
                 case "85":
-                    return "UPS Today Express";
+                    return "Today Express";
                 case "86":
-                    return "UPS Today Express Saver";
+                    return "Today Express Saver";
                 default:
                     return "Unknown";
             }
@@ -813,8 +813,8 @@ namespace Nop.Plugin.Shipping.UPS
                 {
                     foreach (var shippingOption in shippingOptions)
                     {
-                        if (!shippingOption.Name.ToLower().StartsWith("ups"))
-                            shippingOption.Name = $"UPS {shippingOption.Name}";
+                        //if (!shippingOption.Name.ToLower().StartsWith("ups"))
+                        //    shippingOption.Name = $"UPS {shippingOption.Name}";
                         shippingOption.Rate += _upsSettings.AdditionalHandlingCharge;
                         response.ShippingOptions.Add(shippingOption);
                     }
@@ -842,8 +842,8 @@ namespace Nop.Plugin.Shipping.UPS
                     {
                         foreach (var shippingOption in saturdayDeliveryShippingOptions)
                         {
-                            shippingOption.Name =
-                                $"{(shippingOption.Name.ToLower().StartsWith("ups") ? string.Empty : "UPS ")}{shippingOption.Name} - Saturday Delivery";
+                            //shippingOption.Name =
+                            //    $"{(shippingOption.Name.ToLower().StartsWith("ups") ? string.Empty : "UPS ")}{shippingOption.Name} - Saturday Delivery";
                             shippingOption.Rate += _upsSettings.AdditionalHandlingCharge;
                             response.ShippingOptions.Add(shippingOption);
                         }
