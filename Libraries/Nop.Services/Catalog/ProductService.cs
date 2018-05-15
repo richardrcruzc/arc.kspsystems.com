@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Nop.Core;
 using Nop.Core.Caching;
 using Nop.Core.Data;
@@ -11,6 +12,7 @@ using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Security;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Stores;
+using Nop.Core.Domain.Vendors;
 using Nop.Core.Extensions;
 using Nop.Data;
 using Nop.Services.Customers;
@@ -18,6 +20,7 @@ using Nop.Services.Events;
 using Nop.Services.Localization;
 using Nop.Services.Messages;
 using Nop.Services.Security;
+using Nop.Services.Seo;
 using Nop.Services.Stores;
 
 namespace Nop.Services.Catalog
@@ -44,6 +47,8 @@ namespace Nop.Services.Catalog
         #endregion
 
         #region Fields
+
+        private readonly IRepository<Vendor> _vendorRepository;
 
         private readonly IRepository<Product> _productRepository;
         private readonly IRepository<RelatedProduct> _relatedProductRepository;
@@ -107,7 +112,9 @@ namespace Nop.Services.Catalog
         /// <param name="eventPublisher">Event published</param>
         /// <param name="aclService">ACL service</param>
         /// <param name="storeMappingService">Store mapping service</param>
-        public ProductService(ICacheManager cacheManager,
+        public ProductService(
+            IRepository<Vendor> vendorRepository,
+            ICacheManager cacheManager,
             IRepository<Product> productRepository,
             IRepository<RelatedProduct> relatedProductRepository,
             IRepository<CrossSellProduct> crossSellProductRepository,
@@ -135,6 +142,7 @@ namespace Nop.Services.Catalog
             IAclService aclService,
             IStoreMappingService storeMappingService)
         {
+            this._vendorRepository = vendorRepository;
             this._cacheManager = cacheManager;
             this._productRepository = productRepository;
             this._relatedProductRepository = relatedProductRepository;
@@ -168,6 +176,379 @@ namespace Nop.Services.Catalog
 
         #region Utilities
 
+       
+        public virtual string GetNameRid(Product product, int rid =0)
+        {
+            var productName = product.Name;
+            var category = string.Empty;
+             
+            var categoryobj = product.ProductCategories.FirstOrDefault();
+            if (categoryobj != null)
+                category = categoryobj.Category.Name;
+
+            var color = product.Color ?? "";
+
+            var brand = string.Empty;
+
+            var brandobj = _vendorRepository.TableNoTracking.Where(x=>x.Id == product.VendorId).FirstOrDefault();
+            if (brandobj != null)
+                brand = brandobj.Name; 
+
+            var legacy = _dbContext.SqlQuery<string>($"select top 1 legacyCode from LegacyIds where ItemId={product.Id} order by id desc").FirstOrDefault();
+            if (legacy == null)
+                legacy = string.Empty;
+            if (category.ToLower().Contains("toner") && rid>0)
+            {
+
+                var copier = _productRepository.TableNoTracking.Where(x => x.Id == rid).FirstOrDefault();
+
+
+                if (color.Trim().ToLower() == "set")
+                {
+                    productName = $"Genuine {copier.GetSeName()} Toner Set";
+                }
+                else
+                {
+                    if (product.Name.ToLower().Contains("master case"))
+                    {
+                        productName = $"Genuine {copier.GetSeName()} {color} Toner Master Case";
+                    }
+                    else
+                    {
+                        productName = $"Genuine {copier.GetSeName()} {color} Toner Cartridge";
+                    }
+
+                }
+            }            
+              else  if (category.ToLower().Contains("toner"))
+                {
+                    //Konica Minolta Genuine A33K332 (TN512M) Magenta Toner Cartridge
+
+                    var legacyTn = string.Empty;
+                    var legacies = _dbContext.SqlQuery<string>($"select legacyCode from LegacyIds where ItemId={product.Id} order by id desc");
+                    
+                    if (product.Sku.ToLower().Contains("tn"))
+                        {
+                        foreach (var item in legacies)
+                        {
+                            if (product.Sku.ToLower() != item.ToLower())
+                                legacy = item;
+                        }
+
+                    }
+                    else
+                    {
+
+                        foreach (var item in legacies)
+                        {
+                            if (product.Sku.ToLower().Contains("tn"))
+                                legacy = item;
+                        }
+                        if (legacy.Length == 0 && legacies.Count() > 0)
+                        {
+                            legacy = legacies.FirstOrDefault().Trim();
+                        }
+
+                    }
+
+                if (color.Trim().ToLower() == "set")
+                {
+                    if (legacy.Length == 0)
+                    {
+                        productName= $"{brand} Genuine {product.Sku} Toner Set";
+                    }
+                    else
+                    {
+                        productName = $"{brand} Genuine {product.Sku} ({legacy}) Toner Set"; 
+                    }
+                }
+                else
+                {
+                    if (legacy.Length == 0) //no legacy
+                    {
+                        if (color.Length == 0)
+                        {
+                            if (product.Name.ToLower().Contains("master case"))
+                            {
+                                productName = $"{brand} Genuine {product.Sku} Toner Master Case";
+                                
+                            }
+                            else
+                            {
+                                productName = $"{brand} Genuine {product.Sku} Toner Cartridge";                               
+                            }
+                        }
+                        else
+                        {
+                            if (product.Name.ToLower().Contains("master case"))
+                            {
+                                productName = $"{brand} Genuine {product.Sku} {color} Toner Master Case";
+                                productName = $"{brand} Genuine {product.Sku} {color} Toner Master Case";
+                            }
+                            else
+                            {
+                                productName = $"{brand} Genuine {product.Sku} {color} Toner Cartridge";
+                               
+                            }
+                        }
+                    }
+                    else //has legacy
+                    {
+                        if (color.Length == 0)
+                        {
+                            if (product.Name.ToLower().Contains("master case"))
+                            {
+                                productName = $"{brand} Genuine {product.Sku} ({legacy}) Toner Master Case";
+                                
+                            }
+                            else
+                            {
+                                productName = $"{brand} Genuine {product.Sku} ({legacy}) Toner Cartridge";                               
+                            }
+                        }
+                        else
+                        {
+                            if (product.Name.ToLower().Contains("master case"))
+                            {
+                                productName = $"{brand} Genuine {product.Sku} ({legacy}) {color} Toner Master Case";
+                                
+                            }
+                            else
+                            {
+                                productName = $"{brand} Genuine {product.Sku} ({legacy}) {color} Toner Cartridge";
+                                
+
+                            }
+                        }
+                    }
+                }
+
+            }
+
+
+           
+
+                return productName;
+        }
+
+        public virtual string GetUrlRid(Product product, int rid = 0)
+        {
+            var copier = _productRepository.TableNoTracking.Where(x => x.Id == rid).FirstOrDefault();
+
+            var productName = product.Name;
+
+            var seName = SeoExtensions.GetSeName(productName, true, false);
+             
+            var category = string.Empty;
+            var categoryobj = product.ProductCategories.FirstOrDefault();
+            if (categoryobj != null)
+                category = categoryobj.Category.Name;
+
+            var catProductId = string.Empty;
+
+            if (category != string.Empty)
+            {
+                category = SeoExtensions.GetSeName(category, true, false);
+                catProductId = categoryobj.Category.Id.ToString();
+            }
+            var color = product.Color ?? string.Empty;
+
+            if (color != string.Empty)
+                color = SeoExtensions.GetSeName(color, true, false);
+
+            var brand = string.Empty;
+
+            if (copier != null)
+            {
+                var brandobj = _vendorRepository.TableNoTracking.Where(x => x.Id == copier.VendorId).FirstOrDefault();
+                if (brandobj != null)
+                    brand = brandobj.Name.ToLower();
+
+                if (brand != string.Empty)
+                    brand = SeoExtensions.GetSeName(brand, true, false);
+            }
+
+            var legacy = _dbContext.SqlQuery<string>($"select top 1 legacyCode from LegacyIds where ItemId={product.Id} order by id desc").FirstOrDefault();
+            if (legacy == null)
+                legacy = string.Empty;
+
+            if (legacy != string.Empty)
+                legacy = SeoExtensions.GetSeName(legacy, true, false);
+
+            
+            if (category.ToLower().Contains("toner") && rid>0) 
+            {
+             
+
+                if (color.ToLower() == "set")
+                {
+                    productName= $"{product.Id}/toner-set-for/{brand}/{copier.GetSeName().Replace(brand,"")}";
+
+                }
+                else
+                {
+                    if (color.Length == 0)
+                    {
+                        if (copier.GetSeName().ToLower().Contains("master case"))
+                        {
+                            productName = $"{product.Id}/toner-master-case-for/{brand}/{copier.GetSeName().Replace(brand, "")}";
+                        
+                        }
+                        else
+                        {
+                            productName = $"{product.Id}/toner-for/{brand}/{copier.GetSeName().Replace(brand, "")}";
+                          }
+                    }
+                    else
+                    {
+                        if (copier.GetSeName().ToLower().Contains("master case"))
+                        {
+                            if (!string.IsNullOrEmpty(brand))
+                                productName = $"{product.Id}/{color}-toner-master-case-for/{brand}/{copier.GetSeName().Replace(brand, "")}";
+                            else
+                                productName = $"{product.Id}/{color}-toner-master-case-for/{copier.GetSeName()}";
+
+                        }
+                        else
+                        {
+                            if(!string.IsNullOrEmpty(brand))
+                            productName = $"{product.Id}/{color}-toner-for/{brand}/{copier.GetSeName().Replace(brand, "")}";
+                            else
+                            productName = $"{product.Id}/{color}-toner-for/{copier.GetSeName()}";
+
+                        }
+                    }
+
+                }
+                //5446 / magenta - toner -for/ konica % 20minolta / bizhub - c554 
+            }
+            else
+            {
+                if (category.ToLower().Contains("copier"))
+                {
+
+                    productName = $"{product.Id}/{product.GetSeName()}-i-toner-parts-supplies";
+                }
+                else if (category.ToLower().Contains("toner"))
+                {
+                    //5446/KonicaMinolta/A33K332/TN-512M-magenta-toner/
+                    var legacyTn = string.Empty;
+                    var legacies = _dbContext.SqlQuery<string>($"select legacyCode from LegacyIds where ItemId={product.Id} order by id desc");
+
+                    if (category.ToLower().Contains("tn"))
+                    {
+                        foreach (var item in legacies)
+                        {
+                            if (product.Sku.ToLower() != item.ToLower())
+                                legacyTn = item;
+
+                        }
+                    }
+                    else
+                    {
+
+                        foreach (var item in legacies)
+                        {
+                            if (item.ToLower().Contains("tn"))
+                                legacyTn = item;
+
+                        }
+
+
+
+                        if (legacyTn.Length == 0 && legacies.Count() > 0)
+                        {
+                            legacyTn = legacies.FirstOrDefault().ToLower();
+                        }
+                    }
+                    if (color.Trim().ToLower() == "set")
+                    {
+                        if (legacy.Length == 0)
+                        {
+                            productName = $"{product.Id}/{brand}/{product.Sku}/toner-set";
+                        }
+                        else
+                        {
+                            productName = $"{product.Id}/{brand}/{product.Sku}/{legacyTn}-toner-set";
+
+                        }
+
+                    }
+                    else
+                    {
+                        if (legacy.Length == 0) //no legacy
+                        {
+                            if (color.Length == 0)
+                            {
+                                if (seName.ToLower().Contains("master case"))
+                                {
+                                    productName = $"{product.Id}/{brand}/{product.Sku}/toner-master-case";
+
+                                }
+                                else
+                                {
+                                    productName = $"{product.Id}/{brand}/{product.Sku}/toner";
+
+                                }
+                            }
+                            else
+                            {
+                                if (seName.ToLower().Contains("master case"))
+                                {
+                                    productName = $"{product.Id}/{brand}/{product.Sku}/{color}-toner-master-case";
+
+
+                                }
+                                else
+                                {
+                                    productName = $"{product.Id}/{brand}/{product.Sku}/{color}-toner";
+
+                                }
+                            }
+
+                        }
+                        else //has legacy
+                        {
+                            if (color.Length == 0)
+                            {
+                                if (seName.ToLower().Contains("master case"))
+                                {
+                                    productName = $"{product.Id}/{brand}/{product.Sku}/{legacyTn}-toner-master-case";
+
+                                }
+                                else
+                                {
+                                    productName = $"{product.Id}/{brand}/{product.Sku}/{legacyTn}-toner";
+
+                                }
+                            }
+                            else
+                            {
+                                if (seName.ToLower().Contains("master case"))
+                                {
+                                    productName = $"{product.Id}/{brand}/{product.Sku}/{legacyTn}-{color}-toner-master-case";
+
+                                }
+                                else
+                                {
+                                    productName = $"{product.Id}/{brand}/{product.Sku}/{legacyTn}-{color}-toner";
+                                }
+                            }
+                        }
+                    }
+
+                }
+                else
+                {
+                    productName = $"{product.Id}/{product.GetSeName()}-i-{product.Sku}";
+                  
+                }
+            }
+
+
+                return productName.Replace("//","/");
+        }
+         
         /// <summary>
         /// Search products using LINQ
         /// </summary>

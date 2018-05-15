@@ -30,7 +30,7 @@ namespace Nop.Web.Factories
         IEnumerable<ProductOverviewModel> PrepareProductOverviewModels(IEnumerable<Product> products,
             bool preparePriceModel = true, bool preparePictureModel = true,
             int? productThumbPictureSize = null, bool prepareSpecificationAttributes = false,
-            bool forceRedirectionAfterAddingToCart = false);
+            bool forceRedirectionAfterAddingToCart = false, int rid=0);
 
         /// <summary>
         /// Prepare the product details model

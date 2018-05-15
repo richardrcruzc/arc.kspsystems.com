@@ -114,7 +114,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Components
 
                 model.PartNumber = product.Sku;
 
-                var usedIn = _productService.GetProductsByIds(tmp).Select(x => new UsedInModel { ProductName = x.Name, Id = x.Id, SeName =  $"{x.Id}/{x.GetSeName()}-{x.Sku}"  }).ToList();
+                var usedIn = _productService.GetProductsByIds(tmp).Select(x => new UsedInModel { ProductName = _productService.GetNameRid(x,0), Id = x.Id, SeName = _productService.GetUrlRid(x) }).ToList();
 
                 var productCategories = string.Empty;
                 foreach (var c in product.ProductCategories.ToList())
@@ -164,7 +164,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Components
                 model.FullDescription = product.FullDescription;
                 if (!isCopier)
                 {
-                    model.PartForItem = _productService.GetProductsByIds(partForItem.ToArray()).Select(x => new UsedInModel { ProductName = x.Name, Id = x.Id, SeName =  $"{x.Id}/{x.GetSeName()}-{x.Sku}" }).ToList();
+                    model.PartForItem = _productService.GetProductsByIds(partForItem.ToArray()).Select(x => new UsedInModel { ProductName = _productService.GetNameRid(x,0), Id = x.Id, SeName = _productService.GetUrlRid(x) }).ToList();
 
                 }
                 else

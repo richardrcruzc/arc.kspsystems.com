@@ -251,12 +251,12 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                     productModel.Id = x.Id;
                     //little performance optimization: ensure that "FullDescription" is not returned
                     productModel.FullDescription = "";
-                    productModel.Name = x.Name;
+                    productModel.Name = _productService.GetNameRid(x,0);
                     productModel.Sku = x.Sku;
                     productModel.Price = x.Price;
                     productModel.StockQuantityStr = x.StockQuantity.ToString();
                     productModel.Published = x.Published;
-                    //productModel.SeName = x.Name;
+                     productModel.SeName = _productService.GetUrlRid(x);
                     foreach (var cat in x.ProductCategories.ToList())
                       productModel.NameCategory += cat.Category.Name+ " ";
                     //picture

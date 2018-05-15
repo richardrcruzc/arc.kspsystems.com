@@ -337,8 +337,8 @@ namespace Nop.Web.Factories
                 Id = sci.Id,
                 Sku = sci.Product.FormatSku(sci.AttributesXml, _productAttributeParser),
                 ProductId = sci.Product.Id,
-                ProductName = sci.Product.GetLocalized(x => x.Name),
-                ProductSeName = System.Net.WebUtility.UrlDecode($"{sci.Id}/{sci.Product.GetSeName()}-{sci.Product.Sku}"), // sci.Product.GetSeName(),
+                ProductName = _productService.GetNameRid(sci.Product),  //sci.Product.GetLocalized(x => x.Name),
+                ProductSeName =_productService.GetUrlRid(sci.Product), //  System.Net.WebUtility.UrlDecode($"{sci.Id}/{sci.Product.GetSeName()}-{sci.Product.Sku}"), // sci.Product.GetSeName(),
                 Quantity = sci.Quantity,
                 AttributeInfo = _productAttributeFormatter.FormatAttributes(sci.Product, sci.AttributesXml),
             };
@@ -474,8 +474,8 @@ namespace Nop.Web.Factories
                 Id = sci.Id,
                 Sku = sci.Product.FormatSku(sci.AttributesXml, _productAttributeParser),
                 ProductId = sci.Product.Id,
-                ProductName = sci.Product.GetLocalized(x => x.Name),
-                ProductSeName = sci.Product.GetSeName(),
+                ProductName = _productService.GetNameRid(sci.Product,0), // sci.Product.GetLocalized(x => x.Name),
+                ProductSeName = _productService.GetUrlRid(sci.Product,0), // sci.Product.GetSeName(),
                 Quantity = sci.Quantity,
                 AttributeInfo = _productAttributeFormatter.FormatAttributes(sci.Product, sci.AttributesXml),
             };
@@ -986,8 +986,8 @@ namespace Nop.Web.Factories
                         {
                             Id = sci.Id,
                             ProductId = sci.Product.Id,
-                            ProductName = sci.Product.GetLocalized(x => x.Name),
-                            ProductSeName = sci.Product.GetSeName(),
+                            ProductName = _productService.GetNameRid(sci.Product), // sci.Product.GetLocalized(x => x.Name),
+                            ProductSeName =_productService.GetUrlRid(sci.Product), // sci.Product.GetSeName(),
                             Quantity = sci.Quantity,
                             AttributeInfo = _productAttributeFormatter.FormatAttributes(sci.Product, sci.AttributesXml)
                         };

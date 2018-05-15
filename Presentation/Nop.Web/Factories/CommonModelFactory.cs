@@ -529,10 +529,10 @@ namespace Nop.Web.Factories
                     model.Products = products.Select(product => new ProductOverviewModel
                     {
                         Id = product.Id,
-                        Name = product.GetLocalized(x => x.Name),
+                        Name =_productService.GetNameRid(product,0), // product.GetLocalized(x => x.Name),
                         ShortDescription = product.GetLocalized(x => x.ShortDescription),
                         FullDescription = product.GetLocalized(x => x.FullDescription),
-                        SeName = System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}"), // product.GetSeName(),
+                        SeName = _productService.GetUrlRid(product) , //System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}"), // product.GetSeName(),
                     }).ToList();
                 }
                 //product tags

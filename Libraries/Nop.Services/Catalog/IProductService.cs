@@ -14,6 +14,10 @@ namespace Nop.Services.Catalog
     {
         #region Products
 
+        string GetNameRid(Product product, int rid  =0);
+        string GetUrlRid(Product product, int rid=0 );
+       
+
         /// <summary>
         /// Delete a product
         /// </summary>

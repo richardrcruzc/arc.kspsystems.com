@@ -227,7 +227,8 @@
         copier.enable(true);
         $("#ItemsListResults").hide();
     }
-        function onChangeCategory() {
+    function onChangeCategory() {
+        var brand = $("#Brands").val();
             var rid = $("#CopiersAccesories").val();
             var cid = $("#Categories").val();
             //window.location.href = '/anon/BrowserInventory?rid=' + 2 + "?cid=" + 3;
@@ -235,7 +236,7 @@
                 window.location.href = '/anon/BrowseInventory.aspx?rid=' + rid ;
             }
             else {
-                window.location.href = '/anon/BrowseInventory.aspx?rid=' + rid + "&cid=" + cid;
+                window.location.href = '/anon/BrowseInventory.aspx?brand=' +brand+'&rid=' + rid + "&cid=" + cid;
             }
         //$("#ItemsListResults").show();
         //var grid = $("#categories").data("kendoGrid");

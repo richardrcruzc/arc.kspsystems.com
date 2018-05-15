@@ -506,8 +506,8 @@ namespace Nop.Web.Factories
                 {
                     Enabled = _catalogSettings.CategoryBreadcrumbEnabled,
                     ProductId = product.Id,
-                    ProductName = product.GetLocalized(x => x.Name),
-                    ProductSeName = System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}") // product.GetSeName()
+                    ProductName = _productService.GetNameRid(product), //product.GetLocalized(x => x.Name),
+                    ProductSeName = _productService.GetUrlRid(product), // System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}") // product.GetSeName()
                 };
                 var productCategories = _categoryService.GetProductCategoriesByProductId(product.Id);
                 if (!productCategories.Any())
@@ -1112,7 +1112,7 @@ namespace Nop.Web.Factories
         public virtual IEnumerable<ProductOverviewModel> PrepareProductOverviewModels(IEnumerable<Product> products,
             bool preparePriceModel = true, bool preparePictureModel = true,
             int? productThumbPictureSize = null, bool prepareSpecificationAttributes = false,
-            bool forceRedirectionAfterAddingToCart = false)
+            bool forceRedirectionAfterAddingToCart = false,int rid=0)
         {
             if (products == null)
                 throw new ArgumentNullException(nameof(products));
@@ -1120,15 +1120,26 @@ namespace Nop.Web.Factories
             var models = new List<ProductOverviewModel>();
             foreach (var product in products)
             {
-                var tmp = $"{product.Id}/{product.GetSeName()}-{product.Sku}";
-                var newSeName = System.Net.WebUtility.UrlDecode(tmp);
+
+                var productName = string.Empty;
+                var seName = string.Empty;
+                if (rid>0) {
+                    productName = _productService.GetNameRid(product, rid);
+                    seName = _productService.GetUrlRid(product,rid );
+                        }
+                else
+                {
+
+                    productName = _productService.GetNameRid(product);
+                    seName = _productService.GetUrlRid(product);
+                }
                 var model = new ProductOverviewModel
                 {
                     Id = product.Id,
-                    Name = product.GetLocalized(x => x.Name),
+                    Name = productName,  //product.GetLocalized(x => x.Name),
                     ShortDescription = product.GetLocalized(x => x.ShortDescription),
                     FullDescription = product.GetLocalized(x => x.FullDescription),
-                    SeName = newSeName, //product.GetSeName(),
+                    SeName = seName,  //newSeName,   product.GetSeName(),
                     Sku = product.Sku,
                     ProductType = product.ProductType,
                     MarkAsNew = product.MarkAsNew &&
@@ -1179,13 +1190,13 @@ namespace Nop.Web.Factories
             var model = new ProductDetailsModel
             {
                 Id = product.Id,
-                Name = product.GetLocalized(x => x.Name),
+                Name = _productService.GetNameRid(product), //product.GetLocalized(x => x.Name),
                 ShortDescription = product.GetLocalized(x => x.ShortDescription),
                 FullDescription = product.GetLocalized(x => x.FullDescription),
                 MetaKeywords = product.GetLocalized(x => x.MetaKeywords),
                 MetaDescription = product.GetLocalized(x => x.MetaDescription),
                 MetaTitle = product.GetLocalized(x => x.MetaTitle),
-                SeName = product.GetSeName(),
+                SeName = _productService.GetUrlRid(product), // product.GetSeName(),
                 ProductType = product.ProductType,
                 ShowSku = _catalogSettings.ShowSkuOnProductDetailsPage,
                 Sku = product.Sku,
@@ -1207,8 +1218,8 @@ namespace Nop.Web.Factories
             //    model.MetaDescription = model.ShortDescription;
             //}
 
-            if (_seoSettings.GenerateProductMetaDescription && string.IsNullOrEmpty(model.MetaDescription))
-            {
+            //if (_seoSettings.GenerateProductMetaDescription && string.IsNullOrEmpty(model.MetaDescription))
+            //{
                 var legacy = string.Empty;
                 var firstlegacy = string.Empty;
                 string temp = $"{model.Name} {model.Sku}"; 
@@ -1313,7 +1324,7 @@ namespace Nop.Web.Factories
                 {
                     model.MetaDescription = temp_copiers + ". Free Shipping on orders over $99."; 
                 } 
-            } 
+            //} 
                 //shipping info
                 model.IsShipEnabled = product.IsShipEnabled;
             if (product.IsShipEnabled)
@@ -1491,8 +1502,8 @@ namespace Nop.Web.Factories
                 throw new ArgumentNullException(nameof(product));
 
             model.ProductId = product.Id;
-            model.ProductName = product.GetLocalized(x => x.Name);
-            model.ProductSeName = System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}");// product.GetSeName();
+            model.ProductName = _productService.GetNameRid(product); // product.GetLocalized(x => x.Name);
+            model.ProductSeName = _productService.GetUrlRid(product); //System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}");// product.GetSeName();
 
             var productReviews = _catalogSettings.ShowProductReviewsPerStore
                 ? product.ProductReviews.Where(pr => pr.IsApproved && pr.StoreId == _storeContext.CurrentStore.Id).OrderBy(pr => pr.CreatedOnUtc)
@@ -1555,8 +1566,8 @@ namespace Nop.Web.Factories
                 {
                     Title = review.Title,
                     ProductId = product.Id,
-                    ProductName = product.GetLocalized(p => p.Name),
-                    ProductSeName = product.GetSeName(),
+                    ProductName = _productService.GetNameRid(product), //  product.GetLocalized(p => p.Name),
+                    ProductSeName = _productService.GetUrlRid(product), //product.GetSeName(),
                     Rating = review.Rating,
                     ReviewText = review.ReviewText,
                     ReplyText = review.ReplyText,
@@ -1608,8 +1619,8 @@ namespace Nop.Web.Factories
                 throw new ArgumentNullException(nameof(product));
 
             model.ProductId = product.Id;
-            model.ProductName = product.GetLocalized(x => x.Name);
-            model.ProductSeName = System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}");// product.GetSeName();
+            model.ProductName = _productService.GetNameRid(product,0); //product.GetLocalized(x => x.Name);
+            model.ProductSeName = _productService.GetUrlRid(product,0); // System.Net.WebUtility.UrlDecode($"{product.Id}/{product.GetSeName()}-{product.Sku}");// product.GetSeName();
             model.DisplayCaptcha = _captchaSettings.Enabled && _captchaSettings.ShowOnEmailProductToFriendPage;
             if (!excludeProperties)
             {

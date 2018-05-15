@@ -190,10 +190,9 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         //}
 
 
-        public virtual IActionResult BrowseInventory(int rid, int cid, Web.Models.Catalog.CatalogPagingFilteringModel command)
-        {
-            var prodsInCategory = new List<int>();
-
+        public virtual IActionResult BrowseInventory(  int rid, int cid, Web.Models.Catalog.CatalogPagingFilteringModel command)
+        { 
+            var prodsInCategory = new List<int>(); 
 
             ViewBag.Rid = rid;
             ViewBag.Cid = cid;
@@ -213,9 +212,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
              
                 //RelationsGroupsItems>
                 var rgp = _rgpRepository.TableNoTracking.Where(x => x.Direction == "B" && x.Deleted == false && gpi.Contains(x.GroupId)).Select(x => x.ItemId).ToList();
-
-
-
+ 
                 rgp.AddRange(ic);
                 //var catergories
                 //query = products.Where(x => ic.Contains(x.Id) || rgp.Contains(x.Id)) ;
@@ -232,18 +229,12 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                // query.Insert(0, new { Name = "All Categories", Id = 0 });
 
                 //var catergories = query.GroupBy(x => x.Name, x => x.Id, (key, g) => new { Id = key, Name = g.ToList() })
-                // .Select(x => new { x.Name, x.Id }).ToList();
-
-
+                // .Select(x => new { x.Name, x.Id }).ToList(); 
 
 
                 var temp = from c in queryC
                            group c.Name by c.Id into g
-                           select new { Name = g.FirstOrDefault(), Id = g.Key };
-
-
-
-
+                           select new { Name = g.FirstOrDefault(), Id = g.Key }; 
 
                 var catergories = temp.Select(x => new { x.Name, x.Id }).ToList();
 
@@ -256,8 +247,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
             }
             else
-            {
-              
+            { 
 
                 var prodIds = _iRepository.TableNoTracking.Where(x => x.ItemId == rid && x.Deleted == false).Select(x => x.ItemIdPart).ToList();
 
@@ -431,7 +421,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                 }
                 if (featuredProducts != null)
                 {
-                    model.FeaturedProducts = _productModelFactory.PrepareProductOverviewModels(featuredProducts).ToList();
+                    model.FeaturedProducts = _productModelFactory.PrepareProductOverviewModels(featuredProducts, rid:rid).ToList();
                 }
             }
 
@@ -475,7 +465,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
           //  products.Where(item => query.Any(x => x.Id.Equals(item.Id)));
             //products.Where(x => allIds.Contains(x.Id));
 
-            model.Products = _productModelFactory.PrepareProductOverviewModels(products).ToList();
+            model.Products = _productModelFactory.PrepareProductOverviewModels(products,rid:rid).ToList();
 
             model.PagingFilteringContext.LoadPagedList(products);
 
@@ -1004,10 +994,11 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             }
         }
         [HttpPost]
-        public virtual IActionResult FrontSearch(DataSourceRequest command,int rid, int cid)
+        public virtual IActionResult FrontSearch(DataSourceRequest command, int rid, int cid)
         {
+           
             var query = _productService.GetProductsByIds(new int[] {0});
-
+            
 
             if (cid == 0)
             {
@@ -1062,12 +1053,12 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         Manufacturer = string.Join(",", x.ProductManufacturers.Select(y => y.Manufacturer.Name).ToArray()),
                         PartNumber = x.Sku,
                         Price = x.Price,
-                        ProductName = x.Name,
+                        ProductName = _productService.GetNameRid(x, rid:rid),
                         Qty = 1,
                         ThumbImageUrl = thumb,
-                        SeName = x.GetSeName(),
+                        SeName = _productService.GetUrlRid(x, rid),
                         OutOfStock = x.GetTotalStockQuantity() <= 0,
-                        NewSeName = System.Net.WebUtility.UrlDecode($"{x.Id}/{x.GetSeName()}-{x.Sku}") 
+                        NewSeName = _productService.GetUrlRid(x)
 
 
                     };
@@ -1184,12 +1175,12 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         Manufacturer = string.Join(",", x.ProductManufacturers.Select(y => y.Manufacturer.Name).ToArray()),
                         PartNumber = x.Sku,
                         Price = x.Price,
-                        ProductName = x.Name,
+                        ProductName = _productService.GetNameRid(x,0), //x.Name,
                         Qty = 1,
                         ThumbImageUrl = thumb,
-                        SeName = newSeName, // x.GetSeName(),
+                        SeName = _productService.GetUrlRid(x,0), // x.GetSeName(),
                         OutOfStock = x.GetTotalStockQuantity()   <= 0,
-                        NewSeName = newSeName,
+                        NewSeName = _productService.GetUrlRid(x),
 
                     };
                     //categoryModel.Breadcrumb = x.GetFormattedBreadCrumb(_categoryService);

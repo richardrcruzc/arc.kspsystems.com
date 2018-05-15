@@ -53,12 +53,12 @@ else
         { 
             if (item != Model.UsedInModel[Model.UsedInModel.Count - 1])
             {
-                <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName, </a>
+                <a href="@System.Net.WebUtility.UrlDecode(Url.RouteUrl("Product", new { SeName = item.SeName }))">@item.ProductName, </a>
     }
     else
     {
 
-        <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName</a>
+        <a href="@System.Net.WebUtility.UrlDecode(Url.RouteUrl("Product", new { SeName = item.SeName }))">@item.ProductName</a>
 }
 
 

@@ -7,6 +7,7 @@ using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Localization;
 using Nop.Core.Domain.Orders;
+using Nop.Data;
 using Nop.Services.Catalog;
 using Nop.Services.Events;
 using Nop.Services.Localization;
@@ -16,6 +17,7 @@ using Nop.Services.Orders;
 using Nop.Services.Security;
 using Nop.Services.Seo;
 using Nop.Services.Stores;
+using Nop.Services.Vendors;
 using Nop.Web.Factories;
 using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
@@ -31,7 +33,8 @@ namespace Nop.Web.Controllers
     public partial class ProductController : BasePublicController
     {
         #region Fields
-
+        private readonly IVendorService _vendorService;
+        private readonly IDbContext _dbContext;
         private readonly IProductModelFactory _productModelFactory;
         private readonly IProductService _productService;
         private readonly IWorkContext _workContext;
@@ -56,7 +59,10 @@ namespace Nop.Web.Controllers
 
         #region Ctor
 
-        public ProductController(IProductModelFactory productModelFactory,
+        public ProductController(
+            IVendorService vendorService,
+            IDbContext dbContext,
+        IProductModelFactory productModelFactory,
             IProductService productService,
             IWorkContext workContext,
             IStoreContext storeContext,
@@ -76,6 +82,8 @@ namespace Nop.Web.Controllers
             LocalizationSettings localizationSettings,
             CaptchaSettings captchaSettings)
         {
+            this._vendorService= vendorService;
+            this._dbContext = dbContext;
             this._productModelFactory = productModelFactory;
             this._productService = productService;
             this._workContext = workContext;
@@ -99,9 +107,9 @@ namespace Nop.Web.Controllers
 
         #endregion
 
-        #region Product details page
+        #region Product details page 
         [HttpsRequirement(SslRequirement.No)]
-        public virtual IActionResult UrlRecordSlug(int productId, string productName, string partNumber)
+        public virtual IActionResult UrlRecordSlug(int productId, string productName="", string partNumber="", string partNumber1="")
         {
             int updatecartitemid = 0;
             var product = _productService.GetProductById(productId);
@@ -174,6 +182,8 @@ namespace Nop.Web.Controllers
             var model = _productModelFactory.PrepareProductDetailsModel(product, updatecartitem, false);
             //template
             var productTemplateViewPath = _productModelFactory.PrepareProductTemplateViewPath(product);
+
+            
 
             return View(productTemplateViewPath, model);
         }

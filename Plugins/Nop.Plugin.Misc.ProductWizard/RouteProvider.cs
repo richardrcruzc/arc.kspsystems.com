@@ -20,8 +20,22 @@ namespace Nop.Plugin.Misc.ProductWizard
 
             routeBuilder.MapLocalizedRoute(
                 "Nop.Plugin.Misc.ProductWizard.Slug",
-                "{productId:min(1)}/{productName:required}-{PartNumber}",
+                "{productId:min(1)}/{productName:required}",
          new { controller = "Product", action = "UrlRecordSlug" });
+            routeBuilder.MapLocalizedRoute(
+             "Nop.Plugin.Misc.ProductWizard.Slug0",
+             "{productId:min(1)}/{productName:required}-{PartNumber}",
+      new { controller = "Product", action = "UrlRecordSlug" });
+
+            routeBuilder.MapLocalizedRoute(
+                "Nop.Plugin.Misc.ProductWizard.Slug1",
+                "{productId:min(1)}/{productName:required}/{PartNumber}",
+         new { controller = "Product", action = "UrlRecordSlug" });
+
+            routeBuilder.MapLocalizedRoute(
+              "Nop.Plugin.Misc.ProductWizard.Slug2",
+              "{productId:min(1)}/{productName:required}/{PartNumber}/{PartNumber1}",
+       new { controller = "Product", action = "UrlRecordSlug" });
 
             routeBuilder.MapLocalizedRoute(
                 "Nop.Plugin.Misc.ProductWizard.Itendetails",
