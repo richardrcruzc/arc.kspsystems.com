@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Web;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
 using Nop.Core.Caching;
@@ -25,6 +27,7 @@ using Nop.Services.Shipping.Date;
 using Nop.Services.Stores;
 using Nop.Services.Tax;
 using Nop.Services.Vendors;
+using Nop.Web.Extensions;
 using Nop.Web.Framework.Security.Captcha;
 using Nop.Web.Infrastructure.Cache;
 using Nop.Web.Models.Catalog;
@@ -1186,17 +1189,26 @@ namespace Nop.Web.Factories
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
+            var rid = 0;
+            //var referrerUtl  = _webHelper.GetUrlReferrer();
+            //string paramRid = HttpUtility.ParseQueryString(referrerUtl).Get(0);
+            //if (paramRid != null)
+            //{
+            //    int.TryParse(paramRid, out rid);
+
+            //}
+
             //standard properties
             var model = new ProductDetailsModel
             {
                 Id = product.Id,
-                Name = _productService.GetNameRid(product), //product.GetLocalized(x => x.Name),
+                Name = _productService.GetNameRid(product, rid: rid), //product.GetLocalized(x => x.Name),
                 ShortDescription = product.GetLocalized(x => x.ShortDescription),
                 FullDescription = product.GetLocalized(x => x.FullDescription),
                 MetaKeywords = product.GetLocalized(x => x.MetaKeywords),
                 MetaDescription = product.GetLocalized(x => x.MetaDescription),
                 MetaTitle = product.GetLocalized(x => x.MetaTitle),
-                SeName = _productService.GetUrlRid(product), // product.GetSeName(),
+                SeName = _productService.GetUrlRid(product, rid: rid), // product.GetSeName(),
                 ProductType = product.ProductType,
                 ShowSku = _catalogSettings.ShowSkuOnProductDetailsPage,
                 Sku = product.Sku,
@@ -1211,122 +1223,309 @@ namespace Nop.Web.Factories
                 DisplayDiscontinuedMessage = !product.Published && _catalogSettings.DisplayDiscontinuedMessageForUnpublishedProducts
             };
 
-            ////automatically generate product description?
-            //if (_seoSettings.GenerateProductMetaDescription && string.IsNullOrEmpty(model.MetaDescription))
-            //{
-            //    //based on short description
-            //    model.MetaDescription = model.ShortDescription;
-            //}
+            int itemid = product.Id;
+            var lblItemID = product.Sku;
+            string metaprice = "";
 
-            //if (_seoSettings.GenerateProductMetaDescription && string.IsNullOrEmpty(model.MetaDescription))
-            //{
-                var legacy = string.Empty;
-                var firstlegacy = string.Empty;
-                string temp = $"{model.Name} {model.Sku}"; 
-                string temp_copiers = $"{model.Name} Toner, Parts, and Supplies. ";
-                var isCopier = false;
-                model.MetaDescription = $"{model.Name} Toner, Parts, Supplies, and Accessories";
+            var ProdNameLabel = product.Name;
+            var color = product.Color;
+            var productIdLabel = product.Sku;
+
+            if (!string.IsNullOrEmpty(lblItemID))
+            {
+                var HyperLink_Category = string.Empty;
+
+                if(product.ProductCategories.Count()>0)
+                    HyperLink_Category = product.ProductCategories.FirstOrDefault().Category.Name;
+
+                decimal price = product.Price;
+                  metaprice = price.ToString("C");
+
+                string temp = "";
+                string temp_copiers = "";
+                string legacy = " ";
+                string firstlegacy = "";
+
+                temp += " " + ProdNameLabel + " " + lblItemID + " ";
+                temp_copiers += " " + ProdNameLabel + " " + "Toner, Parts, and Supplies. ";
+                int cc;
+
+                var legacyObj = _dbContext.SqlQuery<string>($"select top 1 legacyCode from LegacyIds where ItemId={product.Id} order by legacyCode").FirstOrDefault();
+                if (legacyObj == null)
+                    legacyObj = string.Empty;
+                var legacies = _dbContext.SqlQuery<string>($"select legacyCode from LegacyIds where ItemId={product.Id} order by legacyCode ").ToArray();
 
 
-                foreach (var cat in product.ProductCategories.ToList())
+                if (HyperLink_Category != "Copier")
                 {
-                    if (cat.Category.Name.Contains("Copier") ||
-                       cat.Category.Name.Contains("Copiers - New") ||
-                       cat.Category.Name.Contains("Copiers - Refurbished"))
+                    for (cc = 0; cc < legacies.Count(); ++cc)
                     {
-                        isCopier = true;
-                        break;
-                    }
-                }
-                if (isCopier)
-                {
-                 var ListItemIds = _dbContext.SqlQuery<int>($"SELECT ItemIdPart FROM ItemsCompatability  WHERE(ItemsCompatability.ItemIdPart = {model.Id})  UNION  SELECT   ItemID FROM[Groups-Items]  WHERE([Groups-Items].GroupID IN(SELECT GroupID FROM[Relations-Groups-Items] WHERE(ItemID =  {model.Id}) AND(Direction = 'A')))  UNION  SELECT   ItemID FROM[Relations-Groups-Items]   WHERE([Relations-Groups-Items].Direction = 'B') AND([Relations-Groups-Items].GroupID IN(SELECT GroupID FROM[Groups-Items] WHERE(ItemID =  {model.Id})))");
-                    int[] arrayIds = ListItemIds.ToArray();
-                   
-                    var exProducts = _productService.GetProductsByIds(arrayIds).ToList();
-                    foreach (var pr in exProducts)
-                    {
-                        var prCat = pr.ProductCategories.FirstOrDefault();
-                        if (prCat.Category.Name.Contains("Copier"))
-                            temp_copiers = $"{temp_copiers} Imaging Units, ";
-                        if (prCat.Category.Name.Contains("Drums"))
-                            temp_copiers = $"{temp_copiers} Drums Units, ";
-                        if (prCat.Category.Name.Contains("Fusing Units"))
-                            temp_copiers = $"{temp_copiers} Fusing Units, ";
-                        if (prCat.Category.Name.Contains("PM Kits"))
-                            temp_copiers = $"{temp_copiers} PM Kits, ";
-                        if (prCat.Category.Name.Contains("Developing Units"))
-                            temp_copiers = $"{temp_copiers} Developing Units, ";
-                        if (prCat.Category.Name.Contains("Staples"))
-                            temp_copiers = $"{temp_copiers} Staples, ";
-                    }
-                }
+                        temp += legacies[cc] + " ";
+                        legacy += legacies[cc] + " ";
 
-                temp_copiers = temp_copiers.Trim().TrimEnd(',');
-
-                if (!isCopier)
-                {
-                    //look for all legacy
-                    var legacyies = _dbContext.SqlQuery<string>($"select [LegacyCode] from LegacyIds where [ItemId]={model.Id}").ToList();
-                    foreach (var leg in legacyies)
-                    {
-                        temp = $"{temp} {leg} ";
-                        legacy = $"{legacy} {leg} ";
-
-                        if (model.Sku.Contains("TN"))
+                        if (lblItemID.Contains("TN"))
                         {
-                            if (!leg.Contains("TN"))
+                            if (!legacies[cc].Contains("TN"))
                             {
-                                firstlegacy = leg.ToString();
+                                firstlegacy = legacies[cc];
                                 break;
                             }
                         }
                         else
                         {
-                            if (leg.Contains("TN"))
+                            if (legacies[cc].Contains("TN"))
                             {
-                                firstlegacy = leg.ToString();
+                                firstlegacy = legacies[cc];
                                 break;
                             }
-                            if (firstlegacy.Length == 0 && legacyies.Count() > 0)
+
+                            if (firstlegacy.Length == 0 && legacies.Count() > 0)
                             {
-                                firstlegacy = leg.ToString();
+                                firstlegacy = legacies[0];
+                            }
+                        }
+
+
+                    }
+                }
+                //PRICE TO REGULAR ITEMS
+                temp += " Price: " + metaprice + " For Use In: ";
+                var Label1 = ProdNameLabel;
+
+                if (HyperLink_Category != "Copier")
+                {
+                    var sqlString = $"  SELECT  Product.[Name]  FROM ItemsCompatability INNER JOIN       Product ON ItemsCompatability.ItemID = Product.id   WHERE(ItemsCompatability.ItemIDPart ={product.Id})   UNION   SELECT       Product_1.[Name]   FROM[Groups-Items] INNER JOIN                       Product AS Product_1 ON[Groups-Items].ItemID = Product_1.id   WHERE([Groups-Items].GroupID IN (SELECT     GroupID FROM[Relations-Groups-Items] WHERE(ItemID ={product.Id}) AND(Direction = 'B')))   UNION   SELECT       Product.[Name]  FROM Product INNER JOIN[Relations-Groups-Items] ON Product.id = [Relations-Groups-Items].ItemID  WHERE([Relations-Groups-Items].Direction = 'A') AND([Relations-Groups-Items].GroupID IN  (SELECT     GroupID                             FROM[Groups-Items] WHERE(ItemID ={product.Id})))";
+                    var usedIn = _dbContext.SqlQuery<string>(sqlString).ToList();
+ 
+                    for (cc = usedIn.Count(); cc > 0; --cc)
+                    {
+                        temp += usedIn[cc - 1] + " ";
+                    }
+                }
+
+                //parts for copier need to just include the category names
+                if (HyperLink_Category == "Copier")
+                {
+                    var categories = _dbContext.SqlQuery<int>($"select ItemID from [Relations-Groups-Items] WHERE([Relations-Groups-Items].Direction = 'B') AND([Relations-Groups-Items].GroupID IN (SELECT GroupID FROM[Groups-Items] WHERE(ItemID = {product.Id}))) union select ItemID from[Groups-Items] where GroupId in (SELECT GroupID FROM[Relations-Groups-Items] WHERE(ItemID ={product.Id}) AND(Direction = 'A'))").ToList();
+                    List<string> cats = new List<string>();
+                    foreach (var cat in categories)
+                        cats.Add(cat.ToString());
+
+                    if (cats.Contains("Toner"))
+                    {
+                        //temp_copiers += "Toner ";
+                        cats.Remove("Toner");
+                    }
+                    if (cats.Contains("Imaging Units"))
+                    {
+                        temp_copiers += "Imaging Units, ";
+                        cats.Remove("Imaging Units");
+                    }
+                    if (cats.Contains("Drums"))
+                    {
+                        temp_copiers += "Drums Units, ";
+                        cats.Remove("Drums");
+                    }
+                    if (cats.Contains("Fusing Units"))
+                    {
+                        temp_copiers += "Fusing Units, ";
+                        cats.Remove("Fusing Units");
+                    }
+                    if (cats.Contains("PM Kits"))
+                    {
+                        temp_copiers += "PM Kits, ";
+                        cats.Remove("PM Kits");
+                    }
+                    if (cats.Contains("Developing Units"))
+                    {
+                        temp_copiers += "Developing Units, ";
+                        cats.Remove("Developing Units");
+                    }
+                    if (cats.Contains("Staples"))
+                    {
+                        temp_copiers += "Staples, ";
+                        cats.Remove("Staples");
+                    }
+
+                    temp_copiers = temp_copiers.Trim().TrimEnd(',');
+
+                }
+                var litItemCondition = string.Empty;
+                if (ProdNameLabel.ToLower().Contains("used"))
+                {
+                    litItemCondition += "<meta itemprop=\"itemCondition\" itemtype=\"http://schema.org/OfferItemCondition\" content=\"http://schema.org/UsedCondition\"/>";
+                }
+                else
+                {
+                    litItemCondition += "<meta itemprop=\"itemCondition\" itemtype=\"http://schema.org/OfferItemCondition\" content=\"http://schema.org/NewCondition\"/>";
+
+                }
+
+               var  keywords = HyperLink_Category + " " + lblItemID  + legacy;
+
+              var   metaDescription1 = "description";
+
+
+                if (HyperLink_Category != "Copier")
+                {
+                    //metaDescription.Content = temp;
+                    metaDescription1 = temp;
+                }
+                else
+                {
+                    //metaDescription.Content = temp_copiers;
+                    metaDescription1 = temp_copiers + ". Free Shipping on orders over $99.";
+                }
+                var metaDescription2 = string.Empty;
+                if (HyperLink_Category == "Copier" || HyperLink_Category == "Copiers - New" || HyperLink_Category == "Copiers - Refurbished")
+                {
+                 
+                    metaDescription2 = "robots";
+                    metaDescription2 = "noimageindex";
+                   
+                }
+                var PageTitle = string.Empty;
+                if (HyperLink_Category == "Copier")
+                {
+                    PageTitle = ProdNameLabel + " Toner, Parts, Supplies, and Accessories";
+                }
+                else if (HyperLink_Category == "Toner")
+                {
+                    string brand = string.Empty;
+
+                    if (product.ProductManufacturers.Count > 0)
+                    {
+                        var brandobj = product.ProductManufacturers.FirstOrDefault();
+                        brand = brandobj.Manufacturer.Name;
+                    }
+                 
+                    var route = _webHelper.GetThisPageUrl(true);                
+                    if (route.Contains("-for/"))
+                    {
+                        var routeArray = route.Split('/');
+                       
+
+                        string b = routeArray[routeArray.Count() - 2];  //RouteData.Values["primaryPart#"].ToString();
+                        b = b.Replace("-", " ");
+                         b = StringExtend.FirstCharToUpper(b);
+
+                        string c = routeArray[routeArray.Count() - 1];  //RouteData.Values["EXTRA"].ToString();
+                        c = c.Replace("-", " ");
+                        c =StringExtend.FirstCharToUpper(c);
+
+                        if (color.Trim().ToLower() == "set")
+                        {
+                            PageTitle = "Genuine " + b + " " + c + " Toner Set";
+                            ProdNameLabel = "Genuine " + b + " " + c + " Toner Set";
+                        }
+                        else
+                        {
+                            if (ProdNameLabel.ToLower().Contains("master case"))
+                            {
+                                PageTitle = "Genuine " + b + " " + c + " " +StringExtend.FirstCharToUpper(color) + " Toner Master Case";
+                                ProdNameLabel = "Genuine " + b + " " + c + " " +StringExtend.FirstCharToUpper(color) + " Toner Master Case";
+                            }
+                            else
+                            {
+                                PageTitle = "Genuine " + b + " " + c + " " +StringExtend.FirstCharToUpper(color) + " Toner Cartridge";
+                                ProdNameLabel = "Genuine " + b + " " + c + " " +StringExtend.FirstCharToUpper(color) + " Toner Cartridge";
+                            }
+                        }
+                    }
+                    else if (color.Trim().ToLower() == "set")
+                    {
+                        if (firstlegacy.Length == 0)
+                        {
+                            PageTitle = brand + " Genuine " +lblItemID + " Toner Set";
+                            ProdNameLabel = brand + " Genuine " +lblItemID + " Toner Set";
+                        }
+                        else
+                        {
+                            PageTitle = brand + " Genuine " +lblItemID + " (" + firstlegacy.Trim() + ") Toner Set";
+                            ProdNameLabel = brand + " Genuine " +lblItemID + " (" + firstlegacy.Trim() + ") Toner Set";
+                        }
+                    }
+                    else
+                    {
+                        if (firstlegacy.Length == 0) //no legacy
+                        {
+                            if (color.Length == 0)
+                            {
+                                if (ProdNameLabel.ToLower().Contains("master case"))
+                                {
+                                    PageTitle = brand + " Genuine " +lblItemID + " Toner" + " Master Case";
+                                    ProdNameLabel = brand + " Genuine " +lblItemID + " Toner" + " Master Case";
+                                }
+                                else
+                                {
+                                    PageTitle = brand + " Genuine " +lblItemID + " Toner" + " Cartridge";
+                                    ProdNameLabel = brand + " Genuine " +lblItemID + " Toner" + " Cartridge";
+                                }
+                            }
+                            else
+                            {
+                                if (ProdNameLabel.ToLower().Contains("master case"))
+                                {
+                                    PageTitle = brand + " Genuine " +lblItemID + " " + color + " Toner" + " Master Case";
+                                    ProdNameLabel = brand + " Genuine " +lblItemID + " " + color + " Toner" + " Master Case";
+                                }
+                                else
+                                {
+                                    PageTitle = brand + " Genuine " +lblItemID + " " + color + " Toner" + " Cartridge";
+                                    ProdNameLabel = brand + " Genuine " +lblItemID + " " + color + " Toner" + " Cartridge";
+                                }
                             }
 
                         }
-
+                        else //has legacy
+                        {
+                            if (color.Length == 0)
+                            {
+                                if (ProdNameLabel.ToLower().Contains("master case"))
+                                {
+                                    PageTitle = brand + " Genuine " +lblItemID + " (" + firstlegacy.Trim() + ")" + " Toner" + " Master Case";
+                                    ProdNameLabel = brand + " Genuine " +lblItemID + " (" + firstlegacy.Trim() + ")" + " Toner" + " Master Case";
+                                }
+                                else
+                                {
+                                    PageTitle = brand + " Genuine " +lblItemID + " (" + firstlegacy.Trim() + ")" + " Toner" + " Cartridge";
+                                    ProdNameLabel = brand + " Genuine " +lblItemID + " (" + firstlegacy.Trim() + ")" + " Toner" + " Cartridge";
+                                }
+                            }
+                            else
+                            {
+                                if (ProdNameLabel.ToLower().Contains("master case"))
+                                {
+                                    PageTitle = brand + " Genuine " +lblItemID + " (" + firstlegacy.Trim() + ") " + color + " Toner" + " Master Case";
+                                    ProdNameLabel = brand + " Genuine " +lblItemID + " (" + firstlegacy.Trim() + ") " + color + " Toner" + " Master Case";
+                                }
+                                else
+                                {
+                                    PageTitle = brand + " Genuine " +lblItemID + " (" + firstlegacy.Trim() + ") " + color + " Toner" + " Cartridge";
+                                    ProdNameLabel = brand + " Genuine " +lblItemID + " (" + firstlegacy.Trim() + ") " + color + " Toner" + " Cartridge";
+                                }
+                            }
+                        }
                     }
                 }
-
-
-                //PRICE TO REGULAR ITEMS
-                //price
-                model.ProductPrice = PrepareProductPriceModel(product);
-
-                temp = $"{temp} Price: {model.ProductPrice.Price} For Use In: ";
-
-                if (!isCopier)
-                {
-                    var forUseIn = _dbContext.SqlQuery<int>($"SELECT ItemIdPart FROM ItemsCompatability  WHERE(ItemsCompatability.ItemIdPart = {model.Id})  UNION  SELECT  ItemID FROM[Groups-Items]  WHERE([Groups-Items].GroupID IN(SELECT GroupID FROM[Relations-Groups-Items] WHERE(ItemID =  {model.Id}) AND(Direction = 'A')))  UNION  SELECT  ItemID FROM[Relations-Groups-Items]   WHERE([Relations-Groups-Items].Direction = 'B') AND([Relations-Groups-Items].GroupID IN(SELECT GroupID FROM[Groups-Items] WHERE(ItemID =  {model.Id})))");
-                    int[] forUseInIds = forUseIn.ToArray();
-
-                    var forUseInProducts = _productService.GetProductsByIds(forUseInIds).ToList();
-                    foreach (var pr in forUseInProducts)
-                    {
-                        temp = $"{temp} {pr.Name}";
-                    }
-                }
-
-
-                if (!isCopier)
-                    model.MetaDescription = temp;  
                 else
                 {
-                    model.MetaDescription = temp_copiers + ". Free Shipping on orders over $99."; 
-                } 
-            //} 
-                //shipping info
-                model.IsShipEnabled = product.IsShipEnabled;
+                    PageTitle = HyperLink_Category + " " + ProdNameLabel + " " +lblItemID + " " + legacy;
+                }
+
+
+                model.Name = ProdNameLabel;
+                model.MetaKeywords = keywords;
+                model.MetaDescription = metaDescription1;
+                 model.MetaTitle = PageTitle;
+                var tt = metaDescription2;
+                
+            }
+             
+             
+
+            //shipping info
+            model.IsShipEnabled = product.IsShipEnabled;
             if (product.IsShipEnabled)
             {
                 model.IsFreeShipping = product.IsFreeShipping;

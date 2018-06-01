@@ -175,8 +175,12 @@ namespace Nop.Services.Catalog
         #endregion
 
         #region Utilities
+        public virtual string GetMethaRid(Product product, int rid = 0)
+        {
 
-       
+            return "";
+        }
+
         public virtual string GetNameRid(Product product, int rid =0)
         {
             var productName = product.Name;
@@ -190,9 +194,10 @@ namespace Nop.Services.Catalog
 
             var brand = string.Empty;
 
-            var brandobj = _vendorRepository.TableNoTracking.Where(x=>x.Id == product.VendorId).FirstOrDefault();
+            //var brandobj =  _vendorRepository.TableNoTracking.Where(x=>x.Id == product.VendorId).FirstOrDefault();
+            var brandobj = product.ProductManufacturers.FirstOrDefault();
             if (brandobj != null)
-                brand = brandobj.Name; 
+                brand = brandobj.Manufacturer.Name; 
 
             var legacy = _dbContext.SqlQuery<string>($"select top 1 legacyCode from LegacyIds where ItemId={product.Id} order by id desc").FirstOrDefault();
             if (legacy == null)
@@ -205,17 +210,17 @@ namespace Nop.Services.Catalog
 
                 if (color.Trim().ToLower() == "set")
                 {
-                    productName = $"Genuine {copier.GetSeName()} Toner Set";
+                    productName = $"Genuine {copier.Name} Toner Set";
                 }
                 else
                 {
                     if (product.Name.ToLower().Contains("master case"))
                     {
-                        productName = $"Genuine {copier.GetSeName()} {color} Toner Master Case";
+                        productName = $"Genuine {copier.Name} {color} Toner Master Case";
                     }
                     else
                     {
-                        productName = $"Genuine {copier.GetSeName()} {color} Toner Cartridge";
+                        productName = $"Genuine {copier.Name} {color} Toner Cartridge";
                     }
 
                 }
@@ -283,7 +288,7 @@ namespace Nop.Services.Catalog
                             if (product.Name.ToLower().Contains("master case"))
                             {
                                 productName = $"{brand} Genuine {product.Sku} {color} Toner Master Case";
-                                productName = $"{brand} Genuine {product.Sku} {color} Toner Master Case";
+                                
                             }
                             else
                             {
@@ -358,17 +363,21 @@ namespace Nop.Services.Catalog
 
             var brand = string.Empty;
 
-            if (copier != null)
-            {
-                var brandobj = _vendorRepository.TableNoTracking.Where(x => x.Id == copier.VendorId).FirstOrDefault();
+            //if (copier != null)
+            //{
+                //var brandobj = _vendorRepository.TableNoTracking.Where(x => x.Id == copier.VendorId).FirstOrDefault();
+                //if (brandobj != null)
+                //    brand = brandobj.Name.ToLower();
+                var brandobj = product.ProductManufacturers.FirstOrDefault();
                 if (brandobj != null)
-                    brand = brandobj.Name.ToLower();
+                    brand = brandobj.Manufacturer.Name;
+              
 
                 if (brand != string.Empty)
                     brand = SeoExtensions.GetSeName(brand, true, false);
-            }
+            //}
 
-            var legacy = _dbContext.SqlQuery<string>($"select top 1 legacyCode from LegacyIds where ItemId={product.Id} order by id desc").FirstOrDefault();
+            var legacy = _dbContext.SqlQuery<string>($"select top 1 legacyCode from LegacyIds where ItemId={product.Id} order by legacyCode").FirstOrDefault();
             if (legacy == null)
                 legacy = string.Empty;
 
@@ -433,7 +442,7 @@ namespace Nop.Services.Catalog
                 {
                     //5446/KonicaMinolta/A33K332/TN-512M-magenta-toner/
                     var legacyTn = string.Empty;
-                    var legacies = _dbContext.SqlQuery<string>($"select legacyCode from LegacyIds where ItemId={product.Id} order by id desc");
+                    var legacies = _dbContext.SqlQuery<string>($"select legacyCode from LegacyIds where ItemId={product.Id} order by legacyCode");
 
                     if (category.ToLower().Contains("tn"))
                     {

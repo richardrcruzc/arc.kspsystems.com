@@ -16,7 +16,8 @@ namespace Nop.Services.Catalog
 
         string GetNameRid(Product product, int rid  =0);
         string GetUrlRid(Product product, int rid=0 );
-       
+        string GetMethaRid(Product product, int rid = 0);
+
 
         /// <summary>
         /// Delete a product

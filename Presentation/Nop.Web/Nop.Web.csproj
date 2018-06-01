@@ -119,12 +119,7 @@
     <None Include="Themes\Pavilion\Views\Shared\_Root.Head.cshtml" />
     <None Include="Themes\Pavilion\Views\ShoppingCart\Wishlist.cshtml" />
     <None Include="Themes\Pavilion\Views\_ViewImports.cshtml" />
-    <Content Update="Themes\Pununo\Views\Shared\Components\Footer\Default.cshtml">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Update="Themes\Pununo\Views\Shared\_Header.cshtml">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
+    <Reference Include="System.Web" />
 
     <None Update="Areas\Admin\sitemap.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
