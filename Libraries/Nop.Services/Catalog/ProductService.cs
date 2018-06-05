@@ -555,7 +555,7 @@ namespace Nop.Services.Catalog
             }
 
 
-                return productName.Replace("//","/");
+                return productName.Replace("//","/").Replace("/-","/");
         }
          
         /// <summary>
