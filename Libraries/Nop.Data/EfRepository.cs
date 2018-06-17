@@ -99,7 +99,7 @@ namespace Nop.Data
                     throw new ArgumentNullException(nameof(entity));
 
                 Entities.Add(entity);
-
+               
                 _context.SaveChanges();
             }
             catch (DbEntityValidationException dbEx)

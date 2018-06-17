@@ -42,6 +42,7 @@
     <None Remove="Views\Relations\List.cshtml" />
     <None Remove="Views\SearchBoxExt\Default.cshtml" />
     <None Remove="Views\TriSearch.cshtml" />
+    <None Remove="Views\UploadData.cshtml" />
     <None Remove="Views\UsedIn.cshtml" />
     <None Remove="Views\UsedInAdditional.cshtml" />
     <None Remove="Views\WaterMarkedPicture.cshtml" />
@@ -83,6 +84,9 @@
     </Content>
     <Content Include="Views\TriSearch.cshtml">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\UploadData.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Views\WaterMarkedPicture.cshtml">
