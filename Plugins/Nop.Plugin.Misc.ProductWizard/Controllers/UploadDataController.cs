@@ -178,8 +178,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                   name = worksheet.Cells[endRow, 2].Value.ToString();
 
                                 sql += "INSERT INTO [dbo].[Category] (Id,[Name], UpdatedOnUtc,CreatedOnUtc, CategoryTemplateId, ParentCategoryId, " +
-                                      "PictureId, PageSize, AllowCustomersToSelectPageSize,ShowOnHomePage,IncludeInTopMenu,SubjectToAcl,LimitedToStores,Deleted,DisplayOrder,Published) " +
-                                      $" SELECT {id},'{name}',getdate(),getdate(), 1,0,0,1,0,0,0,0,0,0,0,1; ";
+                                      "PictureId,  AllowCustomersToSelectPageSize,ShowOnHomePage,IncludeInTopMenu,SubjectToAcl,LimitedToStores,Deleted,DisplayOrder,Published, PageSize) " +
+                                      $" SELECT {id},'{name}',getdate(),getdate(), 1,0,0,1,0,0,0,0,0,0,0,1,5; ";
                                  
 
                                 countCategorysInFile += 1;
@@ -583,6 +583,190 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
              
             
 
+        }
+
+        [HttpPost]
+        public virtual IActionResult ImportLegacyFromXlsx(IFormFile importexcelfile)
+        {
+            //if (!_permissionService.Authorize(StandardPermissionProvider.ManageCategories))
+            //    return AccessDeniedView();
+
+            //a vendor cannot import categories
+            if (_workContext.CurrentVendor != null)
+                return AccessDeniedView();
+            var maximunRows = 0;
+            try
+            {
+                if (importexcelfile != null && importexcelfile.Length > 0)
+                {
+                    Stream stream = importexcelfile.OpenReadStream();
+                    using (var xlPackage = new ExcelPackage(stream))
+                    {
+                        var endRow = 2;
+                        var countCategorysInFile = 0;
+                        // get the second worksheet in the workbook
+                        var worksheet = xlPackage.Workbook.Worksheets[5];
+                        if (worksheet == null)
+                            throw new NopException("No worksheet found");
+
+                        var sql = ""; // "SET IDENTITY_INSERT [dbo].[LegacyIds] ON;";
+                        var id = 0;
+                        var name = string.Empty;
+                        var legacyId = string.Empty;
+                        //find end of data
+                        while (true)
+                        {
+                            try
+                            {
+                                //if (worksheet.Row(endRow).OutlineLevel == 0)
+                                //{
+                                //    break;
+                                //}
+                                if (worksheet == null || worksheet.Cells == null)
+                                    break;
+                                if (worksheet.Cells[endRow, 1].Value == null)
+                                    break;
+
+                                id = int.Parse(worksheet.Cells[endRow, 1].Value.ToString());
+                                legacyId = worksheet.Cells[endRow, 2].Value.ToString();
+
+                                sql += $" Insert into  [dbo].[LegacyIds] ([ItemId],[LegacyCode],[Deleted]) select {id},'{legacyId}',0; ";
+
+
+                                countCategorysInFile += 1;
+
+                                endRow++;
+                                maximunRows++;
+                                if (maximunRows > 1)
+                                {
+
+                                    _dbContext.ExecuteSqlCommand(sql);
+                                    sql = string.Empty;
+                                    maximunRows = 0;
+                                }
+
+                                continue;
+                            }
+                            catch (Exception ex)
+                            {
+                                ErrorNotification(_localizationService.GetResource("Admin.Common.UploadFile") + " " + ex.Message);
+                                continue;
+                            }
+                        }
+
+                        //sql += "SET IDENTITY_INSERT [dbo].[LegacyIds] OFF;";
+                        _dbContext.ExecuteSqlCommand(sql);
+                        SuccessNotification(_localizationService.GetResource("Admin.Catalog.LegacyIds.Imported"));
+                    }
+
+
+
+                }
+                else
+                {
+                    ErrorNotification(_localizationService.GetResource("Admin.Common.UploadFile"));
+                    return RedirectToAction("List");
+                }
+                SuccessNotification(_localizationService.GetResource("Admin.Catalog.LegacyIds.Imported"));
+                return RedirectToAction("Index");
+            }
+            catch (Exception exc)
+            {
+                ErrorNotification(exc);
+                return RedirectToAction("Index");
+            }
+        }
+
+
+
+        [HttpPost]
+        public virtual IActionResult ImportItemsCompatabilityFromXlsx(IFormFile importexcelfile)
+        {
+            //if (!_permissionService.Authorize(StandardPermissionProvider.ManageCategories))
+            //    return AccessDeniedView();
+
+            //a vendor cannot import categories
+            if (_workContext.CurrentVendor != null)
+                return AccessDeniedView();
+            var maximunRows = 0;
+            try
+            {
+                if (importexcelfile != null && importexcelfile.Length > 0)
+                {
+                    Stream stream = importexcelfile.OpenReadStream();
+                    using (var xlPackage = new ExcelPackage(stream))
+                    {
+                        var endRow = 2;
+                        var countCategorysInFile = 0;
+                        // get the second worksheet in the workbook
+                        var worksheet = xlPackage.Workbook.Worksheets[6];
+                        if (worksheet == null)
+                            throw new NopException("No worksheet found");
+
+                        var sql = "";// "SET IDENTITY_INSERT [dbo].[ItemsCompatability] ON;";
+                        var id = 0;
+                        var name = string.Empty;
+                        var legacyId = string.Empty;
+                        //find end of data
+                        while (true)
+                        {
+                            try
+                            {
+                                //if (worksheet.Row(endRow).OutlineLevel == 0)
+                                //{
+                                //    break;
+                                //}
+                                if (worksheet == null || worksheet.Cells == null)
+                                    break;
+                                if (worksheet.Cells[endRow, 1].Value == null)
+                                    break;
+
+                                id = int.Parse(worksheet.Cells[endRow, 1].Value.ToString());
+                                legacyId = worksheet.Cells[endRow, 2].Value.ToString();
+
+                                sql += $" Insert into  [dbo].[LegacyIds] ([ItemId],[LegacyCode],[Deleted]) select {id},'{legacyId}',0; ";
+
+
+                                countCategorysInFile += 1;
+
+                                endRow++;
+                                if (maximunRows > 1000)
+                                {
+
+                                    _dbContext.ExecuteSqlCommand(sql);
+                                    sql = string.Empty;
+                                    maximunRows = 0;
+                                }
+                                continue;
+                            }
+                            catch (Exception ex)
+                            {
+                                ErrorNotification(_localizationService.GetResource("Admin.Common.UploadFile") + " " + ex.Message);
+                                continue;
+                            }
+                        }
+
+                      //  sql += "SET IDENTITY_INSERT [dbo].[ItemsCompatability] OFF;";
+                        _dbContext.ExecuteSqlCommand(sql);
+                        SuccessNotification(_localizationService.GetResource("Admin.Catalog.[ItemsCompatability].Imported"));
+                    }
+
+
+
+                }
+                else
+                {
+                    ErrorNotification(_localizationService.GetResource("Admin.Common.UploadFile"));
+                    return RedirectToAction("List");
+                }
+                SuccessNotification(_localizationService.GetResource("Admin.Catalog.[ItemsCompatability].Imported"));
+                return RedirectToAction("Index");
+            }
+            catch (Exception exc)
+            {
+                ErrorNotification(exc);
+                return RedirectToAction("Index");
+            }
         }
 
     }
