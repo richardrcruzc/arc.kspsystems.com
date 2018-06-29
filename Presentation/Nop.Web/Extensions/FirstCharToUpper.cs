@@ -9,8 +9,9 @@ namespace Nop.Web.Extensions
     {
         public static string FirstCharToUpper(string input)
         {
-            if (String.IsNullOrEmpty(input))
-                throw new ArgumentException("ARGH!");
+            if (String.IsNullOrEmpty(input) || String.IsNullOrWhiteSpace(input))
+                return input;
+               // throw new ArgumentException("ARGH!");
             return input.First().ToString().ToUpper() + input.Substring(1);
         }
     }

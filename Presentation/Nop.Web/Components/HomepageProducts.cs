@@ -38,7 +38,7 @@ namespace Nop.Web.Components
             if (!products.Any())
                 return Content("");
 
-            var model = _productModelFactory.PrepareProductOverviewModels(products, true, true, productThumbPictureSize).ToList();
+            var model = _productModelFactory.PrepareProductOverviewModels(products, true, true, productThumbPictureSize).Take(5).ToList();
 
             return View(model);
         }
