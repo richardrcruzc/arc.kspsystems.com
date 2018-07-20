@@ -20,13 +20,33 @@
 
 /* WITH CATEGORY */
 
-.store-search-box span.search-box-text {
+/*.store-search-box span.search-box-text {
     display: inline-block;
     position: relative;
 }
 .store-search-box input.search-box-text {
     width: 220px;
     margin: 0 5px 0 0;
+}*/
+
+.k-autocomplete.k-state-default.search-box-text {
+    display: inline-block;
+    position: relative;
+	width: 220px;
+	background: none;
+	border: none;
+	box-shadow: none;
+}
+.k-autocomplete.k-state-default.search-box-text input.k-input{
+    width: 220px;
+    margin: 0 5px 0 0;
+	border: none;
+	border-radius: 0;
+	background-color: rgba(0,0,0,0.2);
+	box-sizing: border-box;
+	padding: 0 12px;
+	vertical-align: middle;
+	color: rgba(255,255,255,0.7);
 }
 .store-search-box input.search-box-button {
     margin: 0 0 0 5px;
