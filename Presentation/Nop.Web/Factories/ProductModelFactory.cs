@@ -1115,7 +1115,7 @@ namespace Nop.Web.Factories
         public virtual IEnumerable<ProductOverviewModel> PrepareProductOverviewModels(IEnumerable<Product> products,
             bool preparePriceModel = true, bool preparePictureModel = true,
             int? productThumbPictureSize = null, bool prepareSpecificationAttributes = false,
-            bool forceRedirectionAfterAddingToCart = false,int rid=0)
+            bool forceRedirectionAfterAddingToCart = false)
         {
             if (products == null)
                 throw new ArgumentNullException(nameof(products));
@@ -1126,10 +1126,69 @@ namespace Nop.Web.Factories
 
                 var productName = string.Empty;
                 var seName = string.Empty;
-                if (rid>0) {
+                
+                    productName = _productService.GetNameRid(product);
+                    seName = _productService.GetUrlRid(product);
+                
+                var model = new ProductOverviewModel
+                {
+                    Id = product.Id,
+                    Name = productName,  //product.GetLocalized(x => x.Name),
+                    ShortDescription = product.GetLocalized(x => x.ShortDescription),
+                    FullDescription = product.GetLocalized(x => x.FullDescription),
+                    SeName = seName,  //newSeName,   product.GetSeName(),
+                    Sku = product.Sku,
+                    ProductType = product.ProductType,
+                    MarkAsNew = product.MarkAsNew &&
+                        (!product.MarkAsNewStartDateTimeUtc.HasValue || product.MarkAsNewStartDateTimeUtc.Value < DateTime.UtcNow) &&
+                        (!product.MarkAsNewEndDateTimeUtc.HasValue || product.MarkAsNewEndDateTimeUtc.Value > DateTime.UtcNow)
+                };
+
+                //price
+                if (preparePriceModel)
+                {
+                    model.ProductPrice = PrepareProductOverviewPriceModel(product, forceRedirectionAfterAddingToCart);
+                }
+
+                //picture
+                if (preparePictureModel)
+                {
+                    model.DefaultPictureModel = PrepareProductOverviewPictureModel(product, productThumbPictureSize);
+                }
+
+                //specs
+                if (prepareSpecificationAttributes)
+                {
+                    model.SpecificationAttributeModels = PrepareProductSpecificationModel(product);
+                }
+
+                //reviews
+                model.ReviewOverviewModel = PrepareProductReviewOverviewModel(product);
+
+                models.Add(model);
+            }
+            return models;
+        }
+
+        public virtual IEnumerable<ProductOverviewModel> ExtPrepareProductOverviewModels(IEnumerable<Product> products,
+         bool preparePriceModel = true, bool preparePictureModel = true,
+         int? productThumbPictureSize = null, bool prepareSpecificationAttributes = false,
+         bool forceRedirectionAfterAddingToCart = false, int rid = 0)
+        {
+            if (products == null)
+                throw new ArgumentNullException(nameof(products));
+
+            var models = new List<ProductOverviewModel>();
+            foreach (var product in products)
+            {
+
+                var productName = string.Empty;
+                var seName = string.Empty;
+                if (rid > 0)
+                {
                     productName = _productService.GetNameRid(product, rid);
-                    seName = _productService.GetUrlRid(product,rid );
-                        }
+                    seName = _productService.GetUrlRid(product, rid);
+                }
                 else
                 {
 

@@ -421,7 +421,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                 }
                 if (featuredProducts != null)
                 {
-                    model.FeaturedProducts = _productModelFactory.PrepareProductOverviewModels(featuredProducts, rid: rid).ToList();
+                    model.FeaturedProducts = _productModelFactory.ExtPrepareProductOverviewModels(featuredProducts, rid: rid).ToList();
                 }
             }
 
@@ -465,7 +465,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
           //  products.Where(item => query.Any(x => x.Id.Equals(item.Id)));
             //products.Where(x => allIds.Contains(x.Id));
 
-            model.Products = _productModelFactory.PrepareProductOverviewModels(products, rid: rid).ToList();
+            model.Products = _productModelFactory.ExtPrepareProductOverviewModels(products, rid: rid).ToList();
 
             model.PagingFilteringContext.LoadPagedList(products);
 
