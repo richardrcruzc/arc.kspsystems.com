@@ -63,6 +63,7 @@ namespace Nop.Web.Factories
         /// <param name="excludeProperties">Whether to exclude populating of model properties from the entity</param>
         /// <returns>Contact us model</returns>
         ContactUsModel PrepareContactUsModel(ContactUsModel model, bool excludeProperties);
+        SupportModel PrepareSupportModel(SupportModel model, bool excludeProperties);
 
         /// <summary>
         /// Prepare the contact vendor model

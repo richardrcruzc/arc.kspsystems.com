@@ -499,6 +499,13 @@ namespace Nop.Web.Infrastructure
             //page not found
             routeBuilder.MapLocalizedRoute("PageNotFound", "page-not-found", 
                 new { controller = "Common", action = "PageNotFound" });
+
+
+            //Support
+            routeBuilder.MapLocalizedRoute("Supports",
+                            "supports",
+                            new { controller = "Common", action = "Support" } );
+
         }
 
         #endregion

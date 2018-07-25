@@ -1,0 +1,143 @@
+﻿@model SupportModel
+@{
+    Layout = "_ColumnsOne";
+
+    //title
+    Html.AddTitleParts(T("PageTitle.Support").Text);
+    //page class
+    Html.AppendPageCssClassParts("html-contact-page");
+}
+<div class="page">
+  
+    <div class="page-body">
+        @await Component.InvokeAsync("TopicBlock", new { systemName = "Support" })
+        @await Component.InvokeAsync("Widget", new { widgetZone = "support_top" })
+        @if (Model.SuccessfullySent)
+        {
+        <div class="result">
+            @Model.Result
+        </div>
+        }
+        else
+        {
+        <div class="page-title">
+            <h3> Copier Support Request</h3>
+        </div>
+
+        <p>If you have an error code, or you're not sure what part to purchase, please fill out our support form and a techinician will respond to your inquiry.<br /><br /></p>
+        <p> <h5>  <nop-required />Required Fields</h5><br /></p>
+        <form asp-route="Support" method="post" enctype="multipart/form-data">
+
+            <div asp-validation-summary="ModelOnly" class="message-error"></div>
+            <div class="fieldset">
+
+
+
+                <div class="form-fields">
+                    <div class="inputs">
+                        <label asp-for="FullName" asp-postfix=":">Name </label>
+                        <input asp-for="FullName" class="fullname" />
+                        <nop-required />
+                        <span asp-validation-for="FullName"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="Company" asp-postfix=":">Company (If applicable)</label>
+                        <input asp-for="Company" class="enquiry" />
+
+                        <span asp-validation-for="Company"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="Phone" asp-postfix=":">Phone #</label>
+                        <input asp-for="Phone" class="subject" />
+                        <nop-required />
+                        <span asp-validation-for="Phone"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="Email" asp-postfix=":">Email</label>
+                        <input asp-for="Email" class="email" />
+                        <nop-required />
+                        <span asp-validation-for="Email"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="Copier" asp-postfix=":">Copier Model</label>
+                        <input asp-for="Copier" class="enquiry" placeholder="(Ex: Bizhub C250, Bizhub PRESS 71hc, Bizhub PRO 1100, etc.) " />
+                        <nop-required />
+                        <span asp-validation-for="Copier"></span>
+
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="AccessoryModel" asp-postfix=":">Accessory Model</label><br />
+                        <label>If you have any external accessories attached to your copier, please list them here </label>
+                        <input asp-for="AccessoryModel" class="enquiry" placeholder="(Ex: DF-616 Document Feeder, FS-535 Finisher, LU-402 Large Capacity Unit, etc.)" />
+                        <span asp-validation-for="AccessoryModel"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="Description" asp-postfix=":">Issue Description</label>
+                        <label>Please describe in as much detail as possible what the issue is. The more details given, the faster we will be able to diagnose the problem.</label>
+                        <textarea asp-for="Description" class="enquiry" placeholder="(Ex:  &quot;There is a squealing noise under the output tray &quot;,  &quot;our printouts have black streaks on them &quot;, etc.)"> </textarea>
+                        <nop-required />
+                        <span asp-validation-for="Description"></span>
+                    </div>
+                    <div class="inputs">
+                        <label asp-for="LocationOfIssue" asp-postfix=":">Location of Issue</label>
+                        <label>If you know the specific location of your copier's issue, please provide it here.</label>
+                        <input asp-for="LocationOfIssue" class="enquiry" placeholder="(Ex: Main Frame, Driving Section, Fusing Unit, etc.) " />
+
+                        <span asp-validation-for="LocationOfIssue"></span>
+                    </div>
+
+
+                    <div class="inputs">
+                        <label asp-for="ErrorCode" asp-postfix=":">Error Code</label>
+                        <label>
+                            If your device is displaying an Error Code, please provide the number here.
+                        </label>
+                        <input asp-for="ErrorCode" class="enquiry" />
+
+                        <span asp-validation-for="ErrorCode"></span>
+                    </div>
+
+                    <div class="inputs">
+                        <label asp-for="HowLongHaveYouHadThisIssue" asp-postfix=":">How Long Have You Had This Issue?</label>
+                        <input asp-for="HowLongHaveYouHadThisIssue" class="enquiry" />
+
+                        <span asp-validation-for="HowLongHaveYouHadThisIssue"></span>
+                    </div>
+
+
+                    <div class="inputs">
+                        <label asp-for="PartsSuppliesAffected" asp-postfix=":">Parts/Supplies Affected</label>
+                        <label class="result">If you know the parts you believe are causing the problem or you wish to replace them, list them here. You must provide the part number for each item, or else your request may be delayed. A parts manual can be emailed to you on request.</label>
+                        <input asp-for="PartsSuppliesAffected" class="enquiry" placeholder="(Ex: Conveyance Roller/3 - A0G6700200, DV619K Developing Unit - A9C803D, Bearing /E - A00J617800, etc.) " />
+
+                        <span asp-validation-for="PartsSuppliesAffected"></span>
+                    </div>
+
+                    <div class="inputs">
+                        <div class="col-md-2">
+                            <div class="label-wrapper">
+                                <label class="control-label">
+                                    Picture Upload
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-10">
+                            <input type="file" id="Attachments" name="Attachments" class="form-control" />
+                        </div>
+                    </div>
+                        @if (Model.DisplayCaptcha)
+                        {
+                        <div class="captcha-box">
+                            <nop-captcha />
+                        </div>
+                        }
+                    </div>
+                </div>
+            <div class="buttons">
+                <input type="submit" name="send-email" class="button-1 contact-us-button" value="@T("ContactUs.Button")" />
+            </div>
+        </form>
+        }
+        @await Component.InvokeAsync("Widget", new { widgetZone = "support_bottom" })
+    </div>
+</div>

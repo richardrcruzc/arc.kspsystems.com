@@ -1,11 +1,14 @@
 ﻿using System;
+using System.IO;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Nop.Core;
 using Nop.Core.Domain;
 using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Localization;
+using Nop.Core.Domain.Messages;
 using Nop.Core.Domain.Tax;
 using Nop.Core.Domain.Vendors;
 using Nop.Services.Common;
@@ -27,7 +30,9 @@ namespace Nop.Web.Controllers
     public partial class CommonController : BasePublicController
     {
         #region Fields
+        private readonly IHostingEnvironment _hostingEnvironment;
 
+        private readonly IQueuedEmailService _queuedEmailService;
         private readonly ICommonModelFactory _commonModelFactory;
         private readonly ILanguageService _languageService;
         private readonly ICurrencyService _currencyService;
@@ -51,7 +56,10 @@ namespace Nop.Web.Controllers
         
         #region Ctor
 
-        public CommonController(ICommonModelFactory commonModelFactory,
+        public CommonController(
+              IHostingEnvironment hostingEnvironment,
+            IQueuedEmailService queuedEmailService,
+            ICommonModelFactory commonModelFactory,
             ILanguageService languageService,
             ICurrencyService currencyService,
             ILocalizationService localizationService,
@@ -69,6 +77,8 @@ namespace Nop.Web.Controllers
             CaptchaSettings captchaSettings,
             VendorSettings vendorSettings)
         {
+            this._hostingEnvironment = hostingEnvironment;
+            this._queuedEmailService = queuedEmailService;
             this._commonModelFactory = commonModelFactory;
             this._languageService = languageService;
             this._currencyService = currencyService;
@@ -90,8 +100,11 @@ namespace Nop.Web.Controllers
 
         #endregion
 
+
+
+       
         #region Methods
-        
+
         //page not found
         public virtual IActionResult PageNotFound()
         {
@@ -179,6 +192,115 @@ namespace Nop.Web.Controllers
 
             return Redirect(returnUrl);
         }
+
+        //AboutUS
+        [HttpsRequirement(SslRequirement.Yes)]
+        //available even when a store is closed
+        [CheckAccessClosedStore(true)]
+        public ActionResult Support()
+        {
+            var model = new SupportModel();
+            model = _commonModelFactory.PrepareSupportModel(model, false);
+            return View(model);
+        }
+        [HttpPost, ActionName("Support")]
+        [PublicAntiForgery]
+        [ValidateCaptcha]
+        //available even when a store is closed
+        [CheckAccessClosedStore(true)]
+        public virtual IActionResult SupportSend(SupportModel model, bool captchaValid)
+        {
+            //validate CAPTCHA
+            if (_captchaSettings.Enabled && _captchaSettings.ShowOnContactUsPage && !captchaValid)
+            {
+                ModelState.AddModelError("", _captchaSettings.GetWrongCaptchaMessage(_localizationService));
+            }
+
+            model = _commonModelFactory.PrepareSupportModel(model, true);
+
+            if (ModelState.IsValid)
+            {
+                //var subject = _commonSettings.SubjectFieldOnContactUsForm ? model.Subject : null;
+                //var body = Core.Html.HtmlHelper.FormatText(model.Enquiry, false, true, false, false, false, false);
+
+                //_workflowMessageService.SendContactUsMessage(_workContext.WorkingLanguage.Id,
+                //    model.Email.Trim(), model.FullName, subject, body);
+
+                var msgBody = "<b>Name: </b>" + model.FullName + "<br>";
+                msgBody += "<b>Email: </b>" + model.Email + "<br>";
+                msgBody += "<b>Phone: </b>" + model.Phone + "<br>";
+                msgBody += "<b>Description: </b>" + model.Description + "<br>";
+                msgBody += "<b>Copier: </b>" + model.Copier + "<br>";
+                msgBody += "<b>Company: </b>" + model.Company + "<br>";
+                msgBody += "<b>Accessory Model: </b>" + model.AccessoryModel + "<br>";
+                msgBody += "<b>Location of Issue: </b>" + model.LocationOfIssue + "<br>";
+                msgBody += "<b>Error Code: </b>" + model.ErrorCode + "<br>";
+                msgBody += "<b>How Long Have You Had This Issue?: </b>" + model.HowLongHaveYouHadThisIssue + "<br>";
+                msgBody += "<b>Parts/Supplies Affected: </b>" + model.PartsSuppliesAffected + "<br>";
+
+
+                var email = new QueuedEmail
+                {
+                    Priority = QueuedEmailPriority.Low,
+                    From = model.Email,
+                    FromName = model.FullName,
+                    To = "info@ArcServicesCo.com",
+                    CC= "eugene@kspsystems.com",
+                    Subject = "Support Request",
+                    Body = msgBody,
+                    CreatedOnUtc = DateTime.UtcNow,
+                    EmailAccountId = 1,
+                    DontSendBeforeDateUtc = DateTime.UtcNow
+                };
+
+                if (model.Attachments != null && model.Attachments.Length > 0)
+                {
+
+                    
+                        //Assigning Unique Filename (Guid)
+                        var myUniqueFileName = Convert.ToString(Guid.NewGuid());
+
+                        //Getting file Extension
+                        var FileExtension = Path.GetExtension(model.Attachments.FileName);
+
+                        // concating  FileName + FileExtension
+                        var newFileName = myUniqueFileName + FileExtension;
+
+                        // Combines two strings into a path.
+                        var fileName = Path.Combine(_hostingEnvironment.WebRootPath, "SupportPicture") + $@"\{newFileName}";
+
+                        // if you want to store path of folder in database
+                        var imagePath = "SupportPicture/" + newFileName;
+
+                        using (var stream = new FileStream(fileName, FileMode.Create))
+                        {
+                             model.Attachments.CopyTo(stream);
+                        }
+                     
+
+
+                    email.AttachmentFileName =  model.Attachments.FileName;
+                    email.AttachmentFilePath = imagePath;
+
+                }
+
+
+                    _queuedEmailService.InsertQueuedEmail(email); 
+
+
+
+                model.SuccessfullySent = true;
+                model.Result = _localizationService.GetResource("Support.YourEnquiryHasBeenSent");
+
+                //activity log
+                _customerActivityService.InsertActivity("PublicStore.Support", _localizationService.GetResource("ActivityLog.PublicStore.Support"));
+
+                return View(model);
+            }
+
+            return View(model);
+        }
+
 
         //contact us page
         [HttpsRequirement(SslRequirement.Yes)]

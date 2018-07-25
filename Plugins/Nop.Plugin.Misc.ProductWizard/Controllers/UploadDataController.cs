@@ -4,16 +4,25 @@ using Microsoft.AspNetCore.StaticFiles;
 using Nop.Core;
 using Nop.Core.Data;
 using Nop.Core.Domain.Catalog;
+using Nop.Core.Domain.Common;
+using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Media;
+using Nop.Core.Domain.Orders;
+using Nop.Core.Domain.Payments;
+using Nop.Core.Domain.Shipping;
+using Nop.Core.Domain.Tax;
 using Nop.Core.Domain.Vendors;
 using Nop.Data;
 using Nop.Plugin.Misc.ProductWizard.Domain;
 using Nop.Services.Catalog;
+using Nop.Services.Common;
+using Nop.Services.Customers;
 using Nop.Services.Directory;
 using Nop.Services.Localization;
 using Nop.Services.Logging;
 using Nop.Services.Media;
 using Nop.Services.Messages;
+using Nop.Services.Orders;
 using Nop.Services.Security;
 using Nop.Services.Seo;
 using Nop.Services.Shipping;
@@ -24,6 +33,7 @@ using Nop.Web.Framework.Controllers;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -33,6 +43,16 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 {
     public class UploadDataController : BasePluginController
     {
+
+        private readonly ICustomNumberFormatter _customNumberFormatter;
+        private readonly IOrderProcessingService _orderProcessingService;
+        private readonly IAddressService _addressService; 
+        private readonly ICustomerRegistrationService _customerRegistrationService;
+        private readonly CustomerSettings _customerSettings;
+        private readonly IGenericAttributeService _genericAttributeService;
+        private readonly ICustomerService _customerService;
+        private readonly IOrderService _orderService;
+
         //it's quite fast hash (to cheaply distinguish between objects)
         private const string IMAGE_HASH_ALGORITHM = "SHA1";
 
@@ -71,10 +91,18 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         private readonly ICustomerActivityService _customerActivityService;
         private readonly VendorSettings _vendorSettings;
         private readonly ISpecificationAttributeService _specificationAttributeService;
-         
-        private readonly IPermissionService _permissionService; 
+
+        private readonly IPermissionService _permissionService;
         private readonly IDbContext _dbContext;
         public UploadDataController(
+             ICustomNumberFormatter customNumberFormatter,
+            IOrderProcessingService orderProcessingService,
+            IAddressService addressService,
+            ICustomerRegistrationService  customerRegistrationService,
+            CustomerSettings customerSettings,
+            IGenericAttributeService  genericAttributeService,
+            ICustomerService  customerService,
+            IOrderService orderService,
                IRepository<LegacyId> lRepository,
              IRepository<ItemsCompatability> iRepository,
             IRepository<Groups> gpRepository,
@@ -107,8 +135,16 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             ICustomerActivityService customerActivityService,
             VendorSettings vendorSettings,
             ISpecificationAttributeService specificationAttributeService,
-            IDbContext dbContext,  IPermissionService permissionService )
+            IDbContext dbContext, IPermissionService permissionService)
         {
+            this._customNumberFormatter = customNumberFormatter;
+            this._orderProcessingService = orderProcessingService;
+            this._addressService = addressService;
+            this._customerRegistrationService = customerRegistrationService;
+            this._customerSettings = customerSettings;
+            this._genericAttributeService = genericAttributeService;
+            this._customerService = customerService;
+            this._orderService = orderService;
             this._categoryRepository = categoryRepository;
             this._productService = productService;
             this._categoryService = categoryService;
@@ -136,11 +172,11 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             this._customerActivityService = customerActivityService;
             this._vendorSettings = vendorSettings;
             this._specificationAttributeService = specificationAttributeService;
-              
-            this._dbContext = dbContext;
-            this._permissionService = permissionService; 
 
-            this._lRepository = lRepository;  
+            this._dbContext = dbContext;
+            this._permissionService = permissionService;
+
+            this._lRepository = lRepository;
             this._iRepository = iRepository;
             this._gpRepository = gpRepository;
             this._gpiRepository = gpiRepository;
@@ -157,7 +193,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         public virtual IActionResult ImportProductsImgesFromFile(string imagePath = @"D:\data\items")
         {
 
-            imagePath = System.IO.Directory.GetCurrentDirectory()+ "/items"; // Server.MapPath("~/items");
+            imagePath = System.IO.Directory.GetCurrentDirectory() + "/items"; // Server.MapPath("~/items");
 
 
             DirectoryInfo d = new DirectoryInfo(imagePath);//Assuming Test is your Folder
@@ -167,7 +203,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                 string idString = dir.Name.ToString();
                 idString = idString.Replace("itemid_", "");
 
-               int.TryParse(idString, out int id);
+                int.TryParse(idString, out int id);
 
                 if (id > 0)
                 {
@@ -178,13 +214,13 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         var txt = dir.GetFiles("*.txt").FirstOrDefault();
 
                         var description = System.IO.File.ReadAllText(txt.FullName);
-                        description = description.Replace("&lt;", "").Replace("p&gt;", "").Replace("/","");
+                        description = description.Replace("&lt;", "").Replace("p&gt;", "").Replace("/", "");
 
                         FileInfo[] Files = dir.GetFiles("*.jpg");
-                                               
+
 
                         //take only image with not thumbnail
-                        foreach (FileInfo file in Files.Where(x=>!x.FullName.Contains("thumbnail")))
+                        foreach (FileInfo file in Files.Where(x => !x.FullName.Contains("thumbnail")))
                         {
                             if (file.FullName.Contains("thumbnail"))
                                 continue;
@@ -225,7 +261,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 _productService.UpdateProduct(product);
 
                             }
-                            
+
 
                         }
                     }
@@ -243,7 +279,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             return mimeType;
         }
 
-      
+
         [HttpPost]
         public virtual IActionResult ImportProductFromXlsx(IFormFile importexcelfile)
         {
@@ -304,13 +340,13 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                                 //if (exist == null)
 
-                                
+
                                 sql += $"update [dbo].[Category] set    [Name] ='{name}' , PageSize=6  where id =  {id}";
                                 sql += " IF @@ROWCOUNT = 0 ";
                                 sql += " INSERT INTO [dbo].[Category] (Id,[Name], UpdatedOnUtc,CreatedOnUtc, CategoryTemplateId, ParentCategoryId, " +
                                        "PictureId,  AllowCustomersToSelectPageSize,ShowOnHomePage,IncludeInTopMenu,SubjectToAcl,LimitedToStores,Deleted,DisplayOrder,Published, PageSize) " +
                                        $" SELECT {id},'{name}',getdate(),getdate(), 1,0,0,1,0,0,0,0,0,0,1,5; ";
-                                 
+
 
                                 countCategorysInFile += 1;
 
@@ -338,13 +374,13 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         SuccessNotification("Admin.Catalog.Categories.Imported");
                         //Manufacturer
                         // get the 3er worksheet in the workbook
-                          worksheet = xlPackage.Workbook.Worksheets[3];
+                        worksheet = xlPackage.Workbook.Worksheets[3];
                         if (worksheet == null)
                             throw new NopException("No worksheet found");
                         endRow = 2;
                         sql = "SET IDENTITY_INSERT [dbo].[Manufacturer] ON;";
-                         id = 0;
-                          name = string.Empty;
+                        id = 0;
+                        name = string.Empty;
                         //find end of data
                         while (true)
                         {
@@ -365,13 +401,13 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 //var exist = _manufacturerService.GetManufacturerById(id);
                                 //if (exist == null)
 
-                                    sql += $" update [dbo].[Manufacturer] set [Name] ='{name}', UpdatedOnUtc=getdate() where id ={id} ";
+                                sql += $" update [dbo].[Manufacturer] set [Name] ='{name}', UpdatedOnUtc=getdate() where id ={id} ";
                                 sql += " IF @@ROWCOUNT = 0 ";
                                 sql += " INSERT INTO [dbo].[Manufacturer] (Id,[Name], UpdatedOnUtc,CreatedOnUtc, " +
                                            " PictureId, PageSize, AllowCustomersToSelectPageSize,SubjectToAcl,LimitedToStores,Deleted,DisplayOrder,Published,ManufacturerTemplateId) " +
                                            $" SELECT {id},'{name}',getdate(),getdate(), 0,1,0,0,0,0,0,1,0; ";
 
-                                
+
 
                                 countCategorysInFile += 1;
 
@@ -403,13 +439,13 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                         //products
                         // get the second worksheet in the workbook
-                          worksheet = xlPackage.Workbook.Worksheets.FirstOrDefault();
+                        worksheet = xlPackage.Workbook.Worksheets.FirstOrDefault();
                         if (worksheet == null)
                             throw new NopException("No worksheet found");
                         endRow = 2;
                         sql = "SET IDENTITY_INSERT [dbo].[Product] ON;";
-                          id = 0;
-                          name = string.Empty;
+                        id = 0;
+                        name = string.Empty;
                         var Vendor = 0;
                         var SKU = string.Empty;
                         var Gtin = string.Empty;
@@ -441,17 +477,17 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 if (worksheet.Cells[endRow, 1].Value == null)
                                     break;
 
-                               int.TryParse(worksheet.Cells[endRow, 1].Value.ToString(), out id);
+                                int.TryParse(worksheet.Cells[endRow, 1].Value.ToString(), out id);
 
 
-                                Active = worksheet.Cells[endRow, 2].Value.ToString()=="Y"?1:0;
+                                Active = worksheet.Cells[endRow, 2].Value.ToString() == "Y" ? 1 : 0;
 
-                                int.TryParse(worksheet.Cells[endRow, 3].Value.ToString(),out Categories);
+                                int.TryParse(worksheet.Cells[endRow, 3].Value.ToString(), out Categories);
 
-                                int.TryParse(worksheet.Cells[endRow, 4].Value.ToString(),out BrandID);
+                                int.TryParse(worksheet.Cells[endRow, 4].Value.ToString(), out BrandID);
 
-                                SKU = worksheet.Cells[endRow, 5].Value.ToString().Trim().Replace("'","''"); 
-                            
+                                SKU = worksheet.Cells[endRow, 5].Value.ToString().Trim().Replace("'", "''");
+
                                 name = worksheet.Cells[endRow, 6].Value.ToString().Replace("'", "''");
 
 
@@ -460,14 +496,14 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 int.TryParse(worksheet.Cells[endRow, 9].Value.ToString(), out Width);
                                 int.TryParse(worksheet.Cells[endRow, 10].Value.ToString(), out Height);
 
-                                 int.TryParse(worksheet.Cells[endRow, 11].Value.ToString(), out StockQuantity);
+                                int.TryParse(worksheet.Cells[endRow, 11].Value.ToString(), out StockQuantity);
 
                                 int.TryParse(worksheet.Cells[endRow, 14].Value.ToString(), out DropShip);
 
                                 Gtin = worksheet.Cells[endRow, 15].Value.ToString().Trim().Replace("'", "''");
 
-                                if(worksheet.Cells[endRow, 16].Value.ToString() != "NULL")
-                                ExcludeGoogleFeed = worksheet.Cells[endRow, 16].Value.ToString() == "Y" ? 1 : 0;
+                                if (worksheet.Cells[endRow, 16].Value.ToString() != "NULL")
+                                    ExcludeGoogleFeed = worksheet.Cells[endRow, 16].Value.ToString() == "Y" ? 1 : 0;
 
                                 color = worksheet.Cells[endRow, 17].Value.ToString().Replace("'", "''");
 
@@ -494,21 +530,21 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                     $" select {id},'{name}','{SKU}','{Gtin}',{StockQuantity},0,{Price},0,0,{Weight},{Length},{Width},{Height},{ExcludeGoogleFeed},'{color}',{BrandID},{DropShip}, GETDATE(),GETDATE() , " +
                                     " 1,1,1,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0 ,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0  ,0; ";
 
-                                
-
-                                
 
 
-                              countCategorysInFile += 1;
+
+
+
+                                countCategorysInFile += 1;
                                 endRow++;
 
                                 maximunRows++;
 
-                                if(maximunRows>300)
-                                { 
-                                  //  sql += "SET IDENTITY_INSERT [dbo].[Product] OFF;";
+                                if (maximunRows > 300)
+                                {
+                                    //  sql += "SET IDENTITY_INSERT [dbo].[Product] OFF;";
                                     _dbContext.ExecuteSqlCommand(sql);
-                                  //  sql = "SET IDENTITY_INSERT [dbo].[Product] ON;";
+                                    //  sql = "SET IDENTITY_INSERT [dbo].[Product] ON;";
                                     maximunRows = 0;
                                 }
 
@@ -518,7 +554,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                             catch (Exception ex)
                             {
                                 endRow++;
-                                ErrorNotification("Admin.Common.UploadFile"+ ex.Message);
+                                ErrorNotification("Admin.Common.UploadFile" + ex.Message);
                                 continue;
                             }
                         }
@@ -530,7 +566,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         }
                         catch (Exception ex)
                         {
-                            ErrorNotification("Admin.Common.Product"+ ex.Message);
+                            ErrorNotification("Admin.Common.Product" + ex.Message);
 
                         }
                         SuccessNotification("Admin.Catalog.Product.Imported");
@@ -578,17 +614,17 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                     sql += "IF @@ROWCOUNT=0 ";
                                     sql += " INSERT INTO [dbo].[Product_Category_Mapping] ([ProductId],[CategoryId],[IsFeaturedProduct],[DisplayOrder])" +
                                            $" select {id}, {Categories},0,0; ";
-                                  //  }
+                                    //  }
                                 }
                                 if (maximunRows > 1000)
                                 {
-                                    if(sql!=string.Empty)
-                                    _dbContext.ExecuteSqlCommand(sql);
+                                    if (sql != string.Empty)
+                                        _dbContext.ExecuteSqlCommand(sql);
                                     sql = string.Empty;
                                     maximunRows = 0;
                                 }
                                 maximunRows++;
-                                    endRow++;
+                                endRow++;
 
                             }
                             catch (Exception ex)
@@ -636,7 +672,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                                 Active = worksheet.Cells[endRow, 2].Value.ToString() == "Y" ? 1 : 0;
 
-                               // int.TryParse(worksheet.Cells[endRow, 3].Value.ToString(), out Categories);
+                                // int.TryParse(worksheet.Cells[endRow, 3].Value.ToString(), out Categories);
 
                                 int.TryParse(worksheet.Cells[endRow, 4].Value.ToString(), out BrandID);
 
@@ -715,9 +751,9 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 if (worksheet.Cells[endRow, 1].Value == null)
                                     break;
 
-                                int.TryParse(worksheet.Cells[endRow, 1].Value.ToString(), out id); 
+                                int.TryParse(worksheet.Cells[endRow, 1].Value.ToString(), out id);
 
-                               decimal.TryParse(worksheet.Cells[endRow, 3].Value.ToString(), out Price);
+                                decimal.TryParse(worksheet.Cells[endRow, 3].Value.ToString(), out Price);
 
 
                                 sql += $"update  [dbo].[Product] set price ={Price} where id ={id};";
@@ -727,9 +763,9 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                                 if (maximunRows > 1000)
                                 {
-                                 
+
                                     _dbContext.ExecuteSqlCommand(sql);
-                                    sql =string.Empty;
+                                    sql = string.Empty;
                                     maximunRows = 0;
                                 }
                             }
@@ -792,8 +828,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 sql += $" insert into [dbo].[Groups] (Id, GroupName,Interval,    Percentage , CreatedOnUtc,            UpdatedOnUtc,            Deleted) " +
                                         $" select {id}, '{name}',{interval},{percentage}, getdate(), getdate(), 0; ";
 
-                             //   else
-                               
+                                //   else
+
 
                                 maximunRows++;
 
@@ -802,9 +838,9 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 if (maximunRows > 1000)
                                 {
 
-                                  //  sql += "SET IDENTITY_INSERT [dbo].[Groups] OFF;";
+                                    //  sql += "SET IDENTITY_INSERT [dbo].[Groups] OFF;";
                                     _dbContext.ExecuteSqlCommand(sql);
-                                 //   sql = "SET IDENTITY_INSERT [dbo].[Groups] ON;";
+                                    //   sql = "SET IDENTITY_INSERT [dbo].[Groups] ON;";
                                     maximunRows = 0;
                                 }
                             }
@@ -828,17 +864,17 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                             ErrorNotification("Admin.Common.Category" + ex.Message);
 
                         }
-                       
+
 
                         ///Groups items 
                         endRow = 2;
                         worksheet = xlPackage.Workbook.Worksheets[6];
                         if (worksheet == null)
                             throw new NopException("No worksheet found");
-                        sql =string.Empty;
+                        sql = string.Empty;
                         var groupID = 0;
                         var ItemID = 0;
-                      
+
                         maximunRows = 1;
                         sql = "SET IDENTITY_INSERT [dbo].[groups-items] ON;";
                         while (true)
@@ -854,7 +890,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 if (worksheet.Cells[endRow, 1].Value == null)
                                     break;
 
-                                int.TryParse(worksheet.Cells[endRow, 1].Value.ToString(), out groupID); 
+                                int.TryParse(worksheet.Cells[endRow, 1].Value.ToString(), out groupID);
                                 int.TryParse(worksheet.Cells[endRow, 2].Value.ToString(), out ItemID);
 
 
@@ -863,21 +899,21 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 //{
 
                                 sql += $" update [dbo].[groups-items] set GroupId= {groupID}, ItemId={ItemID}, RelationShip=null, Deleted=0  where GroupId={groupID} and ItemId={ItemID} ";
-                                    sql += "IF @@ROWCOUNT=0 ";
-                                    sql += $"insert into [dbo].[groups-items] (GroupId, ItemId, RelationShip, Deleted) " +
-                                        $" select {groupID},{ItemID},null,0; ";
+                                sql += "IF @@ROWCOUNT=0 ";
+                                sql += $"insert into [dbo].[groups-items] (GroupId, ItemId, RelationShip, Deleted) " +
+                                    $" select {groupID},{ItemID},null,0; ";
                                 maximunRows++;
 
-                              
-                              //  }
+
+                                //  }
 
                                 endRow++;
                                 if (maximunRows > 1000)
                                 {
 
-                                   
+
                                     _dbContext.ExecuteSqlCommand(sql);
-                                   
+
                                     maximunRows = 0;
                                 }
                             }
@@ -899,7 +935,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                             ErrorNotification("Admin.Common.groups-items" + ex.Message);
 
                         }
-                       
+
 
                         //item comppactibility
                         worksheet = xlPackage.Workbook.Worksheets[7];
@@ -930,19 +966,19 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 //var exist = _iRepository.TableNoTracking.Where(x => x.ItemId== ItemID && x.ItemIdPart == ItemIDPart).FirstOrDefault();
                                 //if (exist == null)
                                 sql += $" update [dbo].[ItemsCompatability] set ItemId={ItemID}, ItemIdPart={ItemIDPart},  UpdatedOnUtc=getdate(), Deleted=0 where ItemId={ItemID} and ItemIdPart={ItemIDPart} ";
-                                    sql += "IF @@ROWCOUNT=0 ";
+                                sql += "IF @@ROWCOUNT=0 ";
                                 sql += $" insert into [dbo].[ItemsCompatability] (ItemId, ItemIdPart, CreatedOnUtc, UpdatedOnUtc, Deleted) " +
                                         $" select {ItemID},{ItemIDPart},getdate(),getdate(),0; ";
-                                 
+
 
                                 maximunRows++;
 
                                 endRow++;
 
                                 if (maximunRows > 1000)
-                                { 
-                                    if(sql!=string.Empty)
-                                    _dbContext.ExecuteSqlCommand(sql);                                   
+                                {
+                                    if (sql != string.Empty)
+                                        _dbContext.ExecuteSqlCommand(sql);
                                     maximunRows = 0;
                                     sql = string.Empty;
                                 }
@@ -999,11 +1035,11 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 sql += "IF @@ROWCOUNT=0 ";
                                 sql += $"insert into [dbo].[Relations-Groups-Items] ( GroupId,  ItemId ,   Direction ,Deleted) " +
                                         $" select {GroupId},{ItemID},'{dire}',0; ";
-                                
-                                    maximunRows++;
 
-                                    endRow++;
-                              
+                                maximunRows++;
+
+                                endRow++;
+
 
 
                                 if (maximunRows > 1000)
@@ -1016,7 +1052,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                             catch (Exception ex)
                             {
                                 endRow++;
-                                ErrorNotification("Admin.Common.UploadFile"  + ex.Message);
+                                ErrorNotification("Admin.Common.UploadFile" + ex.Message);
                                 continue;
                             }
                         }
@@ -1069,16 +1105,16 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
 
 
-                                    maximunRows++;
+                                maximunRows++;
 
-                                    endRow++;
-                               
+                                endRow++;
+
 
 
                                 if (maximunRows > 1000)
                                 {
-                                    if(sql!=string.Empty)
-                                    _dbContext.ExecuteSqlCommand(sql);
+                                    if (sql != string.Empty)
+                                        _dbContext.ExecuteSqlCommand(sql);
                                     maximunRows = 0;
                                     sql = string.Empty;
                                 }
@@ -1086,7 +1122,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                             catch (Exception ex)
                             {
                                 endRow++;
-                                ErrorNotification("Admin.Common.UploadFile"+ ex.Message);
+                                ErrorNotification("Admin.Common.UploadFile" + ex.Message);
                                 continue;
                             }
                         }
@@ -1099,7 +1135,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         }
                         catch (Exception ex)
                         {
-                            ErrorNotification("Admin.Common.LegacyIds"+ ex.Message);
+                            ErrorNotification("Admin.Common.LegacyIds" + ex.Message);
 
                         }
                     }
@@ -1122,7 +1158,528 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             }
         }
 
+        [HttpPost]
+        public virtual IActionResult ImportOrdersFromXlsx(IFormFile importexcelfile)
+        {
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+                return AccessDeniedView();
+            try
+            {
+                if (importexcelfile != null && importexcelfile.Length > 0)
+                {
+                    Stream stream = importexcelfile.OpenReadStream();
+                    using (var xlPackage = new ExcelPackage(stream))
+                    {
+                        var endRow = 2;
 
+                        // get the 1st worksheet in the workbook
+                        var worksheet = xlPackage.Workbook.Worksheets.FirstOrDefault();
+                        if (worksheet == null)
+                            throw new NopException("No worksheet found");
+
+                        // get the second worksheet in the workbook
+                        var worksheetO = xlPackage.Workbook.Worksheets[2];
+                        if (worksheetO == null)
+                            throw new NopException("No worksheet found");
+
+
+                        var orderid = 0;
+                        var username = string.Empty;
+                        var orderstatus = string.Empty;
+                        var transactionid = string.Empty;
+                        var useremail = string.Empty;
+                        var userrole = string.Empty;
+                        var fname = string.Empty;
+                        var lname = string.Empty;
+                        var billaddr = string.Empty;
+                        var billcity = string.Empty;
+                        var billstate = string.Empty;
+                        var billzip = string.Empty;
+                        var billcountry = string.Empty;
+                        var shipaddr = string.Empty;
+                        var shipcity = string.Empty;
+                        var shipstate = string.Empty;
+                        var shipzip = string.Empty;
+                        var shipcountry = string.Empty;
+                        var userphone = string.Empty;
+                        var userphone2 = string.Empty;
+                        var paymethod = string.Empty;
+                        var cctype = string.Empty;
+                        var ccnumber = string.Empty;
+                        var ccexpiration = string.Empty;
+                        var ccsecurity = string.Empty;
+                        var shipcarrier = string.Empty;
+                        var shiptype = string.Empty;
+                        var shipamount = string.Empty;
+                        var itemcount = string.Empty;
+                        var subtotal = string.Empty;
+                        var tax = string.Empty;
+                        var total = string.Empty;
+                        var trackingnumber = string.Empty;
+                        var year = string.Empty;
+                        var month = string.Empty;
+                        var date = string.Empty;
+                        var hour = string.Empty;
+                        var min = string.Empty;
+                        var info = string.Empty;
+
+                        //find end of data
+                        while (true)
+                        {
+                            try
+                            {
+                                if (worksheet == null || worksheet.Cells == null)
+                                    break;
+                                if(endRow>24070)
+                                if (worksheet.Cells[endRow, 1].Value == null)
+                                    break;
+
+                                username = worksheet.Cells[endRow, 2].Value as string;
+                                useremail = worksheet.Cells[endRow, 5].Value as string;
+                                fname = worksheet.Cells[endRow, 7].Value as string;
+                                lname = worksheet.Cells[endRow, 8].Value as string;
+
+
+                                var customer = _customerService.GetCustomerByEmail(useremail);
+                                if (customer == null)
+                                    customer = _customerService.GetCustomerByUsername(username);
+                                if (customer == null)
+                                {
+                                    if (fname == null && lname == null)
+                                    {
+                                        endRow++;
+                                        continue;
+                                    }
+                                    useremail = $"guest{fname.Trim()}@{lname.Trim()}.com";
+                                    customer = _customerService.GetCustomerByEmail(useremail);
+                                }
+
+                                orderid = int.Parse(worksheet.Cells[endRow, 1].Value.ToString());
+
+                                orderstatus = worksheet.Cells[endRow, 3].Value.ToString();
+                                transactionid = worksheet.Cells[endRow, 4].Value.ToString();
+
+                                userrole = worksheet.Cells[endRow, 6].Value.ToString();
+
+                                billaddr = worksheet.Cells[endRow, 9].Value as string;
+                                billcity = worksheet.Cells[endRow, 10].Value as string;
+                                billstate = worksheet.Cells[endRow, 11].Value as string;
+                                billzip = worksheet.Cells[endRow, 12].Value as string;
+                                billcountry = worksheet.Cells[endRow, 13].Value as string;
+                                shipaddr = worksheet.Cells[endRow, 14].Value as string;
+                                shipcity = worksheet.Cells[endRow, 15].Value as string;
+                                shipstate = worksheet.Cells[endRow, 16].Value as string;
+                                shipzip = worksheet.Cells[endRow, 17].Value as string;
+                                shipcountry = worksheet.Cells[endRow, 18].Value as string;
+                                userphone = worksheet.Cells[endRow, 19].Value  as string;
+                                userphone2 = worksheet.Cells[endRow, 20].Value as string;
+                                paymethod = worksheet.Cells[endRow, 21].Value as string;
+                                cctype = worksheet.Cells[endRow, 22].Value as string;
+                                ccnumber = worksheet.Cells[endRow, 23].Value as string;
+                                ccexpiration = worksheet.Cells[endRow, 24].Value as string;
+                                ccsecurity = worksheet.Cells[endRow, 25].Value as string;
+                                shipcarrier = worksheet.Cells[endRow, 26].Value as string;
+                                shiptype = worksheet.Cells[endRow, 27].Value as string;
+                                shipamount = worksheet.Cells[endRow, 28].Value.ToString();
+                                itemcount = worksheet.Cells[endRow, 29].Value.ToString();
+                                subtotal = worksheet.Cells[endRow, 30].Value.ToString();
+                                tax = worksheet.Cells[endRow, 31].Value.ToString();
+                                total = worksheet.Cells[endRow, 32].Value.ToString();
+                                trackingnumber = worksheet.Cells[endRow, 33].Value as string;
+                                year = worksheet.Cells[endRow, 34].Value.ToString();
+                                month = worksheet.Cells[endRow, 35].Value.ToString();
+                                date = worksheet.Cells[endRow, 36].Value.ToString();
+                                hour = worksheet.Cells[endRow, 37].Value.ToString();
+                                min = worksheet.Cells[endRow, 38].Value.ToString();
+                                info = worksheet.Cells[endRow, 39].Value as string;
+
+                                var dateTimeAsUtc = DateTime.UtcNow;
+
+                                try
+                                {
+                                    var dateToConvert = $"{year}-{month}-{date} {hour}:{min}:00"; 
+
+                                    //var dateTimeWithUnspecifiedKind = DateTime.ParseExact(dateToConvert, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+                                    dateTimeAsUtc = DateTime.SpecifyKind(DateTime.Parse(dateToConvert), DateTimeKind.Utc);
+                                }
+                                catch(Exception ex) {
+                                    var tt = ex.Message;
+                                }
+
+                                if (customer == null)
+                                {
+                                    var newCustomer = new Customer
+                                    {
+
+                                        VendorId = 0,
+                                        CustomerGuid = Guid.NewGuid(),
+                                        Active = true,
+                                        AffiliateId = 0,
+                                        CreatedOnUtc = dateTimeAsUtc,
+                                        Email = useremail,
+                                        Username = username,
+                                        IsSystemAccount = false,
+                                        Deleted = false,
+                                        LastActivityDateUtc = dateTimeAsUtc,
+
+                                    };
+                                    _customerService.InsertCustomer(newCustomer);
+
+                                    try
+                                    {
+                                        _genericAttributeService.SaveAttribute(newCustomer, SystemCustomerAttributeNames.FirstName, fname);
+                                    }
+                                    catch { }
+                                    try
+                                    {
+                                        _genericAttributeService.SaveAttribute(newCustomer, SystemCustomerAttributeNames.LastName, lname);
+                                    }
+                                    catch { }
+
+                                    var billingAddress = new Address
+                                    {
+                                        FirstName = customer.GetAttribute<string>(SystemCustomerAttributeNames.FirstName),
+                                        LastName = customer.GetAttribute<string>(SystemCustomerAttributeNames.LastName),
+                                        Email = customer.Email,
+                                        Company = customer.GetAttribute<string>(SystemCustomerAttributeNames.Company),
+                                        CountryId = customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId) > 0
+                                                                    ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId)
+                                                                    : null,
+                                        StateProvinceId = customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId) > 0
+                                                                    ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId)
+                                                                    : null,
+                                        City = billcity,
+                                        Address1 = billaddr,
+                                        ZipPostalCode = billzip,
+                                        PhoneNumber = userphone,
+                                        FaxNumber = userphone2,
+                                        CreatedOnUtc = customer.CreatedOnUtc
+                                    };
+
+                                    var billinState = _countryService.GetCountryByThreeLetterIsoCode("US").StateProvinces.Where(x => x.Abbreviation == billstate).FirstOrDefault();
+
+
+                                    if (this._addressService.IsAddressValid(billingAddress))
+                                    {
+                                        //some validation                                        
+                                        billingAddress.CountryId = billinState.CountryId;
+                                        billingAddress.StateProvinceId = billinState.Id;
+                                        //set default address
+                                        customer.Addresses.Add(billingAddress);
+                                        customer.BillingAddress = billingAddress;
+                                        _customerService.UpdateCustomer(customer);
+                                    }
+
+
+
+                                    var shippingAddress = new Address
+                                    {
+                                        FirstName = customer.GetAttribute<string>(SystemCustomerAttributeNames.FirstName),
+                                        LastName = customer.GetAttribute<string>(SystemCustomerAttributeNames.LastName),
+                                        Email = customer.Email,
+                                        Company = customer.GetAttribute<string>(SystemCustomerAttributeNames.Company),
+                                        CountryId = customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId) > 0
+                                                                    ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId)
+                                                                    : null,
+                                        StateProvinceId = customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId) > 0
+                                                                    ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId)
+                                                                    : null,
+                                        City = billcity,
+                                        Address1 = billaddr,
+                                        ZipPostalCode = billzip,
+                                        PhoneNumber = userphone,
+                                        FaxNumber = userphone2,
+                                        CreatedOnUtc = customer.CreatedOnUtc
+                                    };
+
+                                    var shippingState = _countryService.GetCountryByThreeLetterIsoCode("US").StateProvinces.Where(x => x.Abbreviation == shipstate).FirstOrDefault();
+
+
+                                    if (this._addressService.IsAddressValid(shippingAddress))
+                                    {
+                                        //some validation                                        
+                                        shippingAddress.CountryId = shippingState.CountryId;
+                                        shippingAddress.StateProvinceId = shippingState.Id;
+                                        //set default address
+                                        customer.Addresses.Add(shippingAddress);
+                                        customer.ShippingAddress = shippingAddress;
+                                        _customerService.UpdateCustomer(customer);
+                                    }
+
+                                }
+
+                                var order = _orderService.GetOrderByAuthorizationTransactionIdAndPaymentMethod(transactionid ,null);
+                                if (order == null)
+                                {
+                                    order = new Order
+                                    {
+                                        Id = 1,
+                                        OrderGuid = Guid.NewGuid(),
+                                        CustomerId = customer.Id,
+                                        Customer = customer,
+                                        StoreId = 1,
+                                        OrderStatus = OrderStatus.Complete,
+                                        ShippingStatus = ShippingStatus.Shipped,
+                                        PaymentStatus = PaymentStatus.Paid,
+                                     //   PaymentMethodSystemName = "PaymentMethodSystemName1",
+                                     //   CustomerCurrencyCode = "US",
+                                    //    CurrencyRate = 1.1M,
+                                      //  CustomerTaxDisplayType = TaxDisplayType.ExcludingTax,
+                                        //VatNumber = "123456789",
+                                        OrderSubtotalInclTax = 2.1M,
+                                        OrderSubtotalExclTax = 3.1M,
+                                        OrderSubTotalDiscountInclTax = 4.1M,
+                                        OrderSubTotalDiscountExclTax = 5.1M,
+                                        OrderShippingInclTax = 6.1M,
+                                        OrderShippingExclTax = 7.1M,
+                                        PaymentMethodAdditionalFeeInclTax = 8.1M,
+                                        PaymentMethodAdditionalFeeExclTax = 9.1M,
+                                       // TaxRates = "1,3,5,7",
+                                        OrderTax = decimal.Parse(tax),
+                                        OrderDiscount = 0M,
+                                        OrderTotal = decimal.Parse(total),
+                                        RefundedAmount = 0M,
+                                    //    CheckoutAttributeDescription = "CheckoutAttributeDescription1",
+                                      //  CheckoutAttributesXml = "CheckoutAttributesXml1",
+                                     //   CustomerLanguageId = 1,
+                                        AffiliateId = 0,
+                                   //     CustomerIp = "CustomerIp1",
+                                   //     AllowStoringCreditCardNumber = false,
+                                        //CardType = "Visa",
+                                        //CardName = "John Smith",
+                                        //CardNumber = "4111111111111111",
+                                        //MaskedCreditCardNumber = "************1111",
+                                        //CardCvv2 = "123",
+                                        //CardExpirationMonth = "12",
+                                        //CardExpirationYear = "2010",
+                                        AuthorizationTransactionId = transactionid,
+                                        AuthorizationTransactionCode = transactionid,
+                                        AuthorizationTransactionResult = transactionid,
+                                        CaptureTransactionId = transactionid,
+                                        CaptureTransactionResult = transactionid,
+                                        SubscriptionTransactionId = transactionid,
+                                        PaidDateUtc = dateTimeAsUtc,
+                                       // CustomValuesXml = "<test>test</test>",
+                                        BillingAddress = customer.BillingAddress,
+                                        ShippingAddress = customer.ShippingAddress,
+                                        ShippingMethod = shipcarrier,
+                                      //  ShippingRateComputationMethodSystemName = "ShippingRateComputationMethodSystemName1",
+                                        Deleted = false,
+                                        CreatedOnUtc = dateTimeAsUtc,
+                                        CustomOrderNumber = string.Empty
+                                    };
+                                    _orderService.InsertOrder(order);
+                                    //generate and set custom order number
+                                    order.CustomOrderNumber = _customNumberFormatter.GenerateOrderCustomNumber(order);
+                                    _customerService.UpdateCustomer(customer); 
+
+                                }
+
+                                var endRowO = 2;
+
+                               
+
+                                var firstTime = true;
+                                //find end of data
+
+                                while (true)
+                                {
+                                    try
+                                    {
+                                        if (worksheetO == null || worksheet.Cells == null)
+                                            break;
+                                        if (endRowO > 41681)
+                                            if (worksheetO.Cells[endRowO, 1].Value == null)
+                                                break;
+
+                                        int orderIdO = 0;
+                                        var orderString = worksheetO.Cells[endRowO, 2].Value.ToString();
+                                          int.TryParse(orderString, out  orderIdO);
+                                        if (orderIdO != orderid)
+                                        {
+                                            if (!firstTime)
+                                                break;
+                                            firstTime = true;
+                                            endRowO++;
+                                            continue;
+                                        }
+                                        
+
+                                       firstTime = false;
+
+                                        int itemId = int.Parse(worksheetO.Cells[endRowO, 3].Value.ToString());
+                                        var ProdName = worksheetO.Cells[endRowO, 4].Value as String;
+                                        var sku = worksheetO.Cells[endRowO, 5].Value.ToString();
+                                        int qty = int.Parse(worksheetO.Cells[endRowO, 6].Value.ToString());
+                                        decimal prodPrice = decimal.Parse(worksheetO.Cells[endRowO, 7].Value.ToString());
+
+
+                                        var itemExist = order.OrderItems.Where(x => x.ProductId == itemId).FirstOrDefault();
+
+                                        if (itemExist == null)
+                                        {
+                                            var product = _productService.GetProductById(itemId);
+
+                                            if (product == null)
+                                            {
+                                                product = new Product
+                                                {
+                                                    Name = ProdName,
+                                                    Sku = sku,
+                                                    Price = prodPrice,
+                                                    UpdatedOnUtc = dateTimeAsUtc,
+                                                    CreatedOnUtc = dateTimeAsUtc,
+                                                    Published = false,
+                                                    ProductType = ProductType.GroupedProduct,
+                                                    ParentGroupedProductId = 2,
+                                                    VisibleIndividually = true,
+                                                  
+                                                    ShortDescription = ProdName,
+                                                    FullDescription = ProdName,
+                                                   // AdminComment = "AdminComment 1",
+                                                    VendorId = 0,
+                                                    ProductTemplateId =1,
+                                                    ShowOnHomePage = false,
+                                                    //MetaKeywords = "Meta keywords",
+                                                    //MetaDescription = "Meta description",
+                                                    //MetaTitle = "Meta title",
+                                                  //  AllowCustomerReviews = false,
+                                                    //ApprovedRatingSum = 2,
+                                                   // NotApprovedRatingSum = 3,
+                                                   // ApprovedTotalReviews = 4,
+                                                  //  NotApprovedTotalReviews = 5,
+                                                   // SubjectToAcl = true,
+                                                  //  LimitedToStores = true, 
+                                                 //   ManufacturerPartNumber = "manufacturerPartNumber",
+                                                 //   Gtin = "GTIN 1",
+                                                 //   IsGiftCard = false,
+                                                 //   GiftCardTypeId = 1,
+                                                 //   OverriddenGiftCardAmount = 1,
+                                                 //   IsDownload = false,
+                                                 //   DownloadId = 2,
+                                                 //   UnlimitedDownloads = false,
+                                                  //  MaxNumberOfDownloads = 3,
+                                                  //  DownloadExpirationDays = 4,
+                                                 //   DownloadActivationTypeId = 5,
+                                                 //   HasSampleDownload = true,
+                                                //    SampleDownloadId = 6,
+                                                //    HasUserAgreement = false,
+                                                 //   UserAgreementText = "userAgreementText",
+                                                 //   IsRecurring = true,
+                                                  //  RecurringCycleLength = 7,
+                                                 //   RecurringCyclePeriodId = 8,
+                                                 //   RecurringTotalCycles = 9,
+                                                 //   IsRental = true,
+                                                 //   RentalPriceLength = 9,
+                                                //    RentalPricePeriodId = 10,
+                                                //    IsShipEnabled = true,
+                                                //    IsFreeShipping = true,
+                                                 //   ShipSeparately = true,
+                                                  //  AdditionalShippingCharge = 10.1M,
+                                                //    DeliveryDateId = 5,
+                                                    IsTaxExempt = true,
+                                               //     TaxCategoryId = 11,
+                                                //    IsTelecommunicationsOrBroadcastingOrElectronicServices = true,
+                                              //      ManageInventoryMethodId = 12,
+                                               //     ProductAvailabilityRangeId = 1,
+                                                    UseMultipleWarehouses = true,
+                                                //    WarehouseId = 6,
+                                                    StockQuantity = 13,
+                                                    DisplayStockAvailability = true,
+                                                    DisplayStockQuantity = true,
+                                                    MinStockQuantity = 14,
+                                                    LowStockActivityId = 15,
+                                                    NotifyAdminForQuantityBelow = 16,
+                                                //    BackorderModeId = 17,
+                                                    AllowBackInStockSubscriptions = true,
+                                                    OrderMinimumQuantity = 18,
+                                                    OrderMaximumQuantity = 19,
+                                                    AllowedQuantities = "1, 5,6,10",
+                                                    AllowAddingOnlyExistingAttributeCombinations = true,
+                                                    NotReturnable = true,
+                                                    DisableBuyButton = true,
+                                                    DisableWishlistButton = true,
+                                                    AvailableForPreOrder = true,
+                                                    PreOrderAvailabilityStartDateTimeUtc = new DateTime(2010, 01, 01),
+                                             //       CallForPrice = true,
+                                                  
+                                                    OldPrice = 22.1M,
+                                                    ProductCost = 23.1M,
+                                            //        CustomerEntersPrice = true,
+                                                    MinimumCustomerEnteredPrice = 24.1M,
+                                                    MaximumCustomerEnteredPrice = 25.1M,
+                                                    BasepriceEnabled = true,
+                                                    BasepriceAmount = 33.1M,
+                                                    BasepriceUnitId = 4,
+                                                    BasepriceBaseAmount = 34.1M,
+                                                    BasepriceBaseUnitId = 5,
+                                                    MarkAsNew = true,
+                                                    MarkAsNewStartDateTimeUtc = new DateTime(2010, 01, 07),
+                                                    MarkAsNewEndDateTimeUtc = new DateTime(2010, 01, 08),
+                                                    HasTierPrices = true,
+                                                    HasDiscountsApplied = true,
+                                                    Weight = 26.1M,
+                                                    Length = 27.1M,
+                                                    Width = 28.1M,
+                                                    Height = 29.1M,
+                                                    AvailableStartDateTimeUtc = new DateTime(2010, 01, 01),
+                                                    AvailableEndDateTimeUtc = new DateTime(2010, 01, 02),
+                                                    RequireOtherProducts = true,
+                                                  //  RequiredProductIds = "1,2,3",
+                                                    AutomaticallyAddRequiredProducts = true,
+                                                    DisplayOrder = 30,
+                                                  
+                                                  
+
+                                                };
+                                                _productService.InsertProduct(product);
+
+                                            }
+                                            var newItem = new OrderItem
+                                            {
+                                                Order = order,
+                                                PriceExclTax = prodPrice,
+                                                OrderItemGuid = Guid.NewGuid(),
+                                                Product = product,
+                                                Quantity = qty,
+                                                DownloadCount = 0,
+                                                IsDownloadActivated = false,
+                                                LicenseDownloadId = 0,
+                                            };
+
+                                            order.OrderItems.Add(newItem);
+                                            _orderService.UpdateOrder(order);
+                                        }
+
+                                    }
+                                    catch(Exception ex)
+                                    {
+
+                                        ErrorNotification($"orderid: {orderid} error {ex}");
+
+                                    }
+
+                                    endRowO++;
+                                }
+
+
+
+                            }
+                            catch (Exception ex)
+                            {
+
+                                ErrorNotification($"orderid: {orderid} error {ex}");
+                            }
+                            endRow++;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            { }
+            SuccessNotification("Admin.Catalog.Categories.Imported");
+            return RedirectToAction("Index");
+        }
 
         //[HttpPost]
         //public virtual IActionResult ImportCategoryFromXlsx(IFormFile importexcelfile)

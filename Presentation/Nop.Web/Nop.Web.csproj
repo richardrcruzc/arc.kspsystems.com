@@ -50,6 +50,7 @@
 
     <!-- We copy the \Logs directory -->
     <Content Include="Logs\**" CopyToPublishDirectory="PreserveNewest" />
+    <None Remove="App_Data\SupportPicture\Index.htm" />
     <None Include="Themes\Pavilion\Views\BackInStockSubscription\CustomerSubscriptions.cshtml" />
     <None Include="Themes\Pavilion\Views\Blog\BlogPost.cshtml" />
     <None Include="Themes\Pavilion\Views\Blog\List.cshtml" />
@@ -120,6 +121,9 @@
     <None Include="Themes\Pavilion\Views\ShoppingCart\Wishlist.cshtml" />
     <None Include="Themes\Pavilion\Views\_ViewImports.cshtml" />
     <Reference Include="System.Web" />
+    <Content Update="Views\Common\Support.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
 
     <None Update="Areas\Admin\sitemap.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -427,6 +427,29 @@ namespace Nop.Web.Factories
 
             return model;
         }
+        /// <summary>
+        /// Prepare the contact us model
+        /// </summary>
+        /// <param name="model">Contact us model</param>
+        /// <param name="excludeProperties">Whether to exclude populating of model properties from the entity</param>
+        /// <returns>Contact us model</returns>
+        public virtual SupportModel PrepareSupportModel(SupportModel model, bool excludeProperties)
+        {
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+
+            if (!excludeProperties)
+            {
+                model.Email = _workContext.CurrentCustomer.Email;
+                model.FullName = _workContext.CurrentCustomer.GetFullName();
+                model.Company = _workContext.CurrentCustomer.BillingAddress.Company;
+            }
+            //model.SubjectEnabled = _commonSettings.SubjectFieldOnContactUsForm;
+            model.DisplayCaptcha = _captchaSettings.Enabled && _captchaSettings.ShowOnContactUsPage;
+
+            return model;
+        }
+ 
 
         /// <summary>
         /// Prepare the contact us model
@@ -777,7 +800,10 @@ namespace Nop.Web.Factories
 
             return sb.ToString();
         }
-        
+
+      
+
+
         #endregion
     }
 }
