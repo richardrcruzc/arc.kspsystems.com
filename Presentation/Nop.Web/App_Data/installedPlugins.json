@@ -35,5 +35,6 @@
   "Widgets.GoogleAnalytics",
   "Widgets.NivoSlider",
   "Widgets.GoDaddyApi",
+  "PromotionFeed.Froogle",
   "ProductWizard"
 ]

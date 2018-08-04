@@ -1,5 +1,5 @@
 {
   "DataProvider": "sqlserver",
-  "DataConnectionString": "Data Source=DESKTOP-0U92LFO\\SQLEXPRESS;Initial Catalog=ArcNOPDB;Integrated Security=True;Persist Security Info=False",
+  "DataConnectionString": "Data Source=DESKTOP-0U92LFO\\SQLEXPRESS;Initial Catalog=Nop40arc;Integrated Security=True;Persist Security Info=False",
   "RawDataSettings": {}
 }

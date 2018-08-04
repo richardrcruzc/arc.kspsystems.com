@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Web.Hosting;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,11 @@ namespace Nop.Web.Controllers
     public partial class CommonController : BasePublicController
     {
         #region Fields
+
+        private readonly IEmailAccountService _emailAccountService;
+        private readonly EmailAccountSettings _emailAccountSettings;
+
+
         private readonly IHostingEnvironment _hostingEnvironment;
 
         private readonly IQueuedEmailService _queuedEmailService;
@@ -57,6 +63,8 @@ namespace Nop.Web.Controllers
         #region Ctor
 
         public CommonController(
+            IEmailAccountService emailAccountService,
+            EmailAccountSettings emailAccountSettings,
               IHostingEnvironment hostingEnvironment,
             IQueuedEmailService queuedEmailService,
             ICommonModelFactory commonModelFactory,
@@ -77,6 +85,8 @@ namespace Nop.Web.Controllers
             CaptchaSettings captchaSettings,
             VendorSettings vendorSettings)
         {
+            this._emailAccountService = emailAccountService;
+            this._emailAccountSettings = emailAccountSettings;
             this._hostingEnvironment = hostingEnvironment;
             this._queuedEmailService = queuedEmailService;
             this._commonModelFactory = commonModelFactory;
@@ -238,12 +248,13 @@ namespace Nop.Web.Controllers
                 msgBody += "<b>How Long Have You Had This Issue?: </b>" + model.HowLongHaveYouHadThisIssue + "<br>";
                 msgBody += "<b>Parts/Supplies Affected: </b>" + model.PartsSuppliesAffected + "<br>";
 
+                var senderAccount = _emailAccountService.GetEmailAccountById(_emailAccountSettings.DefaultEmailAccountId);
 
                 var email = new QueuedEmail
                 {
                     Priority = QueuedEmailPriority.Low,
-                    From = model.Email,
-                    FromName = model.FullName,
+                    From = senderAccount.Email,
+                    FromName = senderAccount.DisplayName,
                     To = "info@ArcServicesCo.com",
                     CC= "eugene@kspsystems.com",
                     Subject = "Support Request",
@@ -271,8 +282,9 @@ namespace Nop.Web.Controllers
 
                         // if you want to store path of folder in database
                         var imagePath = "SupportPicture/" + newFileName;
+                    //var tmp = HostingEnvironment.ApplicationPhysicalPath; // Server.MapPath("~"); 
 
-                        using (var stream = new FileStream(fileName, FileMode.Create))
+                    using (var stream = new FileStream(fileName, FileMode.Create))
                         {
                              model.Attachments.CopyTo(stream);
                         }
@@ -280,7 +292,7 @@ namespace Nop.Web.Controllers
 
 
                     email.AttachmentFileName =  model.Attachments.FileName;
-                    email.AttachmentFilePath = imagePath;
+                    email.AttachmentFilePath = fileName;
 
                 }
 

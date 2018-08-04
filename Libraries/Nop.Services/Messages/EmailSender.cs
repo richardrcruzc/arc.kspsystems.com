@@ -4,6 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using Amazon.Runtime;
+using Amazon.SimpleEmail;
+using Amazon.SimpleEmail.Model;
+using MimeKit;
 using Nop.Core.Domain.Messages;
 using Nop.Services.Media;
 
@@ -50,98 +54,190 @@ namespace Nop.Services.Messages
             string attachmentFilePath = null, string attachmentFileName = null,
             int attachedDownloadId = 0, IDictionary<string, string> headers = null)
         {
-            var message = new MailMessage
-            {
-                //from, to, reply to
-                From = new MailAddress(fromAddress, fromName)
-            };
-            message.To.Add(new MailAddress(toAddress, toName));
-            if (!string.IsNullOrEmpty(replyTo))
-            {
-                message.ReplyToList.Add(new MailAddress(replyTo, replyToName));
-            }
+            
 
-            //BCC
-            if (bcc != null)
+            // Amazon Simple Email Service Client
+
+
+
+
+            String awsAccessKey = "AKIAISCDDROTDTJ66TFQ";    // Replace with your AWS access key.
+            String awsSecretKey = "yxoYAm5qhVqVlUk0FffeVBHI7OuHO8N4DmRvQgnv";    // Replace with your AWS secret key.
+            String source = "Arc Services Co. <websupport@arcservicesco.com>";
+
+            var credentals = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
+
+            Content subjectAws = new Content(subject);
+
+            using (var client = new AmazonSimpleEmailServiceClient(credentals, Amazon.RegionEndpoint.USEast1))
+            using (var messageStream = new MemoryStream())
             {
-                foreach (var address in bcc.Where(bccValue => !string.IsNullOrWhiteSpace(bccValue)))
+                var messageAws = new MimeMessage();
+                var builder = new BodyBuilder() { TextBody = body, HtmlBody= body };
+
+                messageAws.From.Add(new MailboxAddress(fromName,fromAddress));
+                messageAws.To.Add(new MailboxAddress(toName, toAddress));
+               
+                messageAws.Subject = subject;
+
+
+                if (!string.IsNullOrEmpty(replyTo))
                 {
-                    message.Bcc.Add(address.Trim());
-                }
-            }
-
-            //CC
-            if (cc != null)
-            {
-                foreach (var address in cc.Where(ccValue => !string.IsNullOrWhiteSpace(ccValue)))
-                {
-                    message.CC.Add(address.Trim());
-                }
-            }
-
-            //content
-            message.Subject = subject;
-            message.Body = body;
-            message.IsBodyHtml = true;
-
-            //headers
-            if (headers != null)
-                foreach (var header in headers)
-                {
-                    message.Headers.Add(header.Key, header.Value);
+                    messageAws.ReplyTo.Add(new MailboxAddress(replyToName, replyTo)); //(new MailAddress(replyTo, replyToName));
                 }
 
-            //create the file attachment for this e-mail message
-            if (!string.IsNullOrEmpty(attachmentFilePath) &&
-                File.Exists(attachmentFilePath))
-            {
-                var attachment = new Attachment(attachmentFilePath);
-                attachment.ContentDisposition.CreationDate = File.GetCreationTime(attachmentFilePath);
-                attachment.ContentDisposition.ModificationDate = File.GetLastWriteTime(attachmentFilePath);
-                attachment.ContentDisposition.ReadDate = File.GetLastAccessTime(attachmentFilePath);
-                if (!string.IsNullOrEmpty(attachmentFileName))
+                //BCC
+                if (bcc != null)
                 {
-                    attachment.Name = attachmentFileName;
-                }
-                message.Attachments.Add(attachment);
-            }
-            //another attachment?
-            if (attachedDownloadId > 0)
-            {
-                var download = _downloadService.GetDownloadById(attachedDownloadId);
-                if (download != null)
-                {
-                    //we do not support URLs as attachments
-                    if (!download.UseDownloadUrl)
+                    foreach (var address in bcc.Where(bccValue => !string.IsNullOrWhiteSpace(bccValue)))
                     {
-                        var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : download.Id.ToString();
-                        fileName += download.Extension;
-
-
-                        var ms = new MemoryStream(download.DownloadBinary);                        
-                        var attachment = new Attachment(ms, fileName);
-                        //string contentType = !string.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : "application/octet-stream";
-                        //var attachment = new Attachment(ms, fileName, contentType);
-                        attachment.ContentDisposition.CreationDate = DateTime.UtcNow;
-                        attachment.ContentDisposition.ModificationDate = DateTime.UtcNow;
-                        attachment.ContentDisposition.ReadDate = DateTime.UtcNow;
-                        message.Attachments.Add(attachment);                        
+                        messageAws.Bcc.Add(new MailboxAddress(address.Trim()));
                     }
                 }
+
+                //CC
+                if (cc != null)
+                {
+                    foreach (var address in cc.Where(ccValue => !string.IsNullOrWhiteSpace(ccValue)))
+                    {
+                        messageAws.Cc.Add(new MailboxAddress(address.Trim()));
+                    }
+                }
+
+                //create the file attachment for this e-mail message
+                if (!string.IsNullOrEmpty(attachmentFilePath) &&
+                    File.Exists(attachmentFilePath))
+                {
+                    using (FileStream stream = File.Open(attachmentFilePath, FileMode.Open)) builder.Attachments.Add(attachmentFilePath, stream);
+                }
+                //another attachment?
+                if (attachedDownloadId > 0)
+                {
+                    var download = _downloadService.GetDownloadById(attachedDownloadId);
+                    if (download != null)
+                    {
+                        //we do not support URLs as attachments
+                        if (!download.UseDownloadUrl)
+                        {
+                            var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : download.Id.ToString();
+                            fileName += download.Extension;
+                            using (FileStream stream = File.Open(fileName, FileMode.Open)) builder.Attachments.Add(fileName, stream);
+                        }
+                    }
+                }
+
+                messageAws.Body = builder.ToMessageBody();
+                messageAws.WriteTo(messageStream);
+
+                var request = new SendRawEmailRequest()
+                {
+                    RawMessage = new RawMessage() { Data = messageStream }
+                };
+
+                client.SendRawEmail(request);
+
             }
 
-            //send email
-            using (var smtpClient = new SmtpClient())
-            {
-                smtpClient.UseDefaultCredentials = emailAccount.UseDefaultCredentials;
-                smtpClient.Host = emailAccount.Host;
-                smtpClient.Port = emailAccount.Port;
-                smtpClient.EnableSsl = emailAccount.EnableSsl;
-                smtpClient.Credentials = emailAccount.UseDefaultCredentials ? 
-                    CredentialCache.DefaultNetworkCredentials :
-                    new NetworkCredential(emailAccount.Username, emailAccount.Password);
-                smtpClient.Send(message);
-            }
+
+
+
+
+
+            //var message = new MailMessage
+            //{
+            //    //from, to, reply to
+            //    From = new MailAddress(fromAddress, fromName)
+            //};
+            //message.To.Add(new MailAddress(toAddress, toName));
+            //if (!string.IsNullOrEmpty(replyTo))
+            //{
+            //    message.ReplyToList.Add(new MailAddress(replyTo, replyToName));
+            //}
+
+            ////BCC
+            //if (bcc != null)
+            //{
+            //    foreach (var address in bcc.Where(bccValue => !string.IsNullOrWhiteSpace(bccValue)))
+            //    {
+            //        message.Bcc.Add(address.Trim());
+            //    }
+            //}
+
+            ////CC
+            //if (cc != null)
+            //{
+            //    foreach (var address in cc.Where(ccValue => !string.IsNullOrWhiteSpace(ccValue)))
+            //    {
+            //        message.CC.Add(address.Trim());
+            //    }
+            //}
+
+            ////content
+            //message.Subject = subject;
+            //message.Body = body;
+            //message.IsBodyHtml = true;
+
+            ////headers
+            //if (headers != null)
+            //    foreach (var header in headers)
+            //    {
+            //        message.Headers.Add(header.Key, header.Value);
+            //    }
+
+            ////create the file attachment for this e-mail message
+            //if (!string.IsNullOrEmpty(attachmentFilePath) &&
+            //    File.Exists(attachmentFilePath))
+            //{
+            //    var attachment = new Attachment(attachmentFilePath);
+            //    attachment.ContentDisposition.CreationDate = File.GetCreationTime(attachmentFilePath);
+            //    attachment.ContentDisposition.ModificationDate = File.GetLastWriteTime(attachmentFilePath);
+            //    attachment.ContentDisposition.ReadDate = File.GetLastAccessTime(attachmentFilePath);
+            //    if (!string.IsNullOrEmpty(attachmentFileName))
+            //    {
+            //        attachment.Name = attachmentFileName;
+            //    }
+            //    message.Attachments.Add(attachment);
+            //}
+            ////another attachment?
+            //if (attachedDownloadId > 0)
+            //{
+            //    var download = _downloadService.GetDownloadById(attachedDownloadId);
+            //    if (download != null)
+            //    {
+            //        //we do not support URLs as attachments
+            //        if (!download.UseDownloadUrl)
+            //        {
+            //            var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : download.Id.ToString();
+            //            fileName += download.Extension;
+
+
+            //            var ms = new MemoryStream(download.DownloadBinary);                        
+            //            var attachment = new Attachment(ms, fileName);
+            //            //string contentType = !string.IsNullOrWhiteSpace(download.ContentType) ? download.ContentType : "application/octet-stream";
+            //            //var attachment = new Attachment(ms, fileName, contentType);
+            //            attachment.ContentDisposition.CreationDate = DateTime.UtcNow;
+            //            attachment.ContentDisposition.ModificationDate = DateTime.UtcNow;
+            //            attachment.ContentDisposition.ReadDate = DateTime.UtcNow;
+            //            message.Attachments.Add(attachment);                        
+            //        }
+            //    }
+            //}
+
+            ////send email
+            //using (var smtpClient = new SmtpClient())
+            //{
+            //    smtpClient.UseDefaultCredentials = emailAccount.UseDefaultCredentials;
+            //    smtpClient.Host = emailAccount.Host;
+            //    smtpClient.Port = emailAccount.Port;
+            //    smtpClient.EnableSsl = emailAccount.EnableSsl;
+            //    smtpClient.Credentials = emailAccount.UseDefaultCredentials ? 
+            //        CredentialCache.DefaultNetworkCredentials :
+            //        new NetworkCredential(emailAccount.Username, emailAccount.Password);
+            //    smtpClient.Send(message);
+            //}
+
+
+
         }
     }
 }
