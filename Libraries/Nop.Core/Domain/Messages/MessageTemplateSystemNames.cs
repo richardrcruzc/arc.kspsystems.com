@@ -32,6 +32,8 @@ namespace Nop.Core.Domain.Messages
         /// </summary>
         public const string CustomerPasswordRecoveryMessage = "Customer.PasswordRecovery";
 
+        public const string CustomerForceChangePasswordMessage = "Customer.ForceChangePassword";
+
         #endregion
 
         #region Order

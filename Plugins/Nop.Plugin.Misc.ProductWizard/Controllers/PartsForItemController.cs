@@ -236,7 +236,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                            group c.Name by c.Id into g
                            select new { Name = g.FirstOrDefault(), Id = g.Key }; 
 
-                var catergories = temp.Select(x => new { x.Name, x.Id }).ToList();
+                var catergories = temp.OrderBy(x => x.Name).Select(x => new { x.Name, x.Id }).ToList();
 
 
                 allCategoryIds = catergories.Select(x => x.Id).ToList();

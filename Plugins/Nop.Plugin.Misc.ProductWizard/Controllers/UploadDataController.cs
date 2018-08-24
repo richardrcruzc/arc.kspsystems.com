@@ -445,8 +445,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         endRow = 2;
                         sql = "SET IDENTITY_INSERT [dbo].[Product] ON;";
                         id = 0;
-                        name = string.Empty;
-                        var Vendor = 0;
+                        name = string.Empty; 
                         var SKU = string.Empty;
                         var Gtin = string.Empty;
                         var StockQuantity = 0;
@@ -455,8 +454,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         var Length = 0;
                         var Height = 0;
                         var Width = 0;
-                        var Categories = 0;
-                        var Manufacturers = 0;
+                        var Categories = 0; 
                         var picture = string.Empty;
                         var ExcludeGoogleFeed = 1;
                         var Active = 1;
@@ -1675,7 +1673,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                     }
                 }
             }
-            catch (Exception ex)
+            catch 
             { }
             SuccessNotification("Admin.Catalog.Categories.Imported");
             return RedirectToAction("Index");

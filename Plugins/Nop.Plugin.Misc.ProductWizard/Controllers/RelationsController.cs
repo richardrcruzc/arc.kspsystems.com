@@ -393,7 +393,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                 };
                 return Json(gridModel);
             }
-            catch (Exception ex) { return Json(new DataSourceResult()); }
+            catch  { return Json(new DataSourceResult()); }
 
         }
         [HttpPost]

@@ -9,6 +9,7 @@ using Amazon.SimpleEmail;
 using Amazon.SimpleEmail.Model;
 using MimeKit;
 using Nop.Core.Domain.Messages;
+using Nop.Services.Configuration;
 using Nop.Services.Media;
 
 namespace Nop.Services.Messages
@@ -19,14 +20,16 @@ namespace Nop.Services.Messages
     public partial class EmailSender : IEmailSender
     {
         private readonly IDownloadService _downloadService;
+        private readonly ISettingService _settingService;
 
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="downloadService">Download service</param>
-        public EmailSender(IDownloadService downloadService)
+        public EmailSender(IDownloadService downloadService, ISettingService settingService)
         {
             this._downloadService = downloadService;
+            this._settingService = settingService;
         }
 
         /// <summary>
@@ -54,90 +57,165 @@ namespace Nop.Services.Messages
             string attachmentFilePath = null, string attachmentFileName = null,
             int attachedDownloadId = 0, IDictionary<string, string> headers = null)
         {
-            
 
+
+
+            // Create and build a new MailMessage object
+            MailMessage message = new MailMessage();
+            message.IsBodyHtml = true;
+            message.From = new MailAddress(fromAddress, fromName);
+            message.To.Add(new MailAddress(toAddress, toName));
+            message.Subject = subject;
+            message.Body = body;
+
+            //CC
+            if (cc != null)
+            {
+                foreach (var address in cc.Where(ccValue => !string.IsNullOrWhiteSpace(ccValue)))
+                {
+                    message.CC.Add(address.Trim());
+                }
+            }
+
+            if (!string.IsNullOrEmpty(replyTo))
+            {
+                message.ReplyToList.Add(replyTo); //(new MailAddress(replyTo, replyToName));
+            }
+
+            if (bcc != null)
+            {
+                foreach (var address in bcc.Where(bccValue => !string.IsNullOrWhiteSpace(bccValue)))
+                {
+                    message.Bcc.Add(address.Trim());
+                }
+            }
+
+
+            if (!string.IsNullOrEmpty(attachmentFilePath) &&
+              File.Exists(attachmentFilePath))
+                message.Attachments.Add(new Attachment(attachmentFilePath));
+
+            // Comment or delete the next line if you are not using a configuration set
+            // message.Headers.Add("X-SES-CONFIGURATION-SET", "ConfigSet");
+
+            using (var client1 = new System.Net.Mail.SmtpClient(emailAccount.Host, emailAccount.Port))
+            {
+                // Pass SMTP credentials
+                client1.Credentials =
+                    new NetworkCredential(emailAccount.Username, emailAccount.Password);
+
+                // Enable SSL encryption
+                client1.EnableSsl = emailAccount.EnableSsl;
+
+                client1.Send(message);
+
+                // Try to send the message. Show status in console.
+                //try
+                //{
+                //    Console.WriteLine("Attempting to send email...");
+                //    client1.Send(message);
+                //    Console.WriteLine("Email sent!");
+                //}
+                //catch (Exception ex)
+                //{
+                //    Console.WriteLine("The email was not sent.");
+                //    Console.WriteLine("Error message: " + ex.Message);
+                //}
+            }
+
+        }
             // Amazon Simple Email Service Client
 
 
 
 
-            String awsAccessKey = "AKIAISCDDROTDTJ66TFQ";    // Replace with your AWS access key.
-            String awsSecretKey = "yxoYAm5qhVqVlUk0FffeVBHI7OuHO8N4DmRvQgnv";    // Replace with your AWS secret key.
-            String source = "Arc Services Co. <websupport@arcservicesco.com>";
-
-            var credentals = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
-
-            Content subjectAws = new Content(subject);
-
-            using (var client = new AmazonSimpleEmailServiceClient(credentals, Amazon.RegionEndpoint.USEast1))
-            using (var messageStream = new MemoryStream())
-            {
-                var messageAws = new MimeMessage();
-                var builder = new BodyBuilder() { TextBody = body, HtmlBody= body };
-
-                messageAws.From.Add(new MailboxAddress(fromName,fromAddress));
-                messageAws.To.Add(new MailboxAddress(toName, toAddress));
-               
-                messageAws.Subject = subject;
+            //String awsAccessKey = "AKIAISCDDROTDTJ66TFQ";    // Replace with your AWS access key.
+            //String awsSecretKey = "yxoYAm5qhVqVlUk0FffeVBHI7OuHO8N4DmRvQgnv";    // Replace with your AWS secret key.
 
 
-                if (!string.IsNullOrEmpty(replyTo))
-                {
-                    messageAws.ReplyTo.Add(new MailboxAddress(replyToName, replyTo)); //(new MailAddress(replyTo, replyToName));
-                }
+            //awsAccessKey=  _settingService.GetSetting("awsAccessKey").Value.Trim();
+            //awsSecretKey = _settingService.GetSetting("awsSecretKey").Value.Trim();
 
-                //BCC
-                if (bcc != null)
-                {
-                    foreach (var address in bcc.Where(bccValue => !string.IsNullOrWhiteSpace(bccValue)))
-                    {
-                        messageAws.Bcc.Add(new MailboxAddress(address.Trim()));
-                    }
-                }
+            ////String source = "Arc Services Co. <websupport@arcservicesco.com>";
 
-                //CC
-                if (cc != null)
-                {
-                    foreach (var address in cc.Where(ccValue => !string.IsNullOrWhiteSpace(ccValue)))
-                    {
-                        messageAws.Cc.Add(new MailboxAddress(address.Trim()));
-                    }
-                }
+            //var credentals = new BasicAWSCredentials(emailAccount.Username, emailAccount.Password);
 
-                //create the file attachment for this e-mail message
-                if (!string.IsNullOrEmpty(attachmentFilePath) &&
-                    File.Exists(attachmentFilePath))
-                {
-                    using (FileStream stream = File.Open(attachmentFilePath, FileMode.Open)) builder.Attachments.Add(attachmentFilePath, stream);
-                }
-                //another attachment?
-                if (attachedDownloadId > 0)
-                {
-                    var download = _downloadService.GetDownloadById(attachedDownloadId);
-                    if (download != null)
-                    {
-                        //we do not support URLs as attachments
-                        if (!download.UseDownloadUrl)
-                        {
-                            var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : download.Id.ToString();
-                            fileName += download.Extension;
-                            using (FileStream stream = File.Open(fileName, FileMode.Open)) builder.Attachments.Add(fileName, stream);
-                        }
-                    }
-                }
+            //Content subjectAws = new Content(subject);
 
-                messageAws.Body = builder.ToMessageBody();
-                messageAws.WriteTo(messageStream);
+            //using (var client = new AmazonSimpleEmailServiceClient(credentals, Amazon.RegionEndpoint.USEast1))
+            //using (var messageStream = new MemoryStream())
+            //{
+            //    var messageAws = new MimeMessage();
+            //    var builder = new BodyBuilder() { TextBody = body, HtmlBody= body };
 
-                var request = new SendRawEmailRequest()
-                {
-                    RawMessage = new RawMessage() { Data = messageStream }
-                };
+            //    messageAws.From.Add(new MailboxAddress(fromName,fromAddress));
+            //    messageAws.To.Add(new MailboxAddress(toName, toAddress));
 
-                client.SendRawEmail(request);
+            //    messageAws.Subject = subject;
 
-            }
 
+            //    if (!string.IsNullOrEmpty(replyTo))
+            //    {
+            //        messageAws.ReplyTo.Add(new MailboxAddress(replyToName, replyTo)); //(new MailAddress(replyTo, replyToName));
+            //    }
+
+            //    //BCC
+            //    if (bcc != null)
+            //    {
+            //        foreach (var address in bcc.Where(bccValue => !string.IsNullOrWhiteSpace(bccValue)))
+            //        {
+            //            messageAws.Bcc.Add(new MailboxAddress(address.Trim()));
+            //        }
+            //    }
+
+            //    //CC
+            //    if (cc != null)
+            //    {
+            //        foreach (var address in cc.Where(ccValue => !string.IsNullOrWhiteSpace(ccValue)))
+            //        {
+            //            messageAws.Cc.Add(new MailboxAddress(address.Trim()));
+            //        }
+            //    }
+
+            //    //create the file attachment for this e-mail message
+            //    if (!string.IsNullOrEmpty(attachmentFilePath) &&
+            //        File.Exists(attachmentFilePath))
+            //    {
+            //        using (FileStream stream = File.Open(attachmentFilePath, FileMode.Open)) builder.Attachments.Add(attachmentFilePath, stream);
+            //    }
+            //    //another attachment?
+            //    if (attachedDownloadId > 0)
+            //    {
+            //        var download = _downloadService.GetDownloadById(attachedDownloadId);
+            //        if (download != null)
+            //        {
+            //            //we do not support URLs as attachments
+            //            if (!download.UseDownloadUrl)
+            //            {
+            //                var fileName = !string.IsNullOrWhiteSpace(download.Filename) ? download.Filename : download.Id.ToString();
+            //                fileName += download.Extension;
+            //                using (FileStream stream = File.Open(fileName, FileMode.Open)) builder.Attachments.Add(fileName, stream);
+            //            }
+            //        }
+            //    }
+
+            //    messageAws.Body = builder.ToMessageBody();
+            //    messageAws.WriteTo(messageStream);
+
+            //    var request = new SendRawEmailRequest()
+            //    {
+            //        RawMessage = new RawMessage() { Data = messageStream }
+            //    };
+
+            //    try
+            //    {
+            //        client.SendRawEmail(request);
+            //    }
+            //    catch
+            //    { }
+
+
+         
 
 
 
@@ -237,7 +315,6 @@ namespace Nop.Services.Messages
             //}
 
 
-
-        }
+     
     }
 }

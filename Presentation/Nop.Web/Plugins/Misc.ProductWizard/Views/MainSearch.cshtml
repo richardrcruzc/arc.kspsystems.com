@@ -47,7 +47,7 @@
         ddlCategoriess.attr('disabled', true);
 
         ddlCopiers.html('');
-        ddlCopiers.append($('<option></option>').val("0").html("2. Select copier/accesories..."));
+        ddlCopiers.append($('<option></option>').val("0").html("2. Select copier..."));
 
         ddlCategoriess.html('');
         ddlCategoriess.append($('<option></option>').val("0").html("3. Select category..."));
@@ -87,7 +87,8 @@
                     data: { "id": selectedItem },
                     success: function (data) {
                         ddlCopiers.html('');
-                        ddlCopiers.append($('<option></option>').val("0").html("2. Select copier/accesories..."));
+                        //ddlCopiers.append($('<option></option>').val("0").html("2. Select copier/accesories..."));
+                        ddlCopiers.append($('<option></option>').val("0").html("2. Select copier..."));
                         $.each(data, function (id, option) {
                             ddlCopiers.append($('<option></option>').val(option.Id).html(option.Description));
                     });

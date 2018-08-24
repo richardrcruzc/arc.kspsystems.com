@@ -121,7 +121,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
            
 
 
-            var catergories = temp.Select(x => new { x.Name, x.Id }).ToList();
+            var catergories = temp.OrderBy(x => x.Name).Select(x => new { x.Name, x.Id }).ToList();
 
             return Json(catergories);
         }
