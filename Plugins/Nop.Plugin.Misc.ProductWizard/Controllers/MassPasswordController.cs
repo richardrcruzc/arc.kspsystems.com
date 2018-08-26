@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.Host;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.Host;
 using Nop.Core;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Messages;
@@ -61,7 +62,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         /// <summary>
         /// Executes a task
         /// </summary>
-        public void Execute()
+        public string Execute([FromQuery(Name = "roles")] int[] roles)
         {
 
             var store = _storeContext.CurrentStore;
@@ -73,12 +74,12 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
             //no template found
             if (messageTemplate == null)
-                return;
+                return "messageTemplate is null";
 
             //ensure it's active
             var isActive = messageTemplate.IsActive;
             if (!isActive)
-                return;
+                return "messageTemplate is not active";
 
 
             var emailAccountId = messageTemplate.GetLocalized(mt => mt.EmailAccountId, languageId);
@@ -98,7 +99,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             _messageTokenProvider.AddStoreTokens(tokens, store, emailAccount);
 
             //var customers = _customerService.GetAllCustomers(customerRoleIds: new int[] { 1, 2, 3 });
-            var customers = _customerService.GetAllCustomers(customerRoleIds: new int[] { 1});
+            var customers = _customerService.GetAllCustomers(customerRoleIds: roles);
             foreach (var customer in customers)
             {
                 _messageTokenProvider.AddCustomerTokens(tokens, customer);
@@ -108,6 +109,10 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                 var toEmail = customer.Email;
                 var toName = customer.GetFullName();
+
+
+                if (string.IsNullOrEmpty(toEmail))
+                    continue;
 
                 //return SendNotification(messageTemplate, emailAccount, languageId, tokens, toEmail, toName);
                 if (messageTemplate == null)
@@ -134,7 +139,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                     Priority = QueuedEmailPriority.High,
                     From = emailAccount.Email,
                     FromName = emailAccount.DisplayName,
-                    To = customer.Email,
+                    To = toEmail,
                     ToName = toName,
                     //ReplyTo = replyToEmailAddress,
                     //ReplyToName = replyToName,
@@ -154,6 +159,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                 _queuedEmailService.InsertQueuedEmail(email);
             }
 
+
+            return "Mass change Password email process completed";
             //var olderThanMinutes = _customerSettings.DeleteGuestTaskOlderThanMinutes;
             //// Default value in case 0 is returned.  0 would effectively disable this service and harm performance.
             //olderThanMinutes = olderThanMinutes == 0 ? 1440 : olderThanMinutes;

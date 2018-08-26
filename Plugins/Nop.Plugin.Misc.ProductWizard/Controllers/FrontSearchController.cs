@@ -78,10 +78,13 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             if (id <= 0)
                 return null;
 
+            var IsKonica = _manufacturerService.GetManufacturerById(id).Name.StartsWith("Konica Minolta"); ;
+            
+
            var copiers = _categoryService.GetAllCategories(categoryName: "Copier").ToList();
             var accessories = _categoryService.GetAllCategories(categoryName: "Accessories").ToList();
 
-            copiers.AddRange(accessories);
+           // copiers.AddRange(accessories);
 
              var caterogiesIds = copiers.Select(x =>  x.Id  ).ToList() ;
 
@@ -89,6 +92,19 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             var products = _productService.SearchProducts(categoryIds: caterogiesIds , manufacturerId: id, orderBy:  ProductSortingEnum.NameDesc);
 
             var model = products.Select(x => new {Description=x.Name, x.Id }).ToList();
+            if (IsKonica)
+                model = products.Where(x => !x.Name.Contains("Konica Minolta")).Select(x => new { Description = x.Name, x.Id }).ToList();
+
+            //if (IsKonica)
+            //{
+            //    foreach (var konica in model)
+            //    {
+            //        if (konica.Description.Contains("Konica Minolta"))
+            //        {
+            //            model.Remove(konica);
+            //        }
+            //    }
+            //}
             return Json(model);
         }
 
@@ -108,20 +124,16 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
             var query = _productService.GetProductsByIds(rgp.ToArray()).Select(x => new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id }).ToList();
 
-             query.Insert(0, new {Name= "All Categories", Id=0 });
- 
-            
-           
+         
 
             var temp = from c in query
                        group c.Name by c.Id into g
-                       select new { Name = g.FirstOrDefault(), Id =g.Key };
-
-
-           
+                       select new { Name = g.FirstOrDefault(), Id =g.Key }; 
 
 
             var catergories = temp.OrderBy(x => x.Name).Select(x => new { x.Name, x.Id }).ToList();
+
+            catergories.Insert(0, new { Name = "All Categories", Id = 0 });
 
             return Json(catergories);
         }
