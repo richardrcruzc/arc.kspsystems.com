@@ -69,7 +69,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
         public virtual IActionResult GetBrands()
         {
-            var brands = _manufacturerService.GetAllManufacturers().Select(x=> new {x.Name,  x.Id });
+            var brands = _manufacturerService.GetAllManufacturers().OrderBy(x=>x.Name).Select(x=> new {x.Name,  x.Id });
             return Json(brands);
         }
 
@@ -105,7 +105,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             //        }
             //    }
             //}
-            return Json(model);
+            return Json(model.OrderBy(x=>x.Description).ToList());
         }
 
         public virtual IActionResult GetCategories(int id)
