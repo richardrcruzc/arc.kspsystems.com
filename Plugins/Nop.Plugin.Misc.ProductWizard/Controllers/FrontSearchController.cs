@@ -78,8 +78,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             if (id <= 0)
                 return null;
 
-            var IsKonica = _manufacturerService.GetManufacturerById(id).Name.StartsWith("Konica Minolta"); ;
-            
+            var IsKonica = _manufacturerService.GetManufacturerById(id).Name.StartsWith("Konica Minolta");            
 
            var copiers = _categoryService.GetAllCategories(categoryName: "Copier").ToList();
             var accessories = _categoryService.GetAllCategories(categoryName: "Accessories").ToList();
@@ -88,12 +87,14 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
              var caterogiesIds = copiers.Select(x =>  x.Id  ).ToList() ;
 
-
             var products = _productService.SearchProducts(categoryIds: caterogiesIds , manufacturerId: id, orderBy:  ProductSortingEnum.NameDesc);
 
-            var model = products.Select(x => new {Description=x.Name, x.Id }).ToList();
-            if (IsKonica)
-                model = products.Where(x => !x.Name.Contains("Konica Minolta")).Select(x => new { Description = x.Name, x.Id }).ToList();
+            var model = products
+                .OrderBy(x=>x.Name.Replace(x.ProductManufacturers.FirstOrDefault().Manufacturer.Name + " ", ""))
+                .Select(x => new {Description=x.Name.Replace(x.ProductManufacturers.FirstOrDefault().Manufacturer.Name+" ",""), x.Id }).ToList();
+
+            //if (IsKonica)
+            //    model = products.Where(x => !x.Name.Contains("Konica Minolta")).Select(x => new { Description = x.Name, x.Id }).ToList();
 
             //if (IsKonica)
             //{
