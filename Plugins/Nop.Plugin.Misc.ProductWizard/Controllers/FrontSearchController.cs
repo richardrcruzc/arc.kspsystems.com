@@ -70,7 +70,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         public virtual IActionResult GetBrands()
         {
             var brands = _manufacturerService.GetAllManufacturers()
-                .Where(x=>!x.Name.Contains("Hitachi") && !x.Name.Contains("Teco Information System") && 
+                .Where(x=> !x.Name.Contains("Generic") && !x.Name.Contains("Hitachi") && !x.Name.Contains("Teco Information System") && 
                 !x.Name.Contains("AB Dick") && !x.Name.Contains("Olympia"))
                 .OrderBy(x=>x.Name).Select(x=> new {x.Name,  x.Id });
             return Json(brands);
@@ -83,7 +83,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
             var IsKonica = _manufacturerService.GetManufacturerById(id).Name.StartsWith("Konica Minolta");            
 
-           var copiers = _categoryService.GetAllCategories(categoryName: "Copier").ToList();
+            var copiers = _categoryService.GetAllCategories(categoryName: "Copier").Where(x=>x.Name== "Copier").ToList();            
+
             var accessories = _categoryService.GetAllCategories(categoryName: "Accessories").ToList();
 
            // copiers.AddRange(accessories);
@@ -92,8 +93,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
             var products = _productService.SearchProducts(categoryIds: caterogiesIds , manufacturerId: id, orderBy:  ProductSortingEnum.NameDesc);
 
-            var model = products
-                .Where(x => x.ProductCategories.FirstOrDefault().Category.Name.StartsWith("Copier"))
+            var model = products 
                 .OrderBy(x=>x.Name.Replace(x.ProductManufacturers.FirstOrDefault().Manufacturer.Name + " ", ""))
                 .Select(x => new {Description=x.Name.Replace(x.ProductManufacturers.FirstOrDefault().Manufacturer.Name+" ",""), x.Id }).ToList();
 
