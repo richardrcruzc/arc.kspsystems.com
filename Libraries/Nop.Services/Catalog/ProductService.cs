@@ -194,18 +194,20 @@ namespace Nop.Services.Catalog
 
             var brand = string.Empty;
 
+            var copier = _productRepository.TableNoTracking.Where(x => x.Id == rid).FirstOrDefault();
+            if (copier != null) { 
             //var brandobj =  _vendorRepository.TableNoTracking.Where(x=>x.Id == product.VendorId).FirstOrDefault();
-            var brandobj = product.ProductManufacturers.FirstOrDefault();
+            var brandobj = copier.ProductManufacturers.FirstOrDefault(); //product.ProductManufacturers.FirstOrDefault();
             if (brandobj != null)
                 brand = brandobj.Manufacturer.Name; 
-
+            }
             var legacy = _dbContext.SqlQuery<string>($"select top 1 legacyCode from LegacyIds where ItemId={product.Id} order by id desc").FirstOrDefault();
             if (legacy == null)
                 legacy = string.Empty;
-            if (category.ToLower().Contains("toner") && rid>0)
+            if (category.ToLower()=="toner" && rid>0)
             {
 
-                var copier = _productRepository.TableNoTracking.Where(x => x.Id == rid).FirstOrDefault();
+               // var copier = _productRepository.TableNoTracking.Where(x => x.Id == rid).FirstOrDefault();
 
 
                 if (color.Trim().ToLower() == "set")
@@ -225,11 +227,18 @@ namespace Nop.Services.Catalog
 
                 }
             }            
-              else  if (category.ToLower().Contains("toner"))
+              else  if (category.ToLower()=="toner")
                 {
-                    //Konica Minolta Genuine A33K332 (TN512M) Magenta Toner Cartridge
 
-                    var legacyTn = string.Empty;
+
+                var brandobj =  product.ProductManufacturers.FirstOrDefault();
+                if (brandobj != null)
+                    brand = brandobj.Manufacturer.Name;
+            
+
+            //Konica Minolta Genuine A33K332 (TN512M) Magenta Toner Cartridge
+
+            var legacyTn = string.Empty;
                     var legacies = _dbContext.SqlQuery<string>($"select legacyCode from LegacyIds where ItemId={product.Id} order by id desc");
                     
                     if (product.Sku.ToLower().Contains("tn"))
@@ -328,18 +337,17 @@ namespace Nop.Services.Catalog
                     }
                 }
 
-            }
-
-
-           
+            } 
 
                 return productName;
         }
 
         public virtual string GetUrlRid(Product product, int rid = 0)
-        {
+        {            
             var copier = _productRepository.TableNoTracking.Where(x => x.Id == rid).FirstOrDefault();
-
+            var copierName = string.Empty;
+            if (copier!=null)
+               copierName = SeoExtensions.GetSeName(copier.Name, true, false);
             var productName = product.Name;
 
             var seName = SeoExtensions.GetSeName(productName, true, false);
@@ -365,16 +373,19 @@ namespace Nop.Services.Catalog
 
             //if (copier != null)
             //{
-                //var brandobj = _vendorRepository.TableNoTracking.Where(x => x.Id == copier.VendorId).FirstOrDefault();
-                //if (brandobj != null)
-                //    brand = brandobj.Name.ToLower();
-                var brandobj = product.ProductManufacturers.FirstOrDefault();
+            //var brandobj = _vendorRepository.TableNoTracking.Where(x => x.Id == copier.VendorId).FirstOrDefault();
+            //if (brandobj != null)
+            //    brand = brandobj.Name.ToLower();
+            if (copier != null)
+            {
+                var brandobj = copier.ProductManufacturers.FirstOrDefault(); // product.ProductManufacturers.FirstOrDefault();
                 if (brandobj != null)
                     brand = brandobj.Manufacturer.Name;
-              
+
 
                 if (brand != string.Empty)
                     brand = SeoExtensions.GetSeName(brand, true, false);
+            }
             //}
 
             var legacy = _dbContext.SqlQuery<string>($"select top 1 legacyCode from LegacyIds where ItemId={product.Id} order by legacyCode").FirstOrDefault();
@@ -384,36 +395,35 @@ namespace Nop.Services.Catalog
             if (legacy != string.Empty)
                 legacy = SeoExtensions.GetSeName(legacy, true, false);
 
-            
-            if (category.ToLower().Contains("toner") && rid>0) 
+            //categoryID = 110
+            if (category.ToLower()=="toner" && rid>0) 
             {
-             
-
+ 
                 if (color.ToLower() == "set")
                 {
-                    productName= $"{product.Id}/toner-set-for/{brand}/{copier.GetSeName().Replace(brand,"")}";
+                    productName= $"{product.Id}/toner-set-for/{brand}/{copierName.Replace(brand,"")}";
 
                 }
                 else
                 {
                     if (color.Length == 0)
                     {
-                        if (copier.GetSeName().ToLower().Contains("master case"))
+                        if (copierName.ToLower().Contains("master case"))
                         {
-                            productName = $"{product.Id}/toner-master-case-for/{brand}/{copier.GetSeName().Replace(brand, "")}";
+                            productName = $"{product.Id}/toner-master-case-for/{brand}/{copierName.Replace(brand, "")}";
                         
                         }
                         else
                         {
-                            productName = $"{product.Id}/toner-for/{brand}/{copier.GetSeName().Replace(brand, "")}";
+                            productName = $"{product.Id}/toner-for/{brand}/{copierName.Replace(brand, "")}";
                           }
                     }
                     else
                     {
-                        if (copier.GetSeName().ToLower().Contains("master case"))
+                        if (copierName.ToLower().Contains("master case"))
                         {
                             if (!string.IsNullOrEmpty(brand))
-                                productName = $"{product.Id}/{color}-toner-master-case-for/{brand}/{copier.GetSeName().Replace(brand, "")}";
+                                productName = $"{product.Id}/{color}-toner-master-case-for/{brand}/{copierName.Replace(brand, "")}";
                             else
                                 productName = $"{product.Id}/{color}-toner-master-case-for/{copier.GetSeName()}";
 
@@ -421,9 +431,9 @@ namespace Nop.Services.Catalog
                         else
                         {
                             if(!string.IsNullOrEmpty(brand))
-                            productName = $"{product.Id}/{color}-toner-for/{brand}/{copier.GetSeName().Replace(brand, "")}";
+                            productName = $"{product.Id}/{color}-toner-for/{brand}/{copierName.Replace(brand, "")}";
                             else
-                            productName = $"{product.Id}/{color}-toner-for/{copier.GetSeName()}";
+                            productName = $"{product.Id}/{color}-toner-for/{copierName}";
 
                         }
                     }
@@ -433,12 +443,19 @@ namespace Nop.Services.Catalog
             }
             else
             {
-                if (category.ToLower().Contains("copier"))
+                var brandobj = product.ProductManufacturers.FirstOrDefault();
+                if (brandobj != null)
+                    brand = brandobj.Manufacturer.Name;
+
+                if (brand != string.Empty)
+                    brand = SeoExtensions.GetSeName(brand, true, false);
+
+                if (category.ToLower()=="copier")
                 {
 
                     productName = $"{product.Id}/{product.GetSeName()}-i-toner-parts-supplies";
                 }
-                else if (category.ToLower().Contains("toner"))
+                else if (category.ToLower()=="toner")
                 {
                     //5446/KonicaMinolta/A33K332/TN-512M-magenta-toner/
                     var legacyTn = string.Empty;
@@ -549,7 +566,7 @@ namespace Nop.Services.Catalog
                 }
                 else
                 {
-                    productName = $"{product.Id}/{product.GetSeName()}-i-{product.Sku}";
+                    productName = $"{product.Id}/{seName}-i-{product.Sku}";
                   
                 }
             }

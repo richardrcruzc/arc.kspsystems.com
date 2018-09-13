@@ -40,6 +40,8 @@
     <Content Update="App_Data\DataProtectionKeys\*.xml" CopyToPublishDirectory="Never" />
 
     <Compile Remove="Plugins\**" />
+
+    <Content Remove="Plugins\Widgets.GoDaddyApi\**" />
     <EmbeddedResource Remove="Plugins\**" />
     <None Remove="Plugins\**" />
 
@@ -51,6 +53,35 @@
 
     <!-- We copy the \Logs directory -->
     <Content Include="Logs\**" CopyToPublishDirectory="PreserveNewest" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\GoDaddyApi.css" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\license.txt" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\README" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\sample-images\banner1.jpg" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\sample-images\banner2.jpg" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\bar\arrows.png" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\bar\bar.css" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\bar\bullets.png" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\bar\loading.gif" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\custom\arrows.png" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\custom\bullets.png" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\custom\custom.css" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\custom\loading.gif" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\dark\arrows.png" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\dark\bullets.png" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\dark\dark.css" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\dark\loading.gif" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\default\arrows.png" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\default\bullets.png" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\default\default.css" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\default\loading.gif" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\light\arrows.png" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\light\bullets.png" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\light\light.css" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Content\GoDaddyApi\themes\light\loading.gif" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\logo.jpg" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Nop.Plugin.Widgets.GoDaddyApi.dll" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Nop.Plugin.Widgets.GoDaddyApi.pdb" />
+    <Content Remove="Plugins\Widgets.GoDaddyApi\Scripts\jquery.nivo.slider.js" />
     <None Remove="App_Data\SupportPicture\Index.htm" />
     <None Include="Themes\Pavilion\Views\BackInStockSubscription\CustomerSubscriptions.cshtml" />
     <None Include="Themes\Pavilion\Views\Blog\BlogPost.cshtml" />
