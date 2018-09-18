@@ -526,7 +526,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                     " AvailableForPreOrder, CustomerEntersPrice, MinimumCustomerEnteredPrice, MaximumCustomerEnteredPrice, BasepriceEnabled, BasepriceAmount, BasepriceUnitId, BasepriceBaseAmount, " +
                                     " MarkAsNew, HasTierPrices, HasDiscountsApplied, DisplayOrder, Published, Deleted, BasepriceBaseUnitId) " +
                                     $" select {id},'{name}','{SKU}','{Gtin}',{StockQuantity},0,{Price},0,0,{Weight},{Length},{Width},{Height},{ExcludeGoogleFeed},'{color}',{BrandID},{DropShip}, GETDATE(),GETDATE() , " +
-                                    " 1,1,1,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0 ,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0  ,0; ";
+                                    " 5,1,1,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0 ,0,0,1,0,1,0,0,0,0,0,1,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0  ,0; ";
 
 
 

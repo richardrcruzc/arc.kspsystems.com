@@ -392,7 +392,7 @@ namespace Nop.Services.Catalog
             if (legacy == null)
                 legacy = string.Empty;
 
-            if (legacy != string.Empty)
+            if (legacy != string.Empty) 
                 legacy = SeoExtensions.GetSeName(legacy, true, false);
 
             //categoryID = 110
@@ -1115,7 +1115,14 @@ namespace Nop.Services.Catalog
                 return null;
             
             var key = string.Format(PRODUCTS_BY_ID_KEY, productId);
-            return _cacheManager.Get(key, () => _productRepository.GetById(productId));
+            return _cacheManager.Get(key, () => 
+            {
+                var productNoDelted = _productRepository.GetById(productId);
+                if (productNoDelted.Deleted)
+                    return null;
+                return productNoDelted;
+            }
+            );
         }
 
         /// <summary>
