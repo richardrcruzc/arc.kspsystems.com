@@ -15,7 +15,7 @@ namespace Nop.Web.Models.Catalog
             SpecificationAttributeModels = new List<ProductSpecificationModel>();
             ReviewOverviewModel = new ProductReviewOverviewModel();
         }
-
+        public string StockAvailability { get; set; }
         public string Name { get; set; }
         public string ShortDescription { get; set; }
         public string FullDescription { get; set; }

@@ -123,10 +123,23 @@
                         @await Html.PartialAsync("_Availability", Model)
                         <!--add to cart-->
                         @{
-                            var dataDictAddToCart = new ViewDataDictionary(ViewData);
-                            dataDictAddToCart.TemplateInfo.HtmlFieldPrefix = $"addtocart_{Model.Id}";
+                            if (Model.StockAvailability == "Out of stock")
+                            {
+                                    <div class="add-to-cart">
+                                        <div class="add-to-cart-panel">
+                                            <input type="image" src="/images/call_button.gif">
+                                        </div>
+                                    </div>
+
+                            }
+                            else
+                            {
+                                var dataDictAddToCart = new ViewDataDictionary(ViewData);
+                                dataDictAddToCart.TemplateInfo.HtmlFieldPrefix = $"addtocart_{Model.Id}";
                             @await Html.PartialAsync("_AddToCart", Model.AddToCart, dataDictAddToCart)
-                        }
+                                } 
+                            
+                            }
                            <div>
                             @Model.StockAvailability
                             @await Component.InvokeAsync("UsedInProduct", new { id = Model.Id, display = 0 })

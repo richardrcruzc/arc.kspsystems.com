@@ -240,6 +240,7 @@ namespace Nop.Web.Factories
             priceModel.DisableBuyButton = product.DisableBuyButton ||
                                           !_permissionService.Authorize(StandardPermissionProvider.EnableShoppingCart) ||
                                           !_permissionService.Authorize(StandardPermissionProvider.DisplayPrices);
+             
 
             //add to wishlist button
             priceModel.DisableWishlistButton = product.DisableWishlistButton ||
@@ -1144,6 +1145,8 @@ namespace Nop.Web.Factories
                         (!product.MarkAsNewEndDateTimeUtc.HasValue || product.MarkAsNewEndDateTimeUtc.Value > DateTime.UtcNow)
                 };
 
+                model.StockAvailability = product.FormatStockMessage("", _localizationService, _productAttributeParser, _dateRangeService);
+
                 //price
                 if (preparePriceModel)
                 {
@@ -1208,6 +1211,8 @@ namespace Nop.Web.Factories
                         (!product.MarkAsNewStartDateTimeUtc.HasValue || product.MarkAsNewStartDateTimeUtc.Value < DateTime.UtcNow) &&
                         (!product.MarkAsNewEndDateTimeUtc.HasValue || product.MarkAsNewEndDateTimeUtc.Value > DateTime.UtcNow)
                 };
+
+                model.StockAvailability = product.FormatStockMessage("", _localizationService, _productAttributeParser, _dateRangeService);
 
                 //price
                 if (preparePriceModel)

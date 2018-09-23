@@ -101,18 +101,30 @@
 
             <div class="buttons-lower">
                 @if (!Model.ProductPrice.DisableBuyButton)
-            {
-                var addToCartText = T("ShoppingCart.AddToCart").Text;
-                if (Model.ProductPrice.IsRental)
                 {
-                    addToCartText = T("ShoppingCart.Rent").Text;
+                    var addToCartText = T("ShoppingCart.AddToCart").Text;
+                    if (Model.ProductPrice.IsRental)
+                    {
+                        addToCartText = T("ShoppingCart.Rent").Text;
+                    }
+                    if (Model.ProductPrice.AvailableForPreOrder)
+                    {
+                        addToCartText = T("ShoppingCart.PreOrder").Text;
+                    }
+                    if (Model.StockAvailability == "Out of stock")
+                    {
+                        <div class="add-to-cart">
+                            <div class="add-to-cart-panel">
+                                <input type="image" src="/images/call_button.gif">
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+
+                        <button type="button" class="button-2 product-box-add-to-cart-button" onclick="AjaxCart.addproducttocart_catalog('@addtocartlink');return false;"><span>@(addToCartText)</span></button>
+                    }
                 }
-                if (Model.ProductPrice.AvailableForPreOrder)
-                {
-                    addToCartText = T("ShoppingCart.PreOrder").Text;
-                }
-                <button type="button" class="button-2 product-box-add-to-cart-button" onclick="AjaxCart.addproducttocart_catalog('@addtocartlink');return false;"><span>@(addToCartText)</span></button>
-        }
             </div>
             @await Component.InvokeAsync("Widget", new { widgetZone = "productbox_addinfo_after", additionalData = Model.Id })
         </div>
