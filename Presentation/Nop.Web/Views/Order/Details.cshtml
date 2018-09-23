@@ -203,9 +203,9 @@
             {
                 <div class="shipping-info-wrap">
                     <div class="shipping-info">
-	                    <div class="title">
-	                        <strong>@(Model.PickUpInStore ? T("Order.PickupAddress") : T("Order.ShippingAddress"))</strong>
-	                    </div>
+                        <div class="title">
+                            <strong>@(Model.PickUpInStore ? T("Order.PickupAddress") : T("Order.ShippingAddress"))</strong>
+                        </div>
                         <ul class="info-list">
                             @if (!Model.PickUpInStore)
                             {
@@ -280,6 +280,9 @@
                                         @Html.Raw(Model.ShippingAddress.FormattedCustomAddressAttributes)
                                     </li>
                                 }
+
+
+
                             }
                             else
                             {
@@ -311,34 +314,51 @@
                                 }
                             }
                         </ul>
-                    </div>
-                    <div class="shipping-method-info">
+
+
                         <div class="title">
-                            <strong>@T("Order.Shipping")</strong>
+                            Shipping Information:
                         </div>
-                        <ul class="info-list">
-                            <li class="shipping-method">
-                                <span class="label">
-                                    @T("Order.Shipping.Name"):
-                                </span>
-                                <span class="value">
-                                    @Model.ShippingMethod
-                                </span>
-                            </li>
-                            @if (!Model.PrintMode)
-                            {
-                                <li class="shipping-status">
-                                    <span class="label">
-                                        @T("Order.Shipping.Status"):
-                                    </span>
-                                    <span class="value">
-                                        @Model.ShippingStatus
-                                    </span>
-                                </li>
-                            }
+                        <ul>
+                        <li class="custom-attributes-view">
+                            @Html.Raw(Model.DropShipExt)
+                        </li>
+                        <li class="custom-attributes-view">
+                            @Html.Raw(Model.ResidentialAddressExt)
+                        </li>
+                        <li class="custom-attributes-view">
+                            @Html.Raw(Model.ShipToCompanyNameExt)
+                        </li>
+
                         </ul>
                     </div>
-                </div>
+                        <div class="shipping-method-info">
+                            <div class="title">
+                                <strong>@T("Order.Shipping")</strong>
+                            </div>
+                            <ul class="info-list">
+                                <li class="shipping-method">
+                                    <span class="label">
+                                        @T("Order.Shipping.Name"):
+                                    </span>
+                                    <span class="value">
+                                        @Model.ShippingMethod
+                                    </span>
+                                </li>
+                                @if (!Model.PrintMode)
+                                {
+                                    <li class="shipping-status">
+                                        <span class="label">
+                                            @T("Order.Shipping.Status"):
+                                        </span>
+                                        <span class="value">
+                                            @Model.ShippingStatus
+                                        </span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
             }
         </div>
         @if (!Model.PrintMode && Model.Shipments.Count > 0)

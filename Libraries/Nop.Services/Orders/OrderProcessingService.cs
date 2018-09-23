@@ -1574,7 +1574,15 @@ namespace Nop.Services.Orders
                         ProcessOrderPaid(order);
 
 
-                    //move attribute from customer to order
+                    
+                    /*
+                      move these generic attributes from entity customer to entity order
+
+                        DropShipExt
+                        ResidentialAddressExt
+                        ShipToCompanyNameExt
+                    */
+
 
                     var customerId = _workContext.CurrentCustomer.Id;
                     var gAttrs = _genericAttributeService.GetAttributesForEntity(customerId, "Customer").ToList();
@@ -1603,9 +1611,7 @@ namespace Nop.Services.Orders
                         }
 
 
-                    }
-                    //
-
+                    } 
 
                 }
                 else

@@ -61,7 +61,8 @@ else
 
     function saveAttributesEx(attr, attrValue) {
         var subscribeProgress = $("#subscribe-loading-progress");
-        subscribeProgress.show();
+        subscribeProgress.show();
+
         //alert("attrib:" + attr + " attrValue:" + attrValue)
 
         $.ajax({
@@ -76,5 +77,6 @@ else
                 alert('Failed to subscribe.');
                 subscribeProgress.hide();
             }
-        });    }
+        });
+    }
 </script>

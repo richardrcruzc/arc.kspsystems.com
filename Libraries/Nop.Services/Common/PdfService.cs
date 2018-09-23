@@ -34,7 +34,7 @@ namespace Nop.Services.Common
     public partial class PdfService : IPdfService
     {
         #region Fields
-
+        private readonly IGenericAttributeService _genericAttributeService;
         private readonly ILocalizationService _localizationService;
         private readonly ILanguageService _languageService;
         private readonly IWorkContext _workContext;
@@ -87,7 +87,9 @@ namespace Nop.Services.Common
         /// <param name="pdfSettings">PDF sSettings</param>
         /// <param name="taxSettings">Tax settings</param>
         /// <param name="addressSettings">Address settings</param>
-        public PdfService(ILocalizationService localizationService, 
+        public PdfService(
+            IGenericAttributeService genericAttributeService,
+            ILocalizationService localizationService, 
             ILanguageService languageService,
             IWorkContext workContext,
             IOrderService orderService,
@@ -110,6 +112,7 @@ namespace Nop.Services.Common
             TaxSettings taxSettings,
             AddressSettings addressSettings)
         {
+            this._genericAttributeService = genericAttributeService;
             this._localizationService = localizationService;
             this._languageService = languageService;
             this._workContext = workContext;
@@ -520,6 +523,7 @@ namespace Nop.Services.Common
                     p.Border = Rectangle.NO_BORDER;
                     totalsTable.AddCell(p);
                 }
+
             }
 
             //payment fee
@@ -940,6 +944,9 @@ namespace Nop.Services.Common
                     if (_addressSettings.CountryEnabled && order.ShippingAddress.Country != null)
                         shippingAddress.AddCell(
                             new Paragraph(indent + order.ShippingAddress.Country.GetLocalized(x => x.Name, lang.Id), font));
+
+
+                    
                     //custom attributes
                     var customShippingAddressAttributes =
                         _addressAttributeFormatter.FormatAttributes(order.ShippingAddress.CustomAttributes);
@@ -966,8 +973,48 @@ namespace Nop.Services.Common
                     if (!string.IsNullOrEmpty(order.PickupAddress.ZipPostalCode))
                         shippingAddress.AddCell(new Paragraph($"{indent}{order.PickupAddress.ZipPostalCode}", font));
                     shippingAddress.AddCell(new Paragraph(" "));
-                }
+                } 
+              
+
                 shippingAddress.AddCell(GetParagraph("PDFInvoice.ShippingMethod", indent, lang, font, order.ShippingMethod));
+
+                //
+                //_genericAttributeService
+                var gAttrs = _genericAttributeService.GetAttributesForEntity(order.Id, "Order").ToList();
+
+                if (gAttrs.Count > 0)
+                    shippingAddress.AddCell(GetParagraph("Shipping Information", lang, titleFont));
+
+
+                foreach (var attr in gAttrs)
+                {
+                    if (attr.Key == "OrderNoteExt")
+                    {
+                        // model.OrderNoteExt = attr.Value;
+                        if (attr.Value != null)
+                            shippingAddress.AddCell(GetParagraph("Order Note:", indent, lang, font, attr.Value));
+                    }
+                    else if (attr.Key == "ShipToCompanyNameExt")
+                    {
+                        // model.ShipToCompanyNameExt = attr.Value;
+                        if (attr.Value != null)
+                            shippingAddress.AddCell(GetParagraph("Ship-To Company Name:", indent, lang, font, attr.Value));
+                    }
+                    else if (attr.Key == "DropShipExt")
+                    {
+                        // model.DropShipExt = attr.Value;
+                        if (attr.Value != null)
+                            shippingAddress.AddCell(GetParagraph("Drop Ship:", indent, lang, font, attr.Value));
+                    }
+                    else if (attr.Key == "ResidentialAddressExt")
+                    {
+                        //  model.ResidentialAddressExt = attr.Value;
+                        if (attr.Value != null)
+                            shippingAddress.AddCell(GetParagraph("Residential Address:", indent, lang, font, attr.Value));
+                    }
+                }
+
+
                 shippingAddress.AddCell(new Paragraph());
 
                 addressTable.AddCell(shippingAddress);

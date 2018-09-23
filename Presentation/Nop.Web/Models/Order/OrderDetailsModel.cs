@@ -22,6 +22,12 @@ namespace Nop.Web.Models.Order
             CustomValues = new Dictionary<string, object>();
         }
 
+        public string DropShipExt { get; set; }
+        public string ResidentialAddressExt { get; set; }
+        public string ShipToCompanyNameExt { get; set; }
+        public string OrderNoteExt { get; set; }
+        
+
         public bool PrintMode { get; set; }
         public bool PdfInvoiceDisabled { get; set; }
 

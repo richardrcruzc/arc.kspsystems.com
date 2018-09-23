@@ -8,6 +8,7 @@ using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Tax;
 using Nop.Services.Catalog;
+using Nop.Services.Common;
 using Nop.Services.Directory;
 using Nop.Services.Helpers;
 using Nop.Services.Localization;
@@ -28,7 +29,7 @@ namespace Nop.Web.Factories
     public partial class OrderModelFactory : IOrderModelFactory
     {
         #region Fields
-
+        private readonly IGenericAttributeService _genericAttributeService;
         private readonly IAddressModelFactory _addressModelFactory;
         private readonly IOrderService _orderService;
         private readonly IWorkContext _workContext;
@@ -58,7 +59,9 @@ namespace Nop.Web.Factories
 
 		#region Ctor
 
-        public OrderModelFactory(IAddressModelFactory addressModelFactory, 
+        public OrderModelFactory(
+             IGenericAttributeService genericAttributeService,
+        IAddressModelFactory addressModelFactory, 
             IOrderService orderService,
             IWorkContext workContext,
             ICurrencyService currencyService,
@@ -82,6 +85,7 @@ namespace Nop.Web.Factories
             RewardPointsSettings rewardPointsSettings,
             PdfSettings pdfSettings)
         {
+            this._genericAttributeService = genericAttributeService;
             this._addressModelFactory = addressModelFactory;
             this._orderService = orderService;
             this._workContext = workContext;
@@ -186,7 +190,28 @@ namespace Nop.Web.Factories
                 //shipping info
                 ShippingStatus = order.ShippingStatus.GetLocalizedEnum(_localizationService, _workContext)
             };
-            if (order.ShippingStatus != ShippingStatus.ShippingNotRequired)
+            //get generic attributes
+            var gAttrs = _genericAttributeService.GetAttributesForEntity(order.Id, "Order").ToList();
+            foreach (var attr in gAttrs)
+            {
+                if (attr.Key == "OrderNoteExt")
+                {
+                    model.OrderNoteExt = attr.Value;
+                }
+                else if (attr.Key == "ShipToCompanyNameExt")
+                {
+                    model.ShipToCompanyNameExt = attr.Value;
+                }
+                else if (attr.Key == "DropShipExt")
+                {
+                    model.DropShipExt = attr.Value;
+                }
+                else if (attr.Key == "ResidentialAddressExt")
+                {
+                    model.ResidentialAddressExt = attr.Value;
+                }
+            }
+                if (order.ShippingStatus != ShippingStatus.ShippingNotRequired)
             {
                 model.IsShippable = true;
                 model.PickUpInStore = order.PickUpInStore;
