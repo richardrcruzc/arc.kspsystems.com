@@ -1557,31 +1557,13 @@ namespace Nop.Services.Orders
                         CreateFirstRecurringPayment(processPaymentRequest, order);
                     }
 
-                    //notifications
-                    SendNotificationsAndSaveNotes(order);
-
-                    //reset checkout data
-                    _customerService.ResetCheckoutData(details.Customer, processPaymentRequest.StoreId, clearCouponCodes: true, clearCheckoutAttributes: true);
-                    _customerActivityService.InsertActivity("PublicStore.PlaceOrder", _localizationService.GetResource("ActivityLog.PublicStore.PlaceOrder"), order.Id);
-
-                    //check order status
-                    CheckOrderStatus(order);
-
-                    //raise event       
-                    _eventPublisher.Publish(new OrderPlacedEvent(order));
-
-                    if (order.PaymentStatus == PaymentStatus.Paid)
-                        ProcessOrderPaid(order);
-
-
-                    
                     /*
-                      move these generic attributes from entity customer to entity order
+                     move these generic attributes from entity customer to entity order
 
-                        DropShipExt
-                        ResidentialAddressExt
-                        ShipToCompanyNameExt
-                    */
+                       DropShipExt
+                       ResidentialAddressExt
+                       ShipToCompanyNameExt
+                   */
 
 
                     var customerId = _workContext.CurrentCustomer.Id;
@@ -1611,7 +1593,27 @@ namespace Nop.Services.Orders
                         }
 
 
-                    } 
+                    }
+
+                    //notifications
+                    SendNotificationsAndSaveNotes(order);
+
+                    //reset checkout data
+                    _customerService.ResetCheckoutData(details.Customer, processPaymentRequest.StoreId, clearCouponCodes: true, clearCheckoutAttributes: true);
+                    _customerActivityService.InsertActivity("PublicStore.PlaceOrder", _localizationService.GetResource("ActivityLog.PublicStore.PlaceOrder"), order.Id);
+
+                    //check order status
+                    CheckOrderStatus(order);
+
+                    //raise event       
+                    _eventPublisher.Publish(new OrderPlacedEvent(order));
+
+                    if (order.PaymentStatus == PaymentStatus.Paid)
+                        ProcessOrderPaid(order);
+
+
+                    
+                   
 
                 }
                 else

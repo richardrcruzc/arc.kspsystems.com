@@ -250,7 +250,12 @@ namespace Nop.Services.Messages
                     "%Order.CustomValues%",
                     "%Order.Product(s)%",
                     "%Order.CreatedOn%",
-                    "%Order.OrderURLForCustomer%"
+                    "%Order.OrderURLForCustomer%",
+
+                     "%Order.OrderNoteExt%",
+                      "%Order.ShipToCompanyNameExt%",
+                       "%Order.DropShipExt%",
+                        "%Order.ResidentialAddressExt%"
                 });
 
                 //shipment tokens
@@ -918,6 +923,18 @@ namespace Nop.Services.Messages
         /// <param name="vendorId">Vendor identifier</param>
         public virtual void AddOrderTokens(IList<Token> tokens, Order order, int languageId, int vendorId = 0)
         {
+
+
+            //var shipToCompanyNameExt = order.GetAttribute<string>("ShipToCompanyNameExt") != null ? order.GetAttribute<string>("ShipToCompanyNameExt") : string.Empty;
+            //var orderNoteExt = order.GetAttribute<string>("OrderNoteExt") != null ? order.GetAttribute<string>("OrderNoteExt") : string.Empty;
+            //var dropShipExt = order.GetAttribute<string>("DropShipExt") != null ? order.GetAttribute<string>("DropShipExt") : string.Empty;
+            //var residentialAddressExt = order.GetAttribute<string>("ResidentialAddressExt") != null ? order.GetAttribute<string>("ResidentialAddressExt") : string.Empty;
+
+            tokens.Add(new Token("Order.ShipToCompanyNameExt", order.GetAttribute<string>("ShipToCompanyNameExt")));
+            tokens.Add(new Token("Order.OrderNoteExt", order.GetAttribute<string>("OrderNoteExt")));
+            tokens.Add(new Token("Order.DropShipExt", order.GetAttribute<string>("DropShipExt")));
+            tokens.Add(new Token("Order.ResidentialAddressExt", order.GetAttribute<string>("ResidentialAddressExt")));
+
             tokens.Add(new Token("Order.OrderNumber", order.CustomOrderNumber));
 
             tokens.Add(new Token("Order.CustomerFullName", $"{order.BillingAddress.FirstName} {order.BillingAddress.LastName}"));
