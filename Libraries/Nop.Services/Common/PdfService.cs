@@ -988,29 +988,24 @@ namespace Nop.Services.Common
 
                 foreach (var attr in gAttrs)
                 {
-                    if (attr.Key == "OrderNoteExt")
-                    {
-                        // model.OrderNoteExt = attr.Value;
-                        if (attr.Value != null)
-                            shippingAddress.AddCell(GetParagraph("Order Note:", indent, lang, font, attr.Value));
+                    if (string.IsNullOrEmpty(attr.Value))
+                        continue;
+
+                        if (attr.Key == "OrderNoteExt")
+                    { 
+                            shippingAddress.AddCell(GetParagraph($"Order-Note: {attr.Value}", indent, lang, font, attr.Value));
                     }
                     else if (attr.Key == "ShipToCompanyNameExt")
-                    {
-                        // model.ShipToCompanyNameExt = attr.Value;
-                        if (attr.Value != null)
-                            shippingAddress.AddCell(GetParagraph("Ship-To Company Name:", indent, lang, font, attr.Value));
+                    { 
+                            shippingAddress.AddCell(GetParagraph($"Ship-To Company Name: {attr.Value}", indent, lang, font, attr.Value));
                     }
                     else if (attr.Key == "DropShipExt")
-                    {
-                        // model.DropShipExt = attr.Value;
-                        if (attr.Value != null)
-                            shippingAddress.AddCell(GetParagraph("Drop Ship:", indent, lang, font, attr.Value));
+                    { 
+                            shippingAddress.AddCell(GetParagraph($"Drop Ship: {attr.Value}", indent, lang, font, attr.Value));
                     }
                     else if (attr.Key == "ResidentialAddressExt")
-                    {
-                        //  model.ResidentialAddressExt = attr.Value;
-                        if (attr.Value != null)
-                            shippingAddress.AddCell(GetParagraph("Residential Address:", indent, lang, font, attr.Value));
+                    { 
+                            shippingAddress.AddCell(GetParagraph($"Residential Address: {attr.Value}", indent, lang, font, attr.Value));
                     }
                 }
 
