@@ -190,6 +190,117 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             return View("~/Plugins/Misc.ProductWizard/Views/UploadData.cshtml");
         }
         [HttpPost]
+        public virtual IActionResult UpdateGroup(IFormFile importexcelfile)
+        {
+            // groups 
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+                return AccessDeniedView();
+
+            //a vendor cannot import categories
+            if (_workContext.CurrentVendor != null)
+                return AccessDeniedView();
+
+            try
+            {
+                if (importexcelfile != null && importexcelfile.Length > 0)
+                {
+                    Stream stream = importexcelfile.OpenReadStream();
+                    using (var xlPackage = new ExcelPackage(stream))
+                    {
+                        var maximunRows = 0;
+                        var endRow = 2;
+
+                        var worksheet = xlPackage.Workbook.Worksheets[5];
+                        if (worksheet == null)
+                            throw new NopException("No worksheet found");
+                        var sql = "SET IDENTITY_INSERT [dbo].[Groups] ON;";
+                        endRow = 2;
+                        var id = 0;
+                        decimal interval = 0;
+                        decimal percentage = 0;
+                        var name = string.Empty;
+
+                        while (true)
+                        {
+                            try
+                            {
+                                //if (worksheet.Row(endRow).OutlineLevel == 0)
+                                //{
+                                //    break;
+                                //}
+                                if (worksheet == null || worksheet.Cells == null)
+                                    break;
+                                if (worksheet.Cells[endRow, 1].Value == null)
+                                    break;
+
+                                int.TryParse(worksheet.Cells[endRow, 1].Value.ToString(), out id);
+                                name = worksheet.Cells[endRow, 2].Value.ToString();
+                                decimal.TryParse(worksheet.Cells[endRow, 3].Value.ToString(), out interval);
+                                decimal.TryParse(worksheet.Cells[endRow, 4].Value.ToString(), out percentage);
+
+
+                                //var exist = _gpRepository.TableNoTracking.Where(x => x.Id == id).FirstOrDefault();
+                                //if(exist==null)
+                                sql += $" update  [dbo].[Groups] set GroupName ='{name}' , Interval = {interval}, Percentage={percentage}, UpdatedOnUtc=getdate() where id ={id} ";
+                                sql += "IF @@ROWCOUNT=0 ";
+                                sql += $" insert into [dbo].[Groups] (Id, GroupName,Interval,    Percentage , CreatedOnUtc,            UpdatedOnUtc,            Deleted) " +
+                                        $" select {id}, '{name}',{interval},{percentage}, getdate(), getdate(), 0; ";
+
+                                //   else
+
+
+                                maximunRows++;
+
+                                endRow++;
+
+                                if (maximunRows > 1000)
+                                {
+
+                                    //  sql += "SET IDENTITY_INSERT [dbo].[Groups] OFF;";
+                                    _dbContext.ExecuteSqlCommand(sql);
+                                    //   sql = "SET IDENTITY_INSERT [dbo].[Groups] ON;";
+                                    maximunRows = 0;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                endRow++;
+                                ErrorNotification("Admin.Common.Groups" + ex.Message);
+                                continue;
+                            }
+                        }
+
+
+                        sql += "SET IDENTITY_INSERT [dbo].[Groups] OFF;";
+                        try
+                        {
+                            sql += "SET IDENTITY_INSERT [dbo].[Groups] Off;";
+                            _dbContext.ExecuteSqlCommand(sql);
+
+
+                            sql += "update [dbo].[Product] set [ManageInventoryMethodId]=1;";
+                            _dbContext.ExecuteSqlCommand(sql);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            ErrorNotification("Admin.Common.Category" + ex.Message);
+
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+              
+                ErrorNotification("Admin.Common.Groups" + ex.Message);
+               
+            }
+
+            return View("~/Plugins/Misc.ProductWizard/Views/UploadData.cshtml");
+
+        }
+        [HttpPost]
         public virtual IActionResult ImportProductsImgesFromFile(string imagePath = @"D:\data\items")
         {
 
@@ -821,7 +932,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                                 //var exist = _gpRepository.TableNoTracking.Where(x => x.Id == id).FirstOrDefault();
                                 //if(exist==null)
-                                sql += $" update  [dbo].[Groups] set GroupName ={Price} , Interval = {interval}, Percentage={percentage}, UpdatedOnUtc=getdate() where id ={id} ";
+                                sql += $" update  [dbo].[Groups] set GroupName ={name} , Interval = {interval}, Percentage={percentage}, UpdatedOnUtc=getdate() where id ={id} ";
                                 sql += "IF @@ROWCOUNT=0 ";
                                 sql += $" insert into [dbo].[Groups] (Id, GroupName,Interval,    Percentage , CreatedOnUtc,            UpdatedOnUtc,            Deleted) " +
                                         $" select {id}, '{name}',{interval},{percentage}, getdate(), getdate(), 0; ";
