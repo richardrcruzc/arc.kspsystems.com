@@ -11,11 +11,17 @@ namespace Nop.Services.Orders
     /// </summary>
     public partial interface IOrderProcessingService
     {
+
+
+        
+             void SetOrderCompleted(Order order);
         /// <summary>
         /// Checks order status
         /// </summary>
         /// <param name="order">Order</param>
         void CheckOrderStatus(Order order);
+
+
 
         /// <summary>
         /// Places an order

@@ -42,7 +42,7 @@ using System.Threading.Tasks;
 namespace Nop.Plugin.Misc.ProductWizard.Controllers
 {
     public class UploadDataController : BasePluginController
-    {
+    { 
 
         private readonly ICustomNumberFormatter _customNumberFormatter;
         private readonly IOrderProcessingService _orderProcessingService;
@@ -188,6 +188,38 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         {
 
             return View("~/Plugins/Misc.ProductWizard/Views/UploadData.cshtml");
+        }
+
+        [HttpPost]
+        public virtual IActionResult FixSeoUrl( )
+        {
+            // groups 
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+                return AccessDeniedView();
+             
+            var sql = string.Empty;
+            try
+            {
+
+                var products = _productService.SearchProducts().ToList();
+                foreach (var product in products)
+                {
+                    var seName = product.GetSeName();
+                 var validSeo=   product.ValidateSeName(seName, product.Name, true);
+
+                    _urlRecordService.SaveSlug(product, validSeo,0);
+                   // _productService.UpdateProduct(product);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                ErrorNotification("Admin.Common.FixSeoUrl" + ex.Message);
+
+            }
+
+            return View("~/Plugins/Misc.ProductWizard/Views/UploadData.cshtml");
+
         }
         [HttpPost]
         public virtual IActionResult UpdateGroup(IFormFile importexcelfile)
@@ -932,7 +964,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                                 //var exist = _gpRepository.TableNoTracking.Where(x => x.Id == id).FirstOrDefault();
                                 //if(exist==null)
-                                sql += $" update  [dbo].[Groups] set GroupName ={name} , Interval = {interval}, Percentage={percentage}, UpdatedOnUtc=getdate() where id ={id} ";
+                                sql += $" update  [dbo].[Groups] set GroupName ='{name}' , Interval = {interval}, Percentage={percentage}, UpdatedOnUtc=getdate() where id ={id} ";
                                 sql += "IF @@ROWCOUNT=0 ";
                                 sql += $" insert into [dbo].[Groups] (Id, GroupName,Interval,    Percentage , CreatedOnUtc,            UpdatedOnUtc,            Deleted) " +
                                         $" select {id}, '{name}',{interval},{percentage}, getdate(), getdate(), 0; ";
@@ -985,7 +1017,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         var ItemID = 0;
 
                         maximunRows = 1;
-                        sql = "SET IDENTITY_INSERT [dbo].[groups-items] ON;";
+                        sql = "";// "SET IDENTITY_INSERT [dbo].[groups-items] ON;";
                         while (true)
                         {
                             try
@@ -1034,7 +1066,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         }
 
 
-                        sql += "SET IDENTITY_INSERT [dbo].[groups-items] OFF;";
+                        //sql += "SET IDENTITY_INSERT [dbo].[groups-items] OFF;";
                         try
                         {
                             _dbContext.ExecuteSqlCommand(sql);
@@ -1050,7 +1082,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         worksheet = xlPackage.Workbook.Worksheets[7];
                         if (worksheet == null)
                             throw new NopException("No worksheet found");
-                        sql = "SET IDENTITY_INSERT [dbo].[ItemsCompatability] ON;";
+                        sql = "";// "SET IDENTITY_INSERT [dbo].[ItemsCompatability] ON;";
                         // var ItemID = 0;
                         var ItemIDPart = 0;
                         endRow = 2;
@@ -1101,7 +1133,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         }
 
 
-                        sql += "SET IDENTITY_INSERT [dbo].[ItemsCompatability] OFF;";
+                        //sql += "SET IDENTITY_INSERT [dbo].[ItemsCompatability] OFF;";
                         try
                         {
                             _dbContext.ExecuteSqlCommand(sql);
@@ -1116,7 +1148,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         worksheet = xlPackage.Workbook.Worksheets[8];
                         if (worksheet == null)
                             throw new NopException("No worksheet found");
-                        sql = "SET IDENTITY_INSERT [dbo].[Relations-Groups-Items] ON;";
+                        sql = "";// "SET IDENTITY_INSERT [dbo].[Relations-Groups-Items] ON;";
                         // var ItemID = 0;
                         endRow = 2;
                         var GroupId = 0;
@@ -1167,7 +1199,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         }
 
 
-                        sql += "SET IDENTITY_INSERT [dbo].[Relations-Groups-Items] OFF;";
+                      //  sql += "SET IDENTITY_INSERT [dbo].[Relations-Groups-Items] OFF;";
                         try
                         {
                             _dbContext.ExecuteSqlCommand(sql);
@@ -1184,7 +1216,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         worksheet = xlPackage.Workbook.Worksheets[9];
                         if (worksheet == null)
                             throw new NopException("No worksheet found");
-                        sql = "SET IDENTITY_INSERT [dbo].[LegacyIds] ON;";
+                        sql = "";// "SET IDENTITY_INSERT [dbo].[LegacyIds] ON;";
                         var legacyId = string.Empty;
                         endRow = 2;
                         maximunRows = 1;
@@ -1237,7 +1269,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         }
 
 
-                        sql += "SET IDENTITY_INSERT [dbo].[LegacyIds] OFF;";
+                      //  sql += "SET IDENTITY_INSERT [dbo].[LegacyIds] OFF;";
                         try
                         {
                             _dbContext.ExecuteSqlCommand(sql);
@@ -1339,7 +1371,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                             {
                                 if (worksheet == null || worksheet.Cells == null)
                                     break;
-                                if(endRow>24070)
+                                if(endRow>24086)
                                 if (worksheet.Cells[endRow, 1].Value == null)
                                     break;
 
@@ -1593,6 +1625,10 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                                 while (true)
                                 {
+                                    //if (endRowO == 109)
+                                    //{
+                                    //    var dkdkd = 109;
+                                    //}
                                     try
                                     {
                                         if (worksheetO == null || worksheet.Cells == null)

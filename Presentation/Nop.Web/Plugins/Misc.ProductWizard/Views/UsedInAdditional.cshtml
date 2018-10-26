@@ -1,282 +1,137 @@
-﻿@model Nop.Plugin.Misc.ProductWizard.Models.ProductExtModel
-    <link href="~/lib/kendo/2014.1.318/kendo.common.min.css" rel="stylesheet" />
-    <link href="~/lib/kendo/2014.1.318/kendo.default.min.css" rel="stylesheet" />
-    <link href="~/lib/kendo/2014.1.318/kendo.default.mobile.min.css" rel="stylesheet" />
+﻿<!DOCTYPE html>
+<!--[if lt IE 7 ]><html class="ie ie6 lte9 lte8 lte7" lang="en"><![endif]-->
+<!--[if IE 7 ]><html class="ie ie7 lte9 lte8 lte7" lang="en"><![endif]-->
+<!--[if IE 8 ]><html class="ie ie8 lte9 lte8" lang="en"><![endif]-->
+<!--[if IE 9 ]><html class="ie ie9 lte9" lang="en"><![endif]-->
+<!--[if gt IE 9]><!-->
+<html class="" lang="en">
+<!--<![endif]-->
+<head>
+    <meta name='copyright' content='T&P Servicios Legales | Quiénes Somos'>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <title>Domain Default page</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <htm xml:lang="es" lang="es" xmlns="http://www.w3.org/1999/xhtm">
+        <title>T&amp;P Servicios Legales | Quiénes Somos</title>
+        <meta name="description" content="Somos una empresa de cobranzas especializada en soluciones efectivas para la recuperación de créditos vencidos, mediante procesos extrajudiciales y Judiciales." />
+        <meta name="keywords" content="turbocobro legal mora deuda atrasos intimacion compulsivo recuperacion creditos vencidos" />
+        <link rel="stylesheet" charset="utf-8" type="text/css" href="/estilos/comunes.css"></link>
+        <link rel="stylesheet" charset="utf-8" type="text/css" href="/estilos/index.css"></link>
+        <script type="text/javascript" src="/js/comunes.js">
+        </script>
+        <script type="text/javascript">
+    function fecha() {
+                var fecha = new Date();
+                var textomes = new Array(12);
+                textomes[1] = "Enero";
+                textomes[2] = "Febrero";
+                textomes[3] = "Marzo";
+                textomes[4] = "Abril";
+                textomes[5] = "Mayo";
+                textomes[6] = "Junio";
+                textomes[7] = "Julio";
+                textomes[8] = "Agosto";
+                textomes[9] = "Septiembre";
+                textomes[10] = "Octubre";
+                textomes[11] = "Noviembre";
+                textomes[12] = "Diciembre";
 
-    @*<link href="~/lib/kendo/2014.1.318/kendo.common.min.css" rel="stylesheet" />
-        <link href="~/lib/kendo/2014.1.318/kendo.default.min.css" rel="stylesheet" />
-        <link href="~/lib/kendo/2014.1.318/kendo.rtl.min.css" rel = "stylesheet" />
-        <script src="~/lib/kendo/2014.1.318/kendo.web.min.js"></script>*@
-    @{
+                var diames = fecha.getDate();
+                var mes = fecha.getMonth() + 1;
+                var ano = fecha.getFullYear();
 
-        //    Layout = "~/admin/Views/Shared/_AdminLayout.cshtml";
-        var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
-        var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
-    }
-
-    <div>
-        <div class="title"><strong>Parts for this Item </strong><br /></div>
-
-        @if (Model.IsCopier != true)
-        {
-            <div class="details">
-                <h4 class="product-title">
-                    @foreach (var item in Model.PartForItem)
-                    {
-
-
-                        if (item != Model.PartForItem[Model.PartForItem.Count - 1])
-                        {
-                            <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName, </a>
-                        }
-                        else
-                        {
-
-                            <a href="@Url.RouteUrl("Product", new { SeName = item.SeName })">@item.ProductName</a>
-                        }
-
-                    }
-                </h4>
-            </div>
-        }
-        else
-        {
-            <div class="order-summary-content">
-                <div class="table-wrapper">
-                    <div class="mobile-only">
-                        @if (Model.CategoryModel.Count > 0)
-                        {
-
-                            <div id="listView">
-                                <div class="details">
-                                    <h4 class="product-title">
-                                        @foreach (var item in Model.CategoryModel)
-                                        {
-
-                                            if (item != Model.CategoryModel[Model.CategoryModel.Count - 1])
-                                            {
-                                                <a href="@item.CatergorySeo">@item.CatergoryName, </a>
-                                            }
-                                            else
-                                            {
-
-                                                <a href="@item.CatergorySeo">@item.CatergoryName </a>
-                                            }
-
-                                        }
-                                    </h4>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                    <div class="screen-only">
-                        <div id="categories-grid"></div>
-
-                      <script>
-                        $(document).ready(function () {
-
-                            @*$("#listView").kendoListView({
-                             dataSource: {
-                                type: "json",
-                                transport: {
-                                    read: {
-                                         url: "@Html.Raw(Url.Action("PartsForThisItemList", "PartsForItem"))",
-                                            type: "POST",
-                                            dataType: "json",
-                                            data: additionalData
-                                    }
-                                }
-                            },
-                             template: '<a href="#:CatergorySeo#">#=CatergoryName#</a> '
-                            });*@
+                return diames + " de " + textomes[mes] + " de " + ano;
+            }
 
 
 
-                        $("#categories-grid").kendoGrid({
-                            dataSource: {
-                                type: "json",
-                                transport: {
-                                    read: {
-                                         url: "@Html.Raw(Url.Action("PartsForThisItem", "PartsForItem"))",
-                                            type: "POST",
-                                            dataType: "json",
-                                            data: additionalData
-                                    }
-                                },
-                                schema: {
-                                    data: "Data",
-                                    total: "Total",
-                                    errors: "Errors",
-                                    model: {
-                                        id: "Id",
-                                        fields: {
-                                            ThumbImageUrl: { editable: false },
-                                            Category: { editable: false },
-                                            ProductName: { editable: false },
-                                            PartNumber: { editable: false },
-                                            Manufacturer: { editable: false },
-                                            Price: { editable: false },
-                                            Qty: { editable: true, type: "number", validation: { required: true, min: 1 } },
-                                            Id: { editable: false, type: "number" },
-                                            SeName: { editable: false },
-                                            CategorySeo: { editable: false },
-                                            OutOfStock: { editable: false, type:"bool" },
-                                        }
-                                     }
-                                },
-                                 error: function(e) {
-                                        display_kendoui_grid_error(e);
-                                        // Cancel the changes
-                                        this.cancelChanges();
-                                    },
-                                    pageSize: @(defaultGridPageSize),
-                                    serverPaging: true,
-                                    serverFiltering: true,
-                                    serverSorting: true,
-                                    group: { field: "Category", template: '<a href="#:CategorySeo#">#=Category#</a>' },
-                            },
-                            scrollable: false,
-                            editable: "inline",
-                            pageable: {
-                                    refresh: true,
-                                    pageSizes: [@(gridPageSizes)],
-                                    @Html.Partial("_GridPagerMessages")
-                            },                         
-                            scrollable: false,
-                            columns: [
-                                {
-                                    field: "ThumbImageUrl",
-                                            title: "@T("Admin.Catalog.Products.Fields.PictureThumbnailUrl")",
-                                            template: '<a href="/#:NewSeName#"><img src="#=ThumbImageUrl#" /></a>',
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-39519577-1']);
+            _gaq.push(['_trackPageview']);
 
-                                },
-                                {
-                                    field: "ProductName",
-                                    title: "Name",
-                                    template: '<a href="/#:NewSeName#">#:ProductName#<br><span class="item_details_link_info"><img src="/images/magnify_plus.gif" alt="view details"> view details...</span> </a> '
-                                },
-                                {
-                                    field: "PartNumber",
-                                    title: "Part #",
-                                },
-                                {
-                                    field: "Manufacturer",
-                                    title: "Manufacturer",
-                                },
-                                {
-                                    field: "Category",
-                                    title: "Category",
-                                    template: '<a href="#:CategorySeo#">#=Category#</a>',
-                                },
-                                {
-                                    field: "Price",
-                                    title: "Price",
-                                    format: "{0:c}",
-                                    attributes: { style: "text-align:right" },
-                                }, {
-                                    field: "Qty",
-                                    title: "Qty",
-                                    attributes: { style: "text-align:right" },
-                                    width: 75,
-                                    template:'<table  border="1"><tr><td style="border-collapse: collapse;border: 1px solid black;">#:Qty#</td></tr></table>'
-
-                                },  {
-                                    field: "Id",
-                                    title: "Buy Now",
-                                    headerAttributes: { style: "text-align:center" },
-                                    attributes: { style: "text-align:center" },
-                                    template: '# if (OutOfStock) { #<input class="btn btn-xs btn-default" type="image" src="/images/call_button.gif"># } else { # <a class="btn btn-xs btn-default" href="\\#" onclick="rowclick(this);"  title="Edit">&nbsp;<input type="image" class="addToCartbutton" id="addToCartbutton" src="/images/add-btn-small.png"></a># } #',
-                                    attributes: { style: "text-align:center" },
-                                   // template: '<table width="20%" style="border: none 0px;"><tbody><tr><td style="border: none 0px;">Qty.<br /><input id="cartQty" name="cartQty" class="cartQty" value="1" type="number"  style="width:30px"> </td><td style="border: none 0px;"><br /><input type="image" class="addToCartbutton" id="addToCartbutton" src="/images/add-btn-small.png" onclick="rowclick(this);" ></td></tr></tbody></table>'
-                                },
-                                //{
-                                //        field: "Id",
-                                //        title: "",
-                                //        width: 100,
-                                //        headerAttributes: { style: "text-align:center" },
-                                //        attributes: { style: "text-align:center" },
-                                //        template: '<a class="btn btn-default" href="Edit/#=Id#"><img src= "/images/add-btn-small.png" /></a>'
-                                //    }
-                            ],
-                            editable: true
-                        });
-
-
-
-
-                    $("#categorieseeee-grid").on("click", ".addToCartbutton", function (e) {
-                         e.preventDefault();
-                        //var grid = $("#categories-grid").data("kendoGrid");
-                        //var selectedItem = grid.dataItem(grid.select());
-                        //alert(selectedItem.Price);
-                         var row = $(this).closest("tr");
-                         var spans = row.find("cartQty");
-                         alert(spans);
-                        var row = $(e.target).closest("tr");
-                        var grid = $("#categories-grid").data("kendoGrid");
-                        var dataItem = grid.dataItem(row);
-                        alert(dataItem.Price);
-
-                    });
-
-
-
-
-                });
-
-
-
-
-            function rowclick(sender) {
-                var grid = $('#categories-grid').data('kendoGrid');
-
-                if (grid) {
-                    var data = grid.dataItem($(sender).closest("tr"));
-                    if (data) {
-                      //  alert("You clicked " + data.Qty + " for Id : " + data.Id);
-                        //AjaxCart.addproducttocart_catalog(productId);
-                        //AjaxCart.addproducttocart_details('/addproducttocart/details/'++'/1', '#product-details-form')
-                        // addtocartlink = 'Url.RouteUrl("AddProductToCart-Catalog", new { productId = data.Id, shoppingCartTypeId = 1, quantity = data.Qty, forceredirection = false})';
-
-                        // alert(addtocartlink);
-
-                        var productId = data.Id;
-                        var shoppingCartTypeId = 1;
-                        var quantity = data.Qty;
-                        var forceredirection = false
-                        //alert(data.Qty);
-                        var url = '/ShoppingCart/AddProductToCart_Catalog?productId='+data.Id+'&shoppingCartTypeId=1&quantity=' + data.Qty+'&forceredirection=false';
-                      //  alert(url);
-                        $.ajax({
-                            cache: false,
-                            url: url,
-                            type: 'post',
-                            success: function (result) {
-                                //alert('product added');
-                            },
-                            complete: function (result) { },
-                            error: function (result) { /*alert('error adding product to shopping cart');*/}
-                        });
-
-                    }
-                    else
-                        alert("Why isn't my row selected!");
-                }
-
-
-            };
-                function additionalData()
-                {
-                    var data = {
-                                id: '@Model.Id'
-                            };
-            addAntiForgeryToken(data);
-            return data;
-                            }
+            (function () {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+        </script>
+        <div id="fondo_cabecera">
+            <div id="cabecera">
+                <h1><a href="/">T&amp;P Servicios Legales | Quiénes Somos</a></h1>
+                <ul id="nav_util">
+                    <li>
+                        <script>
+    document.write(fecha());
                         </script>
+                    </li>
+                    <li><a title="Home" class="home" href="/">Home</a></li>
+                    <li><a title="Agregar a favoritos" class="favoritos" href="javascript:agregar()">Añadir a Favoritos</a></li>
+                    <li><a title="Mapa Web" class="mapa" href="/mapa-web.htm">Mapa Web</a></li>
+                </ul>
+                <ul id="idiomas">
+                    <li><a href="/about-us.htm">English</a></li>
+                    <li>|</li>
+                    <li><a href="/index.htm">Español</a></li>
+                </ul>
+                <ul id="menu_ppal">
+                    <li><a class="actual" href="/">SOMOS</a></li>
+                    <li><a href="/servicios.htm">SERVICIOS</a></li>
+                    <li><a href="/noticias.htm">NOTICIAS</a></li>
+                    <li><a href="/contactos.htm">CONTACTOS</a></li>
+                    <li><a href="/clientes.htm">CLIENTES</a></li>
+                    <li><a href="/acceso-clientes.htm">ACCESO CLIENTES</a></li>
+                </ul>
+            </div>
+        </div>
+        <div id="fondo_contenido">
+            <div id="contenido">
+                <div id="banner">
+                    <object data="/banner.swf" width="1000" height="355" type="application/x-shockwave-flash"> <param name="movie" value="/banner.swf"></param> <param name="bgcolor" value="EFEBE7"></param> <param name="wmode" value="transparent"></param> </object>
+                </div>
+                <div id="interior">
+                    <div class="titulo">
+                        <div class="enlaces">
+                            <ul>
+                                <li><a title="Visítanos en Twitter" target="_blank" href="http://twitter.com/#!/TPCobros"><img src="/imagenes/comunes/twitter.gif" /></a></li>
+                                <li><a title="Visítanos en Facebook" target="_blank" href="http://www.facebook.com/pages/TP-Servicios-Legales/104685032960310"><img src="/imagenes/comunes/facebook.gif" /></a></li>
+                                <li><a title="Visítanos en Linkedin" target="_blank" href="http://www.linkedin.com/home?trk=hb_tab_home"><img src="/imagenes/comunes/linkedin.gif" /></a></li>
+                                <li class="sin-borde"><a title="Suscríbete a nuestro RSS" target="_blank" href=""><img src="/imagenes/comunes/rss.gif" /></a></li>
+                            </ul>
+                        </div> <h2>EN MATERIA DE COBROS, SOMOS TU SOCIO ESTRATÉGICO!</h2>
+                    </div>
+                    <div class="desarrollo">
+                        <div class="imagen">
+                            <img alt="Quienes Somos" src="/imagenes/index/imagen.jpg" />
+                        </div>
+                        <div class="textos">
+                            <p><span>Somos</span> una empresa de cobranzas especializada en soluciones efectivas para la recuperación de créditos vencidos, mediante procesos extrajudiciales y Judiciales.</p>
+                            <p>
+                                Nuestra mayor fortaleza es contar con un equipo de profesionales comprometidos,  que  destinan  sus conocimientos, energía y experiencia en proporcionarles a nuestros clientes la mejor y más personalizada
+                                asesoría en sus asuntos legales apoyados por la plataforma tecnológica más avanzada del mercado.
+                            </p>
+                            <p>Convirtiéndonos en su socio estratégico, le permitirá incrementar su rentabilidad, reducir sus gastos y mantener su cartera de crédito en los niveles óptimos.</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        }
-        <br />
-    </div>
+        </div>
+        <div id="fondo_pie">
+            <div id="pie">
+                <div class="derechos">
+                    <p>© 2011 T&amp;P SERVICIO LEGALES</p>
+                    <p>Todos los derechos reservados</p>
+                    <p><a href="/aviso-legal.htm">AVISO LEGAL</a></p>
+                </div>
+                <div class="localizacion">
+                    <p>Calle Andres Julio Aybar no. 204, Edificio Málaga II, 2do. Piso, Ensanche Piantini | Tel:. 809-331-8000 | Sto Dgo, Rep Dom.</p>
+                </div>
+            </div>
+        </div>
+    </htm>
+</body>
+</html>

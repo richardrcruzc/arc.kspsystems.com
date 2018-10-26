@@ -1,0 +1,205 @@
+﻿@{
+	Layout = "~/Views/Shared/_ColumnsTwo.cshtml";
+
+	Html.AddCssFileParts("~/Plugins/Moco.SmartSearch/Content/styles.css");
+}
+@model ProductSearchModel
+@using Moco.Plugin.Search.SmartSearch.Models
+@using Nop.Core.Domain.Orders
+@using Nop.Web.Framework;
+@using Nop.Web.Framework.UI;
+@using (Html.BeginForm("Search", "SmartSearch", FormMethod.Get, new { id = "ssForm", @class="page" }))
+{
+	@Html.HiddenFor(model => model.q)
+	<script type="text/javascript">
+		$(document).ready(function () {
+			$('#SelectedSortField').change(function () {
+				$('#ssForm').submit();
+			});
+			$('#SelectedPagingField').change(function () {
+				$('#ssForm').submit();
+			});
+		})
+	</script>
+	<div class="page-body">
+		<div class="category-grid sub-category-grid">
+			<span>@T("Search.SearchTerm"): @Html.DisplayFor(model => model.q, new { id = "" })</span>
+			@*@<span>Results: @Html.DisplayFor(model => model.ResultCount, new { id = "" })</span>*@
+		</div>
+	    <div class="product-selectors">
+	        <div class="product-viewmode">
+	            <span>@T("Catalog.ViewMode")</span>
+
+	            <a class="viewmode-icon grid @if (ViewBag.ViewMode == "grid")
+	                                         {<text>selected</text>}" href="Search?@ViewBag.QueryStringForLayout" title="@T("Catalog.ViewMode.Grid")">@T("Catalog.ViewMode.Grid")</a>
+	            <a class="viewmode-icon list @if (ViewBag.ViewMode == "list")
+	                                         {<text>selected</text>}" href="Search?@ViewBag.QueryStringForLayout&viewMode=list" title="@T("Catalog.ViewMode.Grid")">@T("Catalog.ViewMode.List")</a>
+	        </div>
+	        <div class="product-sorting">
+	            <span>@T("Catalog.OrderBy")</span>
+                @Html.DropDownListFor(model => model.SelectedSortField, Model.SortFields)
+	        </div>
+	        <div class="product-page-size">
+	            <div class="products-pagesize">
+	                <span>@T("Catalog.PageSize")</span>
+                    @Html.DropDownListFor(model => model.SelectedPagingField, Model.PagingFields)
+	                <span>@T("Catalog.PageSize.PerPage")</span>
+	            </div>
+	        </div>
+	    </div>
+
+		<div class="@(ViewBag.ViewMode == "list" ? "product-list" : "product-grid")">
+			<div class="item-grid">
+				@if (!string.IsNullOrEmpty(Model.Warning))
+			    {
+				    <span>@Model.Warning</span>
+			    }
+			    @if (!Model.Products.Hit.Any())
+			    {
+			        <div class="no-result">
+			            @T("Search.NoResultsText")
+			        </div>
+			    }
+				@foreach (var m in Model.Products.Hit)
+				{
+					//prepare "Add to cart" AJAX link
+					string addtocartlink = "";
+					int shoppingCartTypeId = (int)ShoppingCartType.ShoppingCart;
+					int quantity = 1;
+					string productRoute = Url.RouteUrl("Product", new { SeName = m.Document.SeName });
+					//TODO Implement Force Redirect Logic,, Or Look In to.
+					addtocartlink = Url.RouteUrl("AddProductToCart-Catalog", new { productId = m.Document.ProductId, shoppingCartTypeId = shoppingCartTypeId, quantity = quantity }); //, forceredirection = Model.ProductPrice.ForceRedirectionAfterAddingToCart
+
+					//Sales Price
+					decimal salePrice = m.Document.SpecialPrice;
+					decimal listPrice = m.Document.Price;
+					decimal lowestPrice = m.Document.MinimumPrice;
+                    decimal oldPrice = 0;
+				    string priceDisplay;
+
+					if (0 < salePrice && salePrice < listPrice)
+					{
+					    priceDisplay = m.Document.SpecialPriceDisplay;
+						oldPrice = listPrice;
+					}
+					else
+					{
+					    priceDisplay = m.Document.PriceDisplay;
+					}
+
+					<div class="item-box">
+						<div class="product-item" data-productid="@m.Document.ProductId">
+							<div class="picture">
+								<a href="@Url.RouteUrl("Product", new { SeName = m.Document.SeName })">
+									<img src="@m.Document.ImageUrl" alt="@m.Document.SeName" />
+								</a>
+							</div>
+							<div class="details">
+								<h2 class="product-title">
+									<a href="@Url.RouteUrl("Product", new { SeName = m.Document.SeName })">@m.Document.Name</a>
+								</h2>
+								@if (m.Document.AllowCustomerReviews)
+								{ 
+									int ratingPercent = (m.Document.AverageReview * 100 / 5);
+									int totalReviews = m.Document.TotalReviews;
+									
+								<div class="product-rating-box" title="@string.Format(T("Reviews.TotalReviews").Text, totalReviews)">
+									<div class="rating">
+										<div style="width: @(ratingPercent)%">
+										</div>
+									</div>
+								</div>
+								}								
+								<div class="description">
+									<span>@m.Document.ShortDescription</span>
+								</div>
+
+								<div class="add-info">
+									@Html.Widget("productbox_addinfo_before", m.Document.ProductId)
+									<div class="prices">
+									@if (m.Document.Variants.Count <= 1)
+									{
+										if (oldPrice > 0)
+										{
+											<span class="price old-price">m.Document.PriceDisplay</span>
+										}
+										<span class="price actual-price">@priceDisplay</span>
+									}
+									else
+									{
+										<div class="itemPrice ItemPriceFrom">
+											<span>@T("Search.PriceRange.From") &nbsp; @m.Document.PriceDisplay</span>
+										</div>
+									}
+									</div>
+									@Html.Widget("productbox_addinfo_middle", m.Document.ProductId)
+                                    <div class="buttons">
+                                        <div class="addToCartContainer">
+                                            @{
+                                                var addtowishlistlink = Url.RouteUrl("AddProductToCart-Catalog", new { productId = m.Document.ProductId, shoppingCartTypeId = (int)ShoppingCartType.Wishlist, quantity = quantity });
+                                                var addtocomparelink = Url.RouteUrl("AddProductToCompare", new { productId = m.Document.ProductId });
+
+                                                if (!(Model.DisableBuyButton || m.Document.DisableBuyButton || !m.Document.ShowBuyButton))
+                                                {
+                                                    if (m.Document.Variants.Count > 1)
+                                                    {
+                                                        <input type="button" value="@T("ShoppingCart.Options")" class="button-2 product-box-add-to-cart-button addToCartButton" onclick="window.location.assign('@productRoute');return false;"/>
+                                                    }
+                                                    else
+                                                    {
+                                                        <input type="button" value="@T("ShoppingCart.AddToCart")" class="button-2 product-box-add-to-cart-button addToCartButton" onclick="AjaxCart.addproducttocart_catalog('@addtocartlink');return false;"/>
+                                                    }
+                                                }
+
+                                                if (!Model.DisableAddToCompareListButton)
+                                                 {
+                                                     <input type="button" value="@T("ShoppingCart.AddToCompareList")" title="@T("ShoppingCart.AddToCompareList")" class="button-2 add-to-compare-list-button" onclick="AjaxCart.addproducttocomparelist('@addtocomparelink');return false;"/>
+                                                 }
+                                                if (!(Model.DisableWishlistButton || m.Document.DisableWishlistButton))
+                                                 {
+                                                     <input type="button" value="@T("ShoppingCart.AddToWishlist")" title="@T("ShoppingCart.AddToWishlist")" class="button-2 add-to-wishlist-button" onclick="AjaxCart.addproducttocart_catalog('@addtowishlistlink');return false;"/>
+                                                 }
+                                            }
+                                        </div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+			}
+			</div>
+		</div>
+			<div class="pager">
+				<ul>
+					@if (Model.Pages.Count > 1)
+				{
+					//Previous Paging
+					if (Model.SelectedPage > Model.Pages.Values.First())
+					{
+						<li class="previous-page"><a href="Search?@ViewBag.QueryStringForPaging&selectedPage=@Model.PreviousPageValue">@T("Pager.Previous")</a></li>
+					}
+					foreach (var m in Model.Pages)
+					{
+						if (m.Value.Equals(Model.SelectedPage))
+						{
+							<li class="current-page"><span>@m.Value</span></li>
+						}
+						else
+						{
+							<li class="individual-page"><a href="Search?@ViewBag.QueryStringForPaging&selectedPage=@m.Value">@m.Value</a></li>
+						}
+					}
+					//Next Paging
+					if (Model.SelectedPage < Model.Pages.Values.Last())
+					{
+						<li class="next-page"><a href="Search?@ViewBag.QueryStringForPaging&selectedPage=@Model.NextPageValue">@T("Pager.Previous")</a></li>
+					}
+				}
+				</ul>
+			</div>
+		</div>
+	
+	if("grid".Equals(Model.ViewMode,StringComparison.InvariantCultureIgnoreCase)) {Html.HiddenFor(model => model.ViewMode);}
+	if(Model.SelectedPage!=1) {Html.HiddenFor(model => model.SelectedPage);}
+
+}

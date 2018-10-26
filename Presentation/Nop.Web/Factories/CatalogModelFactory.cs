@@ -1434,11 +1434,11 @@ namespace Nop.Web.Factories
         /// </summary>
         /// <returns>Search box model</returns>
         public virtual SearchBoxModel PrepareSearchBoxModel()
-        {
+       {
             var model = new SearchBoxModel
             {
-                AutoCompleteEnabled = _catalogSettings.ProductSearchAutoCompleteEnabled,
-                ShowProductImagesInSearchAutoComplete = _catalogSettings.ShowProductImagesInSearchAutoComplete,
+                AutoCompleteEnabled = true, // _catalogSettings.ProductSearchAutoCompleteEnabled,
+                ShowProductImagesInSearchAutoComplete = false, // _catalogSettings.ShowProductImagesInSearchAutoComplete,
                 SearchTermMinimumLength = _catalogSettings.ProductSearchTermMinimumLength
             };
             return model;

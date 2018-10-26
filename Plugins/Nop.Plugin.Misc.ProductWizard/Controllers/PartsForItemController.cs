@@ -247,24 +247,29 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
             }
             else
-            { 
+            {
 
-                var prodIds = _iRepository.TableNoTracking.Where(x => x.ItemId == rid && x.Deleted == false).Select(x => x.ItemIdPart).ToList();
+                //var prodIds = _iRepository.TableNoTracking.Where(x => x.ItemId == rid && x.Deleted == false).Select(x => x.ItemIdPart).ToList();
 
-                              
-                foreach (var p in prodIds)
-                {
-                    var tp = _productService.GetProductById(p);
-                    if (tp != null)
-                    {
-                        if (tp.ProductCategories.FirstOrDefault() != null && tp.ProductCategories.FirstOrDefault().Category.Id == cid)
-                        {
-                            prodsInCategory.Add(p);
-                        }
-                    }
 
-                }
-                
+                //foreach (var p in prodIds)
+                //{
+                //    var tp = _productService.GetProductById(p);
+                //    if (tp != null)
+                //    {
+                //        if (tp.ProductCategories.FirstOrDefault() != null && tp.ProductCategories.FirstOrDefault().Category.Id == cid)
+                //        {
+                //            prodsInCategory.Add(p);
+                //        }
+                //    }
+
+                //}
+
+                var sqlString = $"select ProductId from Product_Category_Mapping where CategoryId = {cid} and productID in ( SELECT ItemsCompatability.ItemIDPart FROM ItemsCompatability INNER JOIN Product AS Items_1 ON ItemsCompatability.ItemIDPart = Items_1.id WHERE(ItemsCompatability.ItemID = {rid}) UNION  SELECT[Groups-Items].ItemID  FROM[Groups-Items] INNER JOIN Product AS Items_2 ON[Groups-Items].ItemID = Items_2.id WHERE([Groups-Items].GroupID IN  (SELECT GroupID  FROM[Relations-Groups-Items]  WHERE(ItemID =  {rid}) AND(Direction = 'A'))) UNION SELECT[Relations-Groups-Items].ItemID    FROM Product AS Items_3 INNER JOIN    [Relations-Groups-Items] ON Items_3.id = [Relations-Groups-Items].ItemID WHERE([Relations-Groups-Items].Direction = 'B') AND([Relations-Groups-Items].GroupID IN       (SELECT GroupID       FROM[Groups-Items]       WHERE ItemID =  {rid})) )";
+
+                prodsInCategory = _dbContext.SqlQuery<int>(sqlString).ToList();
+
+
 
                 query = _productService.GetProductsByIds(prodsInCategory.ToArray());
                 if(query.FirstOrDefault()!=null && query.FirstOrDefault().ProductCategories.FirstOrDefault()!=null)

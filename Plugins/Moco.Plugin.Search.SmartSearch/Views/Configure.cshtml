@@ -1,0 +1,204 @@
+﻿@{
+    string nopHost = "https://nopss.moco.biz";
+	Layout = "";
+	Html.AddCssFileParts("~/Plugins/Moco.SmartSearch/Content/bootstrap-editable.css");
+	Html.AddCssFileParts("~/Plugins/Moco.SmartSearch/Content/bootstrap-mini.css");
+	Html.AddScriptParts("~/Plugins/Moco.SmartSearch/Scripts/bootstrap-editable.js");
+	Html.AddCssFileParts("~/Plugins/Moco.SmartSearch/Content/styles.css");
+}
+@model ConfigurationModel
+@using Moco.Plugin.Search.SmartSearch.Models;
+@using Nop.Web.Framework;
+@using Nop.Web.Framework.UI;
+
+@using (Html.BeginForm())
+{
+    <div class="ConfigurationText">
+        <strong>SmartSearch functions as a service and requires product and category information to be indexed for this plugin to work correctly. Follow the steps below to configure Your search..</strong>
+        <br />
+        <ul class="ConfigurationText">
+            <li>Create an account on the SmartSearch website <a href="@nopHost/account/register?platform=nopcommerce" target="_blank">@nopHost/account/register?platform=nopcommerce</a></li>
+            <li>Copy/paste the Url to your Smart Search site below.
+                <br /><strong>Please note! Depending on the size of your catalog, this process could take a few minutes. We appreciate your patience. </strong>
+            </li>
+        </ul>
+        <ul class="ConfigurationText">
+            <li>After successfully uploading your product catalog, a pop-up will display stating how many products were successfully indexed and the "Configuration status" will display "Ready To Enable."</li>
+            <li>Enable the plugin and save the configuration.
+                <br /><strong>For changes to take affect, the application must be restarted by scrolling to the top right corner and clicking "Restart application."</strong>
+            </li>
+        </ul>
+    </div>
+	<br />
+	<hr />
+
+<table>
+	<tr>
+        <td class="helpIcon">  <nop-label asp-for="SmartSearchUrl" /> </td>
+		<td class="ssConfigSpacer"></td>
+		<td class="editField">
+			<a href="#" id="SmartSearchUrl" name="SmartSearchUrl">@Model.SmartSearchUrl</a>
+			<!-- @Html.EditorFor(model => model.SmartSearchUrl, new { Class = "SmartSearchUrlTextBox" }) -->
+		</td>
+		<td>			@if (string.IsNullOrWhiteSpace(Model.SmartSearchUrl))
+		{
+			<a id="CreateSmartSearchAccountLink" href="@nopHost/account/register?platform=nopcommerce&fromparentwindow=true" target="_blank" style="font-size: 14px;">Create a SmartSearch Account</a>
+		}
+		</td>
+	</tr>
+	<!--
+	<tr>
+		<td class="helpIcon">@Html.NopLabelFor(model => model.SmartSearchKey)</td>
+		<td class="ssConfigSpacer"></td>
+		<td class="editField">
+			@Html.EditorFor(model => model.SmartSearchKey)
+			@Html.ValidationMessageFor(model => model.SmartSearchKey)
+		</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td class="helpIcon">@Html.NopLabelFor(model => model.AppendDateToFileName)</td>
+		<td class="ssConfigSpacer"></td>
+		<td class="editField">@Html.EditorFor(model => model.AppendDateToFileName)</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td class="helpIcon">@Html.NopLabelFor(model => model.FileName)</td>
+		<td class="ssConfigSpacer"></td>
+		<td class="editField">
+			@Html.EditorFor(model => model.FileName)
+			@Html.ValidationMessageFor(model => model.FileName)
+		</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td class="helpIcon">@Html.NopLabelFor(model => model.FilePath)</td>
+		<td class="ssConfigSpacer"></td>
+		<td class="editField">
+			@Html.EditorFor(model => model.FilePath)
+			@Html.ValidationMessageFor(model => model.FilePath)
+		</td>
+		<td></td>
+	</tr>
+	
+
+	<tr>
+		<td class="helpIcon">@Html.NopLabelFor(model => model.ImageSize)</td>
+		<td class="ssConfigSpacer"></td>
+		<td class="editField">
+			@Html.EditorFor(model => model.ImageSize)
+			@Html.ValidationMessageFor(model => model.ImageSize)
+		</td>
+	</tr>
+	<tr>
+		<td class="helpIcon">@Html.NopLabelFor(model => model.ImageIconSize)</td>
+		<td class="ssConfigSpacer"></td>
+		<td class="editField">
+			@Html.EditorFor(model => model.ImageIconSize)
+			@Html.ValidationMessageFor(model => model.ImageIconSize)
+		</td>
+	</tr>
+	-->
+
+	@*<tr>
+		<td></td>
+		<td></td>
+		<td><input type="button" class="GenerateIndexButton" id="generateIndex" name="Save" value="generate index" /></td>
+	</tr>*@
+	<tr>
+
+        <td class="helpIcon">
+            
+                <nop-label asp-for="ConfigurationStatus" />
+            </td>
+		<td class="ssConfigSpacer"></td>
+		<td class="editField">
+			@if (ViewBag.ProductsIndexedCount.StartsWith("Ready"))
+			{
+				<label id="ItemsIndexedCount" class="ReadyToEnable">@ViewBag.ProductsIndexedCount</label>
+			}
+			else
+			{
+				<label id="ItemsIndexedCount" class="NotReadyToEnable">@ViewBag.ProductsIndexedCount</label>
+			}
+		</td>
+	</tr>
+	<tr>
+		<td class="helpIcon"> <nop-label asp-for="Enabled" /></td>
+		<td class="ssConfigSpacer"></td>
+		<td class="editField">
+			@Html.EditorFor(model => model.Enabled)
+			@Html.ValidationMessageFor(model => model.Enabled)
+		</td>
+	</tr>
+	</table>
+	<br />
+    <div class="buttonField">
+       @Html.AntiForgeryToken()
+		<input type="submit" id="Save" name="Save" value="Save" class="ConfigSaveButton" />
+    </div>
+
+}
+
+<script>
+
+	$(document).ready(function () {
+
+		window.addEventListener('message', function (event) {
+			if (~event.origin.indexOf('@nopHost')) {
+				$('#SmartSearchUrl').click();
+				
+				$('.editable-input input[type=text]').val(event.data);				
+			}
+		});
+
+		$.fn.editable.defaults.mode = 'inline';
+		$('#SmartSearchUrl').editable({
+			type: 'text',
+			pk: { preSharedKey: 1 },
+			name: 'url',
+			params: function (params) {
+
+				$('.throbber').css("display", "block");
+				$('h1.throbber-header').text("uploading product catalog");
+				$('#ajaxBusy').remove();
+				//originally params contain pk, name and value
+				params.url = params.value;
+				return params;
+			},
+			url: '/SmartSearch/SaveSmartSearchUrlAndPushFeed',
+			title: 'Enter Feed URL',
+			inputclass: 'uk-width-1-1',
+			success: function (response, newValue) {
+
+				$('.throbber').css("display", "none");
+				$('h1.throbber-header').text("Wait...");
+
+				if (!isNaN(response)) {
+					$("#CreateSmartSearchAccountLink").remove();
+					$("#ItemsIndexedCount").removeClass("ReadyToEnable");
+					$("#ItemsIndexedCount").removeClass("NotReadyToEnable");
+					$("#ItemsIndexedCount").addClass("ReadyToEnable");
+					$("#ItemsIndexedCount").text("Ready to Enable!");
+					alert(response + " items indexed!");
+				}
+				else {
+					$("#ItemsIndexedCount").removeClass("NotReadyToEnable");
+					$("#ItemsIndexedCount").removeClass("ReadyToEnable");
+					$("#ItemsIndexedCount").addClass("NotReadyToEnable");
+					$("#ItemsIndexedCount").text("Not Ready to Enable.");
+					alert(response);
+				}
+
+			}
+		});
+
+		$('#CreateSmartSearchAccountLink').on('click', function () {
+			return !window.open(this.href, "pop", "width=1000, height=800");
+		});
+
+
+	});
+
+
+</script>

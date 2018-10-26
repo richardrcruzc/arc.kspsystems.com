@@ -1,0 +1,12 @@
+﻿{
+  "Group": "Moco",
+  "FriendlyName": "Moco SmartSearch",
+  "SystemName": "Moco.SmartSearch",
+  "Version": "1.23",
+  "SupportedVersions": [ "4.00" ],
+  "Author": "Richard-cruz@hotmail.com",
+  "DisplayOrder": 1,
+  "FileName": "Moco.Plugin.Search.SmartSearch.dll",
+  "Description": "SmartSearch plugin"
+}
+ 

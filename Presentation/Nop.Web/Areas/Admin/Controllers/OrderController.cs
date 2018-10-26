@@ -3394,12 +3394,20 @@ namespace Nop.Web.Areas.Admin.Controllers
                 LogEditOrder(order.Id);
 
                 SuccessNotification(_localizationService.GetResource("Admin.Orders.Shipments.Added"));
+
+                //mark order as completed
+                _orderProcessingService.SetOrderCompleted(order); 
+
+
                 return continueEditing
                            ? RedirectToAction("ShipmentDetails", new {id = shipment.Id})
                            : RedirectToAction("Edit", new { id = orderId });
             }
             
             ErrorNotification(_localizationService.GetResource("Admin.Orders.Shipments.NoProductsSelected"));
+
+          
+
             return RedirectToAction("AddShipment", new { orderId = orderId });
         }
 
@@ -3482,6 +3490,11 @@ namespace Nop.Web.Areas.Admin.Controllers
 
             shipment.TrackingNumber = model.TrackingNumber;
             _shipmentService.UpdateShipment(shipment);
+             
+            //mark order as completed
+            _orderProcessingService.SetOrderCompleted(shipment.Order);
+
+
 
             return RedirectToAction("ShipmentDetails", new { id = shipment.Id });
         }

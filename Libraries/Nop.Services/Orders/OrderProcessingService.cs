@@ -1445,6 +1445,13 @@ namespace Nop.Services.Orders
 
         #region Methods
 
+
+
+              public virtual void SetOrderCompleted(Order order)
+        {
+
+            SetOrderStatus(order, OrderStatus.Complete, true);
+        }
         /// <summary>
         /// Checks order status
         /// </summary>

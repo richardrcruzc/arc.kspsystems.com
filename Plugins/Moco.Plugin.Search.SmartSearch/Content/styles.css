@@ -1,0 +1,290 @@
+﻿.foo{}
+/*Search Box Wrap*/
+.ssSearchResult {
+	display: inline-block;
+	width: 100%;
+}
+/*Display for search name and result count*/
+.ssSearchResult>.overview {
+	display: none;
+}
+
+/*----------------------Sorting Begin----------------------*/
+/*Search result sorting*/
+.sortContainer {
+	border-style: solid;
+	border-width: thin;
+	border-color: #DDDDDD;
+	background-color: #F5F5F5;
+	padding: 4px 4px 4px 4px;
+	margin-bottom: 20px;
+	margin-top: 20px;
+}
+/*Search result paging*/
+.sortContainer>.paging {
+	text-align: center;
+}
+/*Page Buttons*/
+.sortContainer>.paging>.ssButton {
+	text-align: center;
+	border-style: solid;
+	border-width: thin;
+	border-radius: 2px 2px 2px 2px;
+	color: #555;
+	font-size: 11px;
+	font-weight: 700;
+	padding: 3px 8px;
+	min-width: 10px;
+}
+/*Page Buttons On Hover*/
+.sortContainer>.paging>.ssButton:hover {
+	border-color: #808080;
+	color: black;
+	font-weight: 900;
+	cursor: pointer;
+}
+/*Page Buttons Current Page*/
+.sortContainer>.paging>.currentPage {
+	border-color: #808080;
+	color: black;
+	font-weight: 900;
+	cursor:none;
+}
+/*Sort By Drop Down Box*/
+.ssSearchResult>.sortContainer>.sorting {
+	display: inline;
+	padding-right: 400px;
+}
+/*Page Drop Down Box*/
+.ssSearchResult>.sortContainer>.page {
+	display: inline;
+}
+/*----------------------Sorting End----------------------*/
+
+/*----------------------Results Start--------------------*/
+/*Result Container*/
+.ssSearchResult>.ResultContainer {
+	
+}
+/*Individual Result Container*/
+.itemContainer {
+	width: 700px;
+	border-style: solid;
+	border-width: thin;
+	border-radius: 4px 4px 4px 4px;
+	border-color: #DDDDDD;
+	background-color: #F5F5F5;
+	box-shadow: 2px 2px 1px #F2F2F2;
+	padding: 4px 4px 4px 4px;
+	display: inline-block;
+}
+/*Item Image*/
+.itemContainer>.itemImage {
+	border-style: solid;
+	border-width: thin;
+	border-color: #DDDDDD;
+	border-radius: 4px 4px 4px 4px;
+	padding: 1px 1px 1px 1px;
+	width: 150px;
+	height: 150px;
+	display: inline-block;
+	float: left;
+}
+/*Item Body*/
+.itemContainer>.itemBody {
+	display: inline-block;
+	float: left;
+	padding-top: 10px;
+	padding-left: 10px;
+	width: 530px;
+}
+/*Item Inner Body*/
+.itemContainer>.itemBody>.itemInnerBody {
+	height: 80px;
+	line-height: 1.2;
+}
+/*Item Body Name*/
+.itemContainer>.itemBody>.itemInnerBody>.itemName {
+	font-size: 16px;
+	font-weight: 700;
+	display: block;
+	padding-bottom: 10px;
+}
+/*Item Body Description*/
+.itemContainer>.itemBody>.itemInnerBody>.itemDescription {
+	font-size: 12px;
+	font-weight: 300;
+	display: block;
+	padding-bottom: 10px;
+}
+/*Item Inner Cart Box*/
+.itemContainer>.itemBody>.itemInnerCartBox {
+	float: right;
+}
+/*Item Body Standard Price*/
+.itemContainer>.itemBody>.itemInnerCartBox>.itemPrice {
+	color: #B80709;
+	padding-bottom: 20px;
+	float: right;
+}
+/*Item Body Special Price*/
+.itemContainer>.itemBody>.itemInnerCartBox>.itemSpecialPrice {
+	
+}
+/*Item Body Price With Multiple Variants*/
+.itemContainer>.itemBody>.itemInnerCartBox>.ItemPriceFrom {
+	
+}
+/*Item Body Add To Cart Container*/
+.itemContainer>.itemBody>.itemInnerCartBox>.addToCartContainer {
+	/*padding-top: 20px;*/
+}
+/*Item Body Add To Cart Button*/
+.itemContainer>.itemBody>.itemInnerCartBox>.addToCartContainer>.addToCartButton {
+	/*margin-left: 52px;*/
+}
+/*----------------------Results End--------------------*/
+
+/*---------------Configuration View Start--------------*/
+.ssConfigureContainer .helpIcon {
+	padding-bottom: 8px;
+}
+.ssConfigureContainer .buttonField {
+	padding-top: 10px;
+	border-top-width: 2px;
+	border-top-style:groove;
+}
+.ssConfigureContainer #FileName {
+	width: 200px;
+}
+.ssConfigureContainer #FilePath {
+	width: 600px;
+}
+.ssConfigureContainer #SmartSearchUrl {
+	width: 600px;
+}
+.ssConfigureContainer .editField {
+	
+}
+
+.GetItemsIndexedCountTextBox{
+	border:1px solid black; 
+	height:16px; 
+	text-align:left; 
+	padding:4px 2px 2px 2px; 
+	display:block;
+	background-color: #e3e3e3;
+}
+
+.ReadyToEnable{
+	color: green;
+	font-size: 12px;
+	line-height: 16px;
+	font: normal 12px Arial, Helvetica, sans-serif;
+}
+
+.NotReadyToEnable{
+	color: red;
+	font-size: 12px;
+	line-height: 16px;
+	font: normal 12px Arial, Helvetica, sans-serif;
+}
+.IndentExample{
+	margin-left: 5em;
+}
+
+.ConfigurationText{
+	font-size: 14px;
+	line-height: 16px;
+	font: normal 14px Arial, Helvetica, sans-serif;
+	color: #777;
+}
+
+#SmartSearchUrl{
+	width: 320px;
+	font-size: 14px;
+	margin: 10px 0px 0px 0px;
+}
+
+.ConfigSaveButton{
+	background-color: #eaeaea;
+	padding: 8px 10px;
+	text-align: center;
+	color: #666;
+	text-transform: uppercase;
+	border: none;
+}
+
+.ConfigSaveButton:hover{
+	background-color:#ddd;
+	cursor:pointer;
+}
+
+#editableFeedLocation{
+	font-size: 14px;
+	line-height: 22px;
+}
+/*---------------Configuration View End--------------*/
+
+/*----------------------Misc Start--------------------*/
+.ssSpacer {
+	padding-top: 10px;
+}
+.ssConfigSpacer {
+	width: 300px;
+}
+
+.btn-primary {
+  background-image: -webkit-linear-gradient(top, #428bca 0%, #2d6ca2 100%);
+  background-image:      -o-linear-gradient(top, #428bca 0%, #2d6ca2 100%);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#428bca), to(#2d6ca2));
+  background-image:         linear-gradient(to bottom, #428bca 0%, #2d6ca2 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff428bca', endColorstr='#ff2d6ca2', GradientType=0);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  background-repeat: repeat-x;
+  border-color: #2b669a;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #2d6ca2;
+  background-position: 0 -15px;
+}
+.btn-primary:active,
+.btn-primary.active {
+  background-color: #2d6ca2;
+  border-color: #2b669a;
+}
+.btn-primary:disabled,
+.btn-primary[disabled] {
+  background-color: #2d6ca2;
+  background-image: none;
+}
+
+.btn-default {
+  text-shadow: 0 1px 0 #fff;
+  background-image: -webkit-linear-gradient(top, #fff 0%, #e0e0e0 100%);
+  background-image:      -o-linear-gradient(top, #fff 0%, #e0e0e0 100%);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#e0e0e0));
+  background-image:         linear-gradient(to bottom, #fff 0%, #e0e0e0 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe0e0e0', GradientType=0);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  background-repeat: repeat-x;
+  border-color: #dbdbdb;
+  border-color: #ccc;
+}
+.btn-default:hover,
+.btn-default:focus {
+  background-color: #e0e0e0;
+  background-position: 0 -15px;
+}
+.btn-default:active,
+.btn-default.active {
+  background-color: #e0e0e0;
+  border-color: #dbdbdb;
+}
+.btn-default:disabled,
+.btn-default[disabled] {
+  background-color: #e0e0e0;
+  background-image: none;
+}
+/*----------------------Misc End--------------------*/

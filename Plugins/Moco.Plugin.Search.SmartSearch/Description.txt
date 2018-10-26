@@ -1,0 +1,8 @@
+﻿Group: Moco
+FriendlyName: Moco SmartSearch
+SystemName: Moco.SmartSearch
+Version: 1.2
+SupportedVersions: 3.90
+Author: Morrison Consulting LLC
+DisplayOrder: 1
+FileName: Moco.Plugin.Search.SmartSearch.dll
