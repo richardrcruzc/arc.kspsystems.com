@@ -2,6 +2,86 @@
     Layout = "";
 }
 @*import categories form*@
+
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="importexcel-window-title">Update Status And Tracking from file</h4>
+        </div>
+        <form asp-controller="UploadData" asp-action="UpdateStatusAndTracking" method="post" enctype="multipart/form-data">
+            <div class="form-horizontal">
+
+
+                <div class="form-group">
+
+                    <div class="col-md-10">
+                        <input type="file" id="importexcelfile" name="importexcelfile" class="form-control" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">
+                    @T("Admin.Common.ImportFromExcel")
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="importexcel-window-title">Update $0 into the cart</h4>
+        </div>
+        <form asp-controller="UploadData" asp-action="UpdateProduct" method="post" enctype="multipart/form-data">
+            <div class="form-horizontal">
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">
+                    @T("Admin.Common.ImportFromExcel")
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="importexcel-window-title">Import products Description from file</h4>
+        </div>
+        <form asp-controller="UploadData" asp-action="ImportProductsDesc" method="post" enctype="multipart/form-data">
+            <div class="form-horizontal">
+
+
+                <div class="form-group">
+
+                    <div class="col-md-10">
+                        <input type="file" id="importexcelfile" name="importexcelfile" class="form-control" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">
+                    @T("Admin.Common.ImportFromExcel")
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+
+
 <div id="importexcel-window" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="importexcel-window-title">
 
     <div class="modal-dialog">
@@ -11,7 +91,7 @@
                 <h4 class="modal-title" id="importexcel-window-title">Fix Seo Url</h4>
             </div>
             <form asp-controller="UploadData" asp-action="FixSeoUrl" method="post" enctype="multipart/form-data">
-                
+
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">
                         @T("Admin.Common.ImportFromExcel")

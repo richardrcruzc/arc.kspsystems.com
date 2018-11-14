@@ -127,7 +127,23 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
             //var catergories
 
-            var query = _productService.GetProductsByIds(rgp.ToArray()).Select(x => new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id }).ToList();
+            var queryTmp = _productService.GetProductsByIds(rgp.ToArray());
+
+            //var list = new[] {"",""  }.ToList();
+
+
+            //foreach (var prod in queryTmp)
+            //{
+            //    if(prod.ProductCategories.Count>0)
+            //    list.Add(prod.ProductCategories.FirstOrDefault().Category.Name) ;
+            //    else
+            //        list.Add(prod.Name.ToString());
+
+            //}
+
+
+
+            var query = queryTmp.Where(c=>c.ProductCategories.Count>0).Select(x => new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id }).ToList();
 
          
 

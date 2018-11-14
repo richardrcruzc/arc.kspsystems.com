@@ -36,14 +36,19 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+
+
 
 namespace Nop.Plugin.Misc.ProductWizard.Controllers
 {
     public class UploadDataController : BasePluginController
-    { 
+    {
+        #region readonly
 
+        private readonly IShipmentService _shipmentService;
         private readonly ICustomNumberFormatter _customNumberFormatter;
         private readonly IOrderProcessingService _orderProcessingService;
         private readonly IAddressService _addressService; 
@@ -94,7 +99,12 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
         private readonly IPermissionService _permissionService;
         private readonly IDbContext _dbContext;
+
+        #endregion
+
+        #region ctor
         public UploadDataController(
+              IShipmentService shipmentService,
              ICustomNumberFormatter customNumberFormatter,
             IOrderProcessingService orderProcessingService,
             IAddressService addressService,
@@ -137,6 +147,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             ISpecificationAttributeService specificationAttributeService,
             IDbContext dbContext, IPermissionService permissionService)
         {
+            this._shipmentService = shipmentService;
             this._customNumberFormatter = customNumberFormatter;
             this._orderProcessingService = orderProcessingService;
             this._addressService = addressService;
@@ -183,12 +194,195 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             this._rgpRepository = rgpRepository;
 
         }
-
+        #endregion
         public virtual IActionResult Index()
         {
 
             return View("~/Plugins/Misc.ProductWizard/Views/UploadData.cshtml");
         }
+        [HttpPost]       
+          public virtual IActionResult UpdateStatusAndTracking(IFormFile importexcelfile)
+        {
+        //    if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+        //        return AccessDeniedView();
+            try
+            {
+                if (importexcelfile != null && importexcelfile.Length > 0)
+                {
+                    Stream stream = importexcelfile.OpenReadStream();
+                    using (var xlPackage = new ExcelPackage(stream))
+                    {
+                        var endRow = 24144;
+
+                        // get the 1st worksheet in the workbook
+                        var worksheet = xlPackage.Workbook.Worksheets.FirstOrDefault();
+                        if (worksheet == null)
+                            throw new NopException("No worksheet found");
+
+                        // get the second worksheet in the workbook
+                        var worksheetO = xlPackage.Workbook.Worksheets[2];
+                        if (worksheetO == null)
+                            throw new NopException("No worksheet found");
+
+
+                        var orderid = 0;
+                        var username = string.Empty;
+                        var orderstatus = string.Empty;
+                        var transactionid = string.Empty;
+                        var useremail = string.Empty;
+                        var userrole = string.Empty;
+                        var fname = string.Empty;
+                        var lname = string.Empty;
+                        var billaddr = string.Empty;
+                        var billcity = string.Empty;
+                        var billstate = string.Empty;
+                        var billzip = string.Empty;
+                        var billcountry = string.Empty;
+                        var shipaddr = string.Empty;
+                        var shipcity = string.Empty;
+                        var shipstate = string.Empty;
+                        var shipzip = string.Empty;
+                        var shipcountry = string.Empty;
+                        var userphone = string.Empty;
+                        var userphone2 = string.Empty;
+                        var paymethod = string.Empty;
+                        var cctype = string.Empty;
+                        var ccnumber = string.Empty;
+                        var ccexpiration = string.Empty;
+                        var ccsecurity = string.Empty;
+                        var shipcarrier = string.Empty;
+                        var shiptype = string.Empty;
+                        var shipamount = string.Empty;
+                        var itemcount = string.Empty;
+                        var subtotal = string.Empty;
+                        var tax = string.Empty;
+                        var total = string.Empty;
+                        var trackingnumber = string.Empty;
+                        var year = string.Empty;
+                        var month = string.Empty;
+                        var date = string.Empty;
+                        var hour = string.Empty;
+                        var min = string.Empty;
+                        var info = string.Empty;
+
+                        //find end of data
+                        while (true)
+                        {
+                            try
+                            {
+                                if (worksheet == null || worksheet.Cells == null)
+                                    break;
+                               
+
+                                orderid = int.Parse(worksheet.Cells[endRow, 1].Value.ToString());
+
+                                orderstatus = worksheet.Cells[endRow, 3].Value.ToString();
+
+                                int.TryParse(orderstatus, out int orderStatusId);
+
+                                trackingnumber = worksheet.Cells[endRow, 33].Value as string;
+
+
+                                //OrderStatus.Complete
+
+                                    var order = _orderService.GetOrderById(orderid);
+                                switch(orderStatusId)
+                                    {
+                                    case 0:
+                                        order.OrderStatus = OrderStatus.Processing;
+                                        break;
+                                    case   1:
+                                        order.OrderStatus = OrderStatus.Complete;
+                                        break;
+                                    case   4:
+                                        order.OrderStatus = OrderStatus.Cancelled;
+                                        break;
+                                }
+                                order.ShippingStatus = ShippingStatus.NotYetShipped;
+
+                                if (order.Shipments.Count <= 0)
+                                {
+                                    if (trackingnumber != null)
+                                    {
+                                        var shipment = new Shipment
+                                        {
+                                            OrderId = order.Id,
+                                            TrackingNumber = trackingnumber,
+                                            TotalWeight = null,
+                                            ShippedDateUtc = null,
+                                            DeliveryDateUtc = null,
+                                            AdminComment = "",
+                                            CreatedOnUtc = DateTime.UtcNow,
+                                        };
+                                        var orderItems = order.OrderItems;
+
+                                        foreach (var orderItem in orderItems)
+                                        {
+
+                                            //create a shipment item
+                                            var shipmentItem = new ShipmentItem
+                                            {
+                                                OrderItemId = orderItem.Id,
+                                                Quantity = orderItem.Quantity,
+                                                WarehouseId = 0
+                                            };
+                                            shipment.ShipmentItems.Add(shipmentItem);
+                                        }
+                                        _shipmentService.InsertShipment(shipment);
+
+                                        order.ShippingStatus = ShippingStatus.Shipped;
+                                    }
+                                }
+                                    _orderService.UpdateOrder(order);
+                                
+
+                            }
+                            catch (Exception ex)
+                            {
+
+                                ErrorNotification($"orderid: {orderid} error {ex}");
+                            }
+                            endRow--;
+                        }
+                    }
+                }
+            }
+            catch
+            { }
+            SuccessNotification("Admin.Catalog.Categories.Imported");
+            return RedirectToAction("Index");
+        }
+
+
+
+        [HttpPost]
+        public virtual IActionResult UpdateProduct()
+        {
+            // groups 
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+                return AccessDeniedView();
+
+            //a vendor cannot import categories
+            if (_workContext.CurrentVendor != null)
+                return AccessDeniedView();
+
+            try
+            {
+             string sql = "update [dbo].[Product] set IsShipEnabled=1; update dbo.Product set OrderMaximumQuantity = 1000 , OrderMinimumQuantity = 1 , ProductTypeId = 5; ";
+
+                                    //  sql += "SET IDENTITY_INSERT [dbo].[Groups] OFF;";
+                _dbContext.ExecuteSqlCommand(sql);
+                                    //   sql = "SET IDENTITY_INSERT [dbo].[Groups] ON;";
+                        }
+                            catch (Exception ex)
+                            {
+     
+                                ErrorNotification("Admin.Common.Groups" + ex.Message);
+                               
+                            }
+                        
+     return View("~/Plugins/Misc.ProductWizard/Views/UploadData.cshtml");
+}
 
         [HttpPost]
         public virtual IActionResult FixSeoUrl( )
@@ -336,11 +530,16 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
         public virtual IActionResult ImportProductsImgesFromFile(string imagePath = @"D:\data\items")
         {
 
-            imagePath = System.IO.Directory.GetCurrentDirectory() + "/items"; // Server.MapPath("~/items");
+          //  imagePath = System.IO.Directory.GetCurrentDirectory() + "/items"; // Server.MapPath("~/items");
 
 
             DirectoryInfo d = new DirectoryInfo(imagePath);//Assuming Test is your Folder
             var allDirectory = d.EnumerateDirectories().ToList();
+            //Parallel.ForEach(allDirectory, dir =>
+            //{
+
+
+            //});
             foreach (var dir in allDirectory)
             {
                 string idString = dir.Name.ToString();
@@ -350,6 +549,10 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                 if (id > 0)
                 {
+                    if (id == 915)
+                    {
+                        int why = 1;
+                    }
                     var product = _productService.GetProductById(id);
                     if (product != null)
                     {
@@ -363,7 +566,8 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
 
                         //take only image with not thumbnail
-                        foreach (FileInfo file in Files.Where(x => !x.FullName.Contains("thumbnail")))
+                        //foreach (FileInfo file in Files.Where(x => !x.FullName.Contains("thumbnail")))
+                        foreach (FileInfo file in Files)
                         {
                             if (file.FullName.Contains("thumbnail"))
                                 continue;
@@ -392,6 +596,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                             if (!pictureAlreadyExists)
                             {
+
                                 var newPicture = _pictureService.InsertPicture(newPictureBinary, mimeType, _pictureService.GetPictureSeName(description));
                                 product.ProductPictures.Add(new ProductPicture
                                 {
@@ -407,6 +612,97 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
 
                         }
+                    }
+                }
+            }
+            //});
+            return View("~/Plugins/Misc.ProductWizard/Views/UploadData.cshtml");
+        }
+        [HttpPost]
+        public virtual IActionResult ImportProductsDesc(string descPath = @"D:\data\items")
+        {
+
+            descPath = "~/App_Data/dataSettings.json";
+            descPath = "~/items";
+           var filePath = CommonHelper.MapPath(descPath);
+            //descPath = System.IO.Directory.GetCurrentDirectory() + "/items"; // Server.MapPath("~/items");
+            
+
+            DirectoryInfo d = new DirectoryInfo(filePath); 
+            var allDirectory = d.EnumerateDirectories().ToList();
+            foreach (var dir in allDirectory)
+            {
+                string idString = dir.Name.ToString();
+                idString = idString.Replace("itemid_", "");
+
+                int.TryParse(idString, out int id);
+
+                if (id > 0)
+                {
+                    var product = _productService.GetProductById(id);
+                    if (product != null)
+                    {
+
+                        var txt = dir.GetFiles("*.txt").FirstOrDefault();
+
+                        var description = System.IO.File.ReadAllText(txt.FullName);
+                        //description = description.Replace("&lt;", "").Replace("p&gt;", "").Replace("/", "");
+
+                        description = WebUtility.HtmlDecode(description);
+
+                        if (!string.IsNullOrEmpty(description))
+                        {
+                            product.FullDescription = description;
+                            _productService.UpdateProduct(product);
+                        }
+                        //FileInfo[] Files = dir.GetFiles("*.jpg");
+
+
+                        //take only image with not thumbnail
+                        //foreach (FileInfo file in Files.Where(x => !x.FullName.Contains("thumbnail")))
+                        //{
+                        //    if (file.FullName.Contains("thumbnail"))
+                        //        continue;
+
+                        //    var picturePath = file.FullName;
+
+                        //    var mimeType = GetMimeTypeFromFilePath(file.FullName);
+                        //    var newPictureBinary = System.IO.File.ReadAllBytes(picturePath);
+
+                        //    var pictureAlreadyExists = false;
+
+                        //    //compare with existing product pictures
+                        //    var existingPictures = _pictureService.GetPicturesByProductId(product.Id);
+                        //    foreach (var existingPicture in existingPictures)
+                        //    {
+                        //        var existingBinary = _pictureService.LoadPictureBinary(existingPicture);
+                        //        //picture binary after validation (like in database)
+                        //        var validatedPictureBinary = _pictureService.ValidatePicture(newPictureBinary, mimeType);
+                        //        if (!existingBinary.SequenceEqual(validatedPictureBinary) &&
+                        //            !existingBinary.SequenceEqual(newPictureBinary))
+                        //            continue;
+                        //        //the same picture content
+                        //        pictureAlreadyExists = true;
+                        //        break;
+                        //    }
+
+                        //    if (!pictureAlreadyExists)
+                        //    {
+                        //        var newPicture = _pictureService.InsertPicture(newPictureBinary, mimeType, _pictureService.GetPictureSeName(description));
+                        //        product.ProductPictures.Add(new ProductPicture
+                        //        {
+                        //            //EF has some weird issue if we set "Picture = newPicture" instead of "PictureId = newPicture.Id"
+                        //            //pictures are duplicated
+                        //            //maybe because entity size is too large
+                        //            PictureId = newPicture.Id,
+                        //            DisplayOrder = 1,
+                        //        });
+                        //        _productService.UpdateProduct(product);
+
+                        //    }
+
+
+                        //}
                     }
                 }
             }
@@ -1311,7 +1607,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                     Stream stream = importexcelfile.OpenReadStream();
                     using (var xlPackage = new ExcelPackage(stream))
                     {
-                        var endRow = 2;
+                        var endRow =2;
 
                         // get the 1st worksheet in the workbook
                         var worksheet = xlPackage.Workbook.Worksheets.FirstOrDefault();
@@ -1363,7 +1659,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                         var hour = string.Empty;
                         var min = string.Empty;
                         var info = string.Empty;
-
+                        Customer customer ;
                         //find end of data
                         while (true)
                         {
@@ -1371,31 +1667,66 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                             {
                                 if (worksheet == null || worksheet.Cells == null)
                                     break;
-                                if(endRow>24086)
-                                if (worksheet.Cells[endRow, 1].Value == null)
-                                    break;
+                                if (endRow > 24144)
+                                    if (worksheet.Cells[endRow, 1].Value == null)
+                                        break;
 
                                 username = worksheet.Cells[endRow, 2].Value as string;
+                                if(username == null)
+                                    username = worksheet.Cells[endRow, 2].Value.ToString();
+
                                 useremail = worksheet.Cells[endRow, 5].Value as string;
+                                if(useremail==null)
+                                    useremail = worksheet.Cells[endRow, 5].Value.ToString();
+
                                 fname = worksheet.Cells[endRow, 7].Value as string;
+                                if(fname==null)
+                                    fname = worksheet.Cells[endRow, 7].Value.ToString();
+
                                 lname = worksheet.Cells[endRow, 8].Value as string;
+                                if(lname==null)
+                                    lname = worksheet.Cells[endRow, 8].Value.ToString();
 
+                                if (username == "jrasa@rasa-law.com" || useremail == "jrasa@rasa-law.com")
+                                {
+                                    var why = 1;
+                                }
+                                if (username == "bonner@bonner.k12.mt.us" || useremail == "bonner@bonner.k12.mt.us")
+                                {
+                                    var why = 1;
+                                }
+                                
 
-                                var customer = _customerService.GetCustomerByEmail(useremail);
-                                if (customer == null)
-                                    customer = _customerService.GetCustomerByUsername(username);
+                                    if (!CommonHelper.IsValidEmail(useremail))
+                                    if (!CommonHelper.IsValidEmail(username))
+                                        useremail = $"{username}{fname}@{lname}.com";
+
+                                customer = _customerService.GetCustomerByEmail(useremail);
+
+                                if (username.ToLower() == "guest" && customer==null)
+                                {
+                                    customer = _customerService.InsertGuestCustomer();
+                                    customer.Email = useremail;
+                                }
+
                                 if (customer == null)
                                 {
-                                    if (fname == null && lname == null)
+                                    customer = _customerService.GetCustomerByUsername(username);
+                                    if (customer != null)
                                     {
-                                        endRow++;
-                                        continue;
-                                    }
-                                    useremail = $"guest{fname.Trim()}@{lname.Trim()}.com";
-                                    customer = _customerService.GetCustomerByEmail(useremail);
+                                        if (CommonHelper.IsValidEmail(useremail))
+                                            customer.Email = useremail;
+                                            }
+
                                 }
 
                                 orderid = int.Parse(worksheet.Cells[endRow, 1].Value.ToString());
+
+
+                                if (orderid == 40411)
+                                {
+                                    var t = 1;
+                                }
 
                                 orderstatus = worksheet.Cells[endRow, 3].Value.ToString();
                                 transactionid = worksheet.Cells[endRow, 4].Value.ToString();
@@ -1406,14 +1737,25 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 billcity = worksheet.Cells[endRow, 10].Value as string;
                                 billstate = worksheet.Cells[endRow, 11].Value as string;
                                 billzip = worksheet.Cells[endRow, 12].Value as string;
+                                if(billzip==null)
+                                    billzip = worksheet.Cells[endRow, 12].Value.ToString();
+
                                 billcountry = worksheet.Cells[endRow, 13].Value as string;
                                 shipaddr = worksheet.Cells[endRow, 14].Value as string;
                                 shipcity = worksheet.Cells[endRow, 15].Value as string;
                                 shipstate = worksheet.Cells[endRow, 16].Value as string;
                                 shipzip = worksheet.Cells[endRow, 17].Value as string;
+
+                                if (shipzip==null)
+                                    shipzip = worksheet.Cells[endRow, 17].Value.ToString();
+
                                 shipcountry = worksheet.Cells[endRow, 18].Value as string;
-                                userphone = worksheet.Cells[endRow, 19].Value  as string;
+                                userphone = worksheet.Cells[endRow, 19].Value as string;
+                                if(userphone == null)
+                                    userphone = worksheet.Cells[endRow, 19].Value.ToString();
                                 userphone2 = worksheet.Cells[endRow, 20].Value as string;
+                                if (userphone2 == null)
+                                    userphone2 = worksheet.Cells[endRow, 20].Value.ToString();
                                 paymethod = worksheet.Cells[endRow, 21].Value as string;
                                 cctype = worksheet.Cells[endRow, 22].Value as string;
                                 ccnumber = worksheet.Cells[endRow, 23].Value as string;
@@ -1446,49 +1788,55 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 catch(Exception ex) {
                                     var tt = ex.Message;
                                 }
-
-                                if (customer == null)
+                              
+                                if (customer == null  )
                                 {
-                                    var newCustomer = new Customer
+
+                                    customer = new Customer
+                                        {
+
+                                            VendorId = 0,
+                                            CustomerGuid = Guid.NewGuid(),
+                                            Active = true,
+                                            AffiliateId = 0,
+                                            CreatedOnUtc = dateTimeAsUtc,
+                                            Email = useremail,
+                                            Username = username,
+                                            IsSystemAccount = false,
+                                            Deleted = false,
+                                            LastActivityDateUtc = dateTimeAsUtc,
+
+                                        };
+                                        _customerService.InsertCustomer(customer);
+                                }
+                                try
                                     {
-
-                                        VendorId = 0,
-                                        CustomerGuid = Guid.NewGuid(),
-                                        Active = true,
-                                        AffiliateId = 0,
-                                        CreatedOnUtc = dateTimeAsUtc,
-                                        Email = useremail,
-                                        Username = username,
-                                        IsSystemAccount = false,
-                                        Deleted = false,
-                                        LastActivityDateUtc = dateTimeAsUtc,
-
-                                    };
-                                    _customerService.InsertCustomer(newCustomer);
-
-                                    try
-                                    {
-                                        _genericAttributeService.SaveAttribute(newCustomer, SystemCustomerAttributeNames.FirstName, fname);
+                                        _genericAttributeService.SaveAttribute(customer, SystemCustomerAttributeNames.FirstName, fname);
                                     }
                                     catch { }
                                     try
                                     {
-                                        _genericAttributeService.SaveAttribute(newCustomer, SystemCustomerAttributeNames.LastName, lname);
+                                        _genericAttributeService.SaveAttribute(customer, SystemCustomerAttributeNames.LastName, lname);
                                     }
                                     catch { }
+
+                                    var billingCountry = _countryService.GetCountryByTwoLetterIsoCode(billcountry);
+                                    var billingState = billingCountry.StateProvinces.Where(x => x.Abbreviation == billstate).FirstOrDefault();
 
                                     var billingAddress = new Address
                                     {
-                                        FirstName = customer.GetAttribute<string>(SystemCustomerAttributeNames.FirstName),
-                                        LastName = customer.GetAttribute<string>(SystemCustomerAttributeNames.LastName),
+                                        FirstName =fname,
+                                        LastName = lname,
                                         Email = customer.Email,
                                         Company = customer.GetAttribute<string>(SystemCustomerAttributeNames.Company),
-                                        CountryId = customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId) > 0
-                                                                    ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId)
-                                                                    : null,
-                                        StateProvinceId = customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId) > 0
-                                                                    ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId)
-                                                                    : null,
+                                        CountryId = billingCountry.Id,
+                                        //customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId) > 0
+                                        //                            ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId)
+                                        //                            : null,
+                                        StateProvinceId = billingState.Id,
+                                        //customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId) > 0
+                                        //                            ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId)
+                                        //                            : null,
                                         City = billcity,
                                         Address1 = billaddr,
                                         ZipPostalCode = billzip,
@@ -1497,20 +1845,37 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                         CreatedOnUtc = customer.CreatedOnUtc
                                     };
 
-                                    var billinState = _countryService.GetCountryByThreeLetterIsoCode("US").StateProvinces.Where(x => x.Abbreviation == billstate).FirstOrDefault();
+                                    var billinState = _countryService.GetCountryByThreeLetterIsoCode("USA").StateProvinces.Where(x => x.Abbreviation == billstate).FirstOrDefault();
 
 
-                                    if (this._addressService.IsAddressValid(billingAddress))
+                                if (this._addressService.IsAddressValid(billingAddress))
+                                {
+                                    //some validation                                        
+                                    billingAddress.CountryId = billinState.CountryId;
+                                    billingAddress.StateProvinceId = billinState.Id;
+
+                                    if (customer.BillingAddress == null)
                                     {
-                                        //some validation                                        
-                                        billingAddress.CountryId = billinState.CountryId;
-                                        billingAddress.StateProvinceId = billinState.Id;
                                         //set default address
                                         customer.Addresses.Add(billingAddress);
                                         customer.BillingAddress = billingAddress;
                                         _customerService.UpdateCustomer(customer);
                                     }
+                                    else
+                                    {
+                                        this._addressService.UpdateAddress(billingAddress);
+                                        customer.BillingAddress = billingAddress;
+                                        _customerService.UpdateCustomer(customer);
 
+                                    }
+                                }
+                                else
+                                {
+                                    var why=true;
+                                }
+
+                                    var shippingCountry = _countryService.GetCountryByTwoLetterIsoCode(billcountry);
+                                    var shippingState = billingCountry.StateProvinces.Where(x => x.Abbreviation == billstate).FirstOrDefault();
 
 
                                     var shippingAddress = new Address
@@ -1519,12 +1884,14 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                         LastName = customer.GetAttribute<string>(SystemCustomerAttributeNames.LastName),
                                         Email = customer.Email,
                                         Company = customer.GetAttribute<string>(SystemCustomerAttributeNames.Company),
-                                        CountryId = customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId) > 0
-                                                                    ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId)
-                                                                    : null,
-                                        StateProvinceId = customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId) > 0
-                                                                    ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId)
-                                                                    : null,
+                                        CountryId = shippingCountry.Id,
+                                        StateProvinceId= shippingState.Id,
+                                        //CountryId = customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId) > 0
+                                        //                            ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.CountryId)
+                                        //                            : null,
+                                        //StateProvinceId = customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId) > 0
+                                        //                            ? (int?)customer.GetAttribute<int>(SystemCustomerAttributeNames.StateProvinceId)
+                                        //                            : null,
                                         City = billcity,
                                         Address1 = billaddr,
                                         ZipPostalCode = billzip,
@@ -1533,7 +1900,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                         CreatedOnUtc = customer.CreatedOnUtc
                                     };
 
-                                    var shippingState = _countryService.GetCountryByThreeLetterIsoCode("US").StateProvinces.Where(x => x.Abbreviation == shipstate).FirstOrDefault();
+                                  //  var shippingState = _countryService.GetCountryByThreeLetterIsoCode("USA").StateProvinces.Where(x => x.Abbreviation == shipstate).FirstOrDefault();
 
 
                                     if (this._addressService.IsAddressValid(shippingAddress))
@@ -1541,85 +1908,132 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                         //some validation                                        
                                         shippingAddress.CountryId = shippingState.CountryId;
                                         shippingAddress.StateProvinceId = shippingState.Id;
+
+                                    if (customer.ShippingAddress == null)
+                                    {
                                         //set default address
                                         customer.Addresses.Add(shippingAddress);
                                         customer.ShippingAddress = shippingAddress;
                                         _customerService.UpdateCustomer(customer);
                                     }
+                                    else
+                                    {
+                                        this._addressService.UpdateAddress(shippingAddress);
+                                        customer.ShippingAddress = shippingAddress;
+                                        _customerService.UpdateCustomer(customer);
 
+                                    }
+                                    }
+                                else
+                                {
+                                    var why = true;
                                 }
 
-                                var order = _orderService.GetOrderByAuthorizationTransactionIdAndPaymentMethod(transactionid ,null);
+
+                                //var order = _orderService.GetOrderByAuthorizationTransactionIdAndPaymentMethod(transactionid ,null);
+                                var order = _orderService.GetOrderById(orderid);
                                 if (order == null)
                                 {
-                                    order = new Order
+                                    // order = new Order
+                                    // {
+
+                                    //     Id = 1,
+                                    //     OrderGuid = Guid.NewGuid(),
+                                    //     CustomerId = customer.Id,
+                                    //     Customer = customer,
+                                    //     StoreId = 1,
+                                    //     OrderStatus = OrderStatus.Complete,
+                                    //     ShippingStatus = ShippingStatus.Shipped,
+                                    //     PaymentStatus = PaymentStatus.Paid,
+                                    //  //   PaymentMethodSystemName = "PaymentMethodSystemName1",
+                                    //  //   CustomerCurrencyCode = "US",
+                                    // //    CurrencyRate = 1.1M,
+                                    //   //  CustomerTaxDisplayType = TaxDisplayType.ExcludingTax,
+                                    //     //VatNumber = "123456789",
+                                    //     OrderSubtotalInclTax = 2.1M,
+                                    //     OrderSubtotalExclTax = 3.1M,
+                                    //     OrderSubTotalDiscountInclTax = 4.1M,
+                                    //     OrderSubTotalDiscountExclTax = 5.1M,
+                                    //     OrderShippingInclTax = 6.1M,
+                                    //     OrderShippingExclTax = 7.1M,
+                                    //     PaymentMethodAdditionalFeeInclTax = 8.1M,
+                                    //     PaymentMethodAdditionalFeeExclTax = 9.1M,
+                                    //    // TaxRates = "1,3,5,7",
+                                    //     OrderTax = decimal.Parse(tax),
+                                    //     OrderDiscount = 0M,
+                                    //     OrderTotal = decimal.Parse(total),
+                                    //     RefundedAmount = 0M,
+                                    // //    CheckoutAttributeDescription = "CheckoutAttributeDescription1",
+                                    //   //  CheckoutAttributesXml = "CheckoutAttributesXml1",
+                                    //  //   CustomerLanguageId = 1,
+                                    //     AffiliateId = 0,
+                                    ////     CustomerIp = "CustomerIp1",
+                                    ////     AllowStoringCreditCardNumber = false,
+                                    //     //CardType = "Visa",
+                                    //     //CardName = "John Smith",
+                                    //     //CardNumber = "4111111111111111",
+                                    //     //MaskedCreditCardNumber = "************1111",
+                                    //     //CardCvv2 = "123",
+                                    //     //CardExpirationMonth = "12",
+                                    //     //CardExpirationYear = "2010",
+                                    //     AuthorizationTransactionId = transactionid,
+                                    //     AuthorizationTransactionCode = transactionid,
+                                    //     AuthorizationTransactionResult = transactionid,
+                                    //     CaptureTransactionId = transactionid,
+                                    //     CaptureTransactionResult = transactionid,
+                                    //     SubscriptionTransactionId = transactionid,
+                                    //     PaidDateUtc = dateTimeAsUtc,
+                                    //    // CustomValuesXml = "<test>test</test>",
+                                    //     BillingAddress = customer.BillingAddress,
+                                    //     ShippingAddress = customer.ShippingAddress,
+                                    //     ShippingMethod = shipcarrier,
+                                    //   //  ShippingRateComputationMethodSystemName = "ShippingRateComputationMethodSystemName1",
+                                    //     Deleted = false,
+                                    //     CreatedOnUtc = dateTimeAsUtc,
+                                    //     CustomOrderNumber = string.Empty
+                                    // };
+                                    // _orderService.InsertOrder(order);
+
+                                    string insertOrderSql = "SET IDENTITY_INSERT[dbo].[Order] ON;";
+                                    insertOrderSql += "insert into[ArcNOPDB].[dbo].[Order] (Id, CustomerId, CustomOrderNumber, OrderGuid, StoreId, BillingAddressId,";
+                                    insertOrderSql += "pickUpInStore, OrderStatusId, ShippingStatusId, PaymentStatusId, CurrencyRate, CustomerTaxDisplayTypeId,";
+                                    insertOrderSql += "OrderSubtotalInclTax, OrderSubtotalExclTax, OrderSubTotalDiscountInclTax, OrderSubTotalDiscountExclTax,";
+                                    insertOrderSql += "OrderShippingInclTax, OrderShippingExclTax, PaymentMethodAdditionalFeeInclTax, PaymentMethodAdditionalFeeExclTax,";
+                                    insertOrderSql += "OrderTax, OrderDiscount, OrderTotal, RefundedAmount, CustomerLanguageId, AffiliateId, AllowStoringCreditCardNumber, Deleted,";
+                                    insertOrderSql += $"CreatedOnUtc) values({orderid},{customer.Id},'234234', NEWID(), 1,1,0,30,30,30,1,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0, GETDATE()) ";
+                                    insertOrderSql += "  SET IDENTITY_INSERT[dbo].[Order] OFF;";
+
+                                    _dbContext.ExecuteSqlCommand(insertOrderSql);
+
+
+                                    order = _orderService.GetOrderById(orderid);
+                                    if (order != null)
                                     {
-                                        Id = 1,
-                                        OrderGuid = Guid.NewGuid(),
-                                        CustomerId = customer.Id,
-                                        Customer = customer,
-                                        StoreId = 1,
-                                        OrderStatus = OrderStatus.Complete,
-                                        ShippingStatus = ShippingStatus.Shipped,
-                                        PaymentStatus = PaymentStatus.Paid,
-                                     //   PaymentMethodSystemName = "PaymentMethodSystemName1",
-                                     //   CustomerCurrencyCode = "US",
-                                    //    CurrencyRate = 1.1M,
-                                      //  CustomerTaxDisplayType = TaxDisplayType.ExcludingTax,
-                                        //VatNumber = "123456789",
-                                        OrderSubtotalInclTax = 2.1M,
-                                        OrderSubtotalExclTax = 3.1M,
-                                        OrderSubTotalDiscountInclTax = 4.1M,
-                                        OrderSubTotalDiscountExclTax = 5.1M,
-                                        OrderShippingInclTax = 6.1M,
-                                        OrderShippingExclTax = 7.1M,
-                                        PaymentMethodAdditionalFeeInclTax = 8.1M,
-                                        PaymentMethodAdditionalFeeExclTax = 9.1M,
-                                       // TaxRates = "1,3,5,7",
-                                        OrderTax = decimal.Parse(tax),
-                                        OrderDiscount = 0M,
-                                        OrderTotal = decimal.Parse(total),
-                                        RefundedAmount = 0M,
-                                    //    CheckoutAttributeDescription = "CheckoutAttributeDescription1",
-                                      //  CheckoutAttributesXml = "CheckoutAttributesXml1",
-                                     //   CustomerLanguageId = 1,
-                                        AffiliateId = 0,
-                                   //     CustomerIp = "CustomerIp1",
-                                   //     AllowStoringCreditCardNumber = false,
-                                        //CardType = "Visa",
-                                        //CardName = "John Smith",
-                                        //CardNumber = "4111111111111111",
-                                        //MaskedCreditCardNumber = "************1111",
-                                        //CardCvv2 = "123",
-                                        //CardExpirationMonth = "12",
-                                        //CardExpirationYear = "2010",
-                                        AuthorizationTransactionId = transactionid,
-                                        AuthorizationTransactionCode = transactionid,
-                                        AuthorizationTransactionResult = transactionid,
-                                        CaptureTransactionId = transactionid,
-                                        CaptureTransactionResult = transactionid,
-                                        SubscriptionTransactionId = transactionid,
-                                        PaidDateUtc = dateTimeAsUtc,
-                                       // CustomValuesXml = "<test>test</test>",
-                                        BillingAddress = customer.BillingAddress,
-                                        ShippingAddress = customer.ShippingAddress,
-                                        ShippingMethod = shipcarrier,
-                                      //  ShippingRateComputationMethodSystemName = "ShippingRateComputationMethodSystemName1",
-                                        Deleted = false,
-                                        CreatedOnUtc = dateTimeAsUtc,
-                                        CustomOrderNumber = string.Empty
-                                    };
-                                    _orderService.InsertOrder(order);
-                                    //generate and set custom order number
-                                    order.CustomOrderNumber = _customNumberFormatter.GenerateOrderCustomNumber(order);
-                                    _customerService.UpdateCustomer(customer); 
+                                        //generate and set custom order number
+                                        order.CustomOrderNumber = _customNumberFormatter.GenerateOrderCustomNumber(order);
+                                        _customerService.UpdateCustomer(customer);
+                                    }
 
                                 }
 
-                                var endRowO = 2;
+                                    order.CustomerId = customer.Id;
+                                    order.BillingAddress = customer.BillingAddress;
+                                    order.ShippingAddress = customer.ShippingAddress;
+                                    order.AuthorizationTransactionId = transactionid;
+                                    order.AuthorizationTransactionCode = transactionid;
+                                    order.AuthorizationTransactionResult = transactionid;
+                                    order.CaptureTransactionId = transactionid;
+                                    order.CaptureTransactionResult = transactionid;
+                                    order.SubscriptionTransactionId = transactionid;
 
-                               
+                                    order.OrderTax = decimal.Parse(tax);
+                                    order.OrderTotal = decimal.Parse(total);
+                                    order.ShippingMethod = shipcarrier;
 
+                                    _orderService.UpdateOrder(order);
+
+                                 
+                                var endRowO = 2; 
                                 var firstTime = true;
                                 //find end of data
 
@@ -1633,10 +2047,14 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                     {
                                         if (worksheetO == null || worksheet.Cells == null)
                                             break;
-                                        if (endRowO > 41681)
+                                        if (endRowO > 24144)
                                             if (worksheetO.Cells[endRowO, 1].Value == null)
                                                 break;
-
+                                        if (orderid == 40519
+)
+                                        {
+                                            var pp = 29870;
+                                        }
                                         int orderIdO = 0;
                                         var orderString = worksheetO.Cells[endRowO, 2].Value.ToString();
                                           int.TryParse(orderString, out  orderIdO);
@@ -1661,140 +2079,170 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                                         var itemExist = order.OrderItems.Where(x => x.ProductId == itemId).FirstOrDefault();
 
-                                        if (itemExist == null)
+                                        if (itemExist != null)
+                                        {
+                                            var updateOrderDetails = $"update [dbo].[OrderItem]  set [Quantity] ={qty}, [UnitPriceInclTax]={prodPrice}, [UnitPriceExclTax]={prodPrice},[PriceInclTax]={prodPrice},[PriceExclTax]={prodPrice} where OrderId ={orderid} and Productid = {itemId}";
+                                            _dbContext.ExecuteSqlCommand(updateOrderDetails);
+                                        }
+                                        else
                                         {
                                             var product = _productService.GetProductById(itemId);
-
                                             if (product == null)
                                             {
-                                                product = new Product
+                                                itemId = _dbContext.SqlQuery<int>($"select top 1 id from dbo.Product where [Name] ='{ProdName}' order by id").FirstOrDefault();
+                                                if (itemId == 0)
                                                 {
-                                                    Name = ProdName,
-                                                    Sku = sku,
-                                                    Price = prodPrice,
-                                                    UpdatedOnUtc = dateTimeAsUtc,
-                                                    CreatedOnUtc = dateTimeAsUtc,
-                                                    Published = false,
-                                                    ProductType = ProductType.GroupedProduct,
-                                                    ParentGroupedProductId = 2,
-                                                    VisibleIndividually = true,
-                                                  
-                                                    ShortDescription = ProdName,
-                                                    FullDescription = ProdName,
-                                                   // AdminComment = "AdminComment 1",
-                                                    VendorId = 0,
-                                                    ProductTemplateId =1,
-                                                    ShowOnHomePage = false,
-                                                    //MetaKeywords = "Meta keywords",
-                                                    //MetaDescription = "Meta description",
-                                                    //MetaTitle = "Meta title",
-                                                  //  AllowCustomerReviews = false,
-                                                    //ApprovedRatingSum = 2,
-                                                   // NotApprovedRatingSum = 3,
-                                                   // ApprovedTotalReviews = 4,
-                                                  //  NotApprovedTotalReviews = 5,
-                                                   // SubjectToAcl = true,
-                                                  //  LimitedToStores = true, 
-                                                 //   ManufacturerPartNumber = "manufacturerPartNumber",
-                                                 //   Gtin = "GTIN 1",
-                                                 //   IsGiftCard = false,
-                                                 //   GiftCardTypeId = 1,
-                                                 //   OverriddenGiftCardAmount = 1,
-                                                 //   IsDownload = false,
-                                                 //   DownloadId = 2,
-                                                 //   UnlimitedDownloads = false,
-                                                  //  MaxNumberOfDownloads = 3,
-                                                  //  DownloadExpirationDays = 4,
-                                                 //   DownloadActivationTypeId = 5,
-                                                 //   HasSampleDownload = true,
-                                                //    SampleDownloadId = 6,
-                                                //    HasUserAgreement = false,
-                                                 //   UserAgreementText = "userAgreementText",
-                                                 //   IsRecurring = true,
-                                                  //  RecurringCycleLength = 7,
-                                                 //   RecurringCyclePeriodId = 8,
-                                                 //   RecurringTotalCycles = 9,
-                                                 //   IsRental = true,
-                                                 //   RentalPriceLength = 9,
-                                                //    RentalPricePeriodId = 10,
-                                                //    IsShipEnabled = true,
-                                                //    IsFreeShipping = true,
-                                                 //   ShipSeparately = true,
-                                                  //  AdditionalShippingCharge = 10.1M,
-                                                //    DeliveryDateId = 5,
-                                                    IsTaxExempt = true,
-                                               //     TaxCategoryId = 11,
-                                                //    IsTelecommunicationsOrBroadcastingOrElectronicServices = true,
-                                              //      ManageInventoryMethodId = 12,
-                                               //     ProductAvailabilityRangeId = 1,
-                                                    UseMultipleWarehouses = true,
-                                                //    WarehouseId = 6,
-                                                    StockQuantity = 13,
-                                                    DisplayStockAvailability = true,
-                                                    DisplayStockQuantity = true,
-                                                    MinStockQuantity = 14,
-                                                    LowStockActivityId = 15,
-                                                    NotifyAdminForQuantityBelow = 16,
-                                                //    BackorderModeId = 17,
-                                                    AllowBackInStockSubscriptions = true,
-                                                    OrderMinimumQuantity = 18,
-                                                    OrderMaximumQuantity = 19,
-                                                    AllowedQuantities = "1, 5,6,10",
-                                                    AllowAddingOnlyExistingAttributeCombinations = true,
-                                                    NotReturnable = true,
-                                                    DisableBuyButton = true,
-                                                    DisableWishlistButton = true,
-                                                    AvailableForPreOrder = true,
-                                                    PreOrderAvailabilityStartDateTimeUtc = new DateTime(2010, 01, 01),
-                                             //       CallForPrice = true,
-                                                  
-                                                    OldPrice = 22.1M,
-                                                    ProductCost = 23.1M,
-                                            //        CustomerEntersPrice = true,
-                                                    MinimumCustomerEnteredPrice = 24.1M,
-                                                    MaximumCustomerEnteredPrice = 25.1M,
-                                                    BasepriceEnabled = true,
-                                                    BasepriceAmount = 33.1M,
-                                                    BasepriceUnitId = 4,
-                                                    BasepriceBaseAmount = 34.1M,
-                                                    BasepriceBaseUnitId = 5,
-                                                    MarkAsNew = true,
-                                                    MarkAsNewStartDateTimeUtc = new DateTime(2010, 01, 07),
-                                                    MarkAsNewEndDateTimeUtc = new DateTime(2010, 01, 08),
-                                                    HasTierPrices = true,
-                                                    HasDiscountsApplied = true,
-                                                    Weight = 26.1M,
-                                                    Length = 27.1M,
-                                                    Width = 28.1M,
-                                                    Height = 29.1M,
-                                                    AvailableStartDateTimeUtc = new DateTime(2010, 01, 01),
-                                                    AvailableEndDateTimeUtc = new DateTime(2010, 01, 02),
-                                                    RequireOtherProducts = true,
-                                                  //  RequiredProductIds = "1,2,3",
-                                                    AutomaticallyAddRequiredProducts = true,
-                                                    DisplayOrder = 30,
-                                                  
-                                                  
+                                                    product = new Product
+                                                    {
+                                                        Name = ProdName,
+                                                        Sku = sku,
+                                                        Price = prodPrice,
+                                                        UpdatedOnUtc = dateTimeAsUtc,
+                                                        CreatedOnUtc = dateTimeAsUtc,
+                                                        Published = false,
+                                                        ProductType = ProductType.GroupedProduct,
+                                                        ParentGroupedProductId = 2,
+                                                        VisibleIndividually = true,
 
-                                                };
-                                                _productService.InsertProduct(product);
+                                                        ShortDescription = ProdName,
+                                                        FullDescription = ProdName,
+                                                        // AdminComment = "AdminComment 1",
+                                                        VendorId = 0,
+                                                        ProductTemplateId = 1,
+                                                        ShowOnHomePage = false,
+                                                        //MetaKeywords = "Meta keywords",
+                                                        //MetaDescription = "Meta description",
+                                                        //MetaTitle = "Meta title",
+                                                        //  AllowCustomerReviews = false,
+                                                        //ApprovedRatingSum = 2,
+                                                        // NotApprovedRatingSum = 3,
+                                                        // ApprovedTotalReviews = 4,
+                                                        //  NotApprovedTotalReviews = 5,
+                                                        // SubjectToAcl = true,
+                                                        //  LimitedToStores = true, 
+                                                        //   ManufacturerPartNumber = "manufacturerPartNumber",
+                                                        //   Gtin = "GTIN 1",
+                                                        //   IsGiftCard = false,
+                                                        //   GiftCardTypeId = 1,
+                                                        //   OverriddenGiftCardAmount = 1,
+                                                        //   IsDownload = false,
+                                                        //   DownloadId = 2,
+                                                        //   UnlimitedDownloads = false,
+                                                        //  MaxNumberOfDownloads = 3,
+                                                        //  DownloadExpirationDays = 4,
+                                                        //   DownloadActivationTypeId = 5,
+                                                        //   HasSampleDownload = true,
+                                                        //    SampleDownloadId = 6,
+                                                        //    HasUserAgreement = false,
+                                                        //   UserAgreementText = "userAgreementText",
+                                                        //   IsRecurring = true,
+                                                        //  RecurringCycleLength = 7,
+                                                        //   RecurringCyclePeriodId = 8,
+                                                        //   RecurringTotalCycles = 9,
+                                                        //   IsRental = true,
+                                                        //   RentalPriceLength = 9,
+                                                        //    RentalPricePeriodId = 10,
+                                                        //    IsShipEnabled = true,
+                                                        //    IsFreeShipping = true,
+                                                        //   ShipSeparately = true,
+                                                        //  AdditionalShippingCharge = 10.1M,
+                                                        //    DeliveryDateId = 5,
+                                                        IsTaxExempt = true,
+                                                        //     TaxCategoryId = 11,
+                                                        //    IsTelecommunicationsOrBroadcastingOrElectronicServices = true,
+                                                        //      ManageInventoryMethodId = 12,
+                                                        //     ProductAvailabilityRangeId = 1,
+                                                        UseMultipleWarehouses = true,
+                                                        //    WarehouseId = 6,
+                                                        StockQuantity = 13,
+                                                        DisplayStockAvailability = true,
+                                                        DisplayStockQuantity = true,
+                                                        MinStockQuantity = 14,
+                                                        LowStockActivityId = 15,
+                                                        NotifyAdminForQuantityBelow = 16,
+                                                        //    BackorderModeId = 17,
+                                                        AllowBackInStockSubscriptions = true,
+                                                        OrderMinimumQuantity = 18,
+                                                        OrderMaximumQuantity = 19,
+                                                        AllowedQuantities = "1, 5,6,10",
+                                                        AllowAddingOnlyExistingAttributeCombinations = true,
+                                                        NotReturnable = true,
+                                                        DisableBuyButton = true,
+                                                        DisableWishlistButton = true,
+                                                        AvailableForPreOrder = true,
+                                                        PreOrderAvailabilityStartDateTimeUtc = new DateTime(2010, 01, 01),
+                                                        //       CallForPrice = true,
 
+                                                        OldPrice = 22.1M,
+                                                        ProductCost = 23.1M,
+                                                        //        CustomerEntersPrice = true,
+                                                        MinimumCustomerEnteredPrice = 24.1M,
+                                                        MaximumCustomerEnteredPrice = 25.1M,
+                                                        BasepriceEnabled = true,
+                                                        BasepriceAmount = 33.1M,
+                                                        BasepriceUnitId = 4,
+                                                        BasepriceBaseAmount = 34.1M,
+                                                        BasepriceBaseUnitId = 5,
+                                                        MarkAsNew = true,
+                                                        MarkAsNewStartDateTimeUtc = new DateTime(2010, 01, 07),
+                                                        MarkAsNewEndDateTimeUtc = new DateTime(2010, 01, 08),
+                                                        HasTierPrices = true,
+                                                        HasDiscountsApplied = true,
+                                                        Weight = 26.1M,
+                                                        Length = 27.1M,
+                                                        Width = 28.1M,
+                                                        Height = 29.1M,
+                                                        AvailableStartDateTimeUtc = new DateTime(2010, 01, 01),
+                                                        AvailableEndDateTimeUtc = new DateTime(2010, 01, 02),
+                                                        RequireOtherProducts = true,
+                                                        //  RequiredProductIds = "1,2,3",
+                                                        AutomaticallyAddRequiredProducts = true,
+                                                        DisplayOrder = 30,
+
+
+
+                                                    };
+                                                    _productService.InsertProduct(product);
+                                                }
                                             }
-                                            var newItem = new OrderItem
-                                            {
-                                                Order = order,
-                                                PriceExclTax = prodPrice,
-                                                OrderItemGuid = Guid.NewGuid(),
-                                                Product = product,
-                                                Quantity = qty,
-                                                DownloadCount = 0,
-                                                IsDownloadActivated = false,
-                                                LicenseDownloadId = 0,
-                                            };
+                                                //var newItem = new OrderItem
+                                                //{
+                                                //    Order = order,
+                                                //    PriceExclTax = prodPrice,
+                                                //    OrderItemGuid = Guid.NewGuid(),
+                                                //    ProductId = itemId,
+                                                //    Quantity = qty,
+                                                //    DownloadCount = 0,
+                                                //    IsDownloadActivated = false,
+                                                //    LicenseDownloadId = 0,
+                                                //};
 
-                                            order.OrderItems.Add(newItem);
-                                            _orderService.UpdateOrder(order);
+                                                //order.OrderItems.Add(newItem);
+                                                //_orderService.UpdateOrder(order);
+
+                                                var insertOrdeDetail = "insert into [dbo].[OrderItem] " +
+                                                "([OrderItemGuid]" +
+                                                ",[OrderId]" +
+                                                ",[ProductId]" +
+                                                ",[Quantity]" +
+                                                ",[UnitPriceInclTax]" +
+                                                ",[UnitPriceExclTax]" +
+                                                ",[PriceInclTax]" +
+                                                ",[PriceExclTax]" +
+                                                ",[DiscountAmountInclTax]" +
+                                                ",[DiscountAmountExclTax]" +
+                                                ",[OriginalProductCost]" +
+                                                ",[DownloadCount]" +
+                                                ",[IsDownloadActivated]" +
+                                                ",[LicenseDownloadId]" +
+                                                ",[ItemWeight])";
+
+                                                insertOrdeDetail += $" values(NEWID(),{order.Id},{itemId},{qty},{prodPrice},{prodPrice},{prodPrice},{prodPrice},0,0,0,0,0,0,0)";
+
+                                             _dbContext.ExecuteSqlCommand(insertOrdeDetail);
+
                                         }
+                                                                                                                     
 
                                     }
                                     catch(Exception ex)
@@ -1808,7 +2256,60 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
                                 }
 
 
+                                //tracking
 
+                                int.TryParse(orderstatus, out int orderStatusId);
+
+                                switch (orderStatusId)
+                                {
+                                    case 0:
+                                        order.OrderStatus = OrderStatus.Processing;
+                                        break;
+                                    case 1:
+                                        order.OrderStatus = OrderStatus.Complete;
+                                        break;
+                                    case 4:
+                                        order.OrderStatus = OrderStatus.Cancelled;
+                                        break;
+                                }
+                                order.ShippingStatus = ShippingStatus.NotYetShipped;
+
+                                if (order.Shipments.Count <= 0)
+                                {
+                                    if (trackingnumber != null)
+                                    {
+
+                                        var shipment = new Shipment
+                                        {
+                                            OrderId = order.Id,
+                                            TrackingNumber = trackingnumber,
+                                            TotalWeight = null,
+                                            ShippedDateUtc = null,
+                                            DeliveryDateUtc = null,
+                                            AdminComment = "",
+                                            CreatedOnUtc = DateTime.UtcNow,
+                                        };
+                                        var orderItems = order.OrderItems;
+
+                                        foreach (var orderItem in orderItems)
+                                        {
+
+                                            //create a shipment item
+                                            var shipmentItem = new ShipmentItem
+                                            {
+                                                OrderItemId = orderItem.Id,
+                                                Quantity = orderItem.Quantity,
+                                                WarehouseId = 0
+                                            };
+                                            shipment.ShipmentItems.Add(shipmentItem);
+                                        }
+                                        _shipmentService.InsertShipment(shipment);
+
+                                        order.ShippingStatus = ShippingStatus.Shipped;
+                                    }
+                                }
+                                _orderService.UpdateOrder(order);
+                                _customerService.UpdateCustomer(customer);
                             }
                             catch (Exception ex)
                             {

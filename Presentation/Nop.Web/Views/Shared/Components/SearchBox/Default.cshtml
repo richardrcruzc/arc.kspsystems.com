@@ -3,36 +3,68 @@
 
 
 <form asp-route="Searchfilter" method="get" id="small-search-box-form">
-    <input type="text" class="search-box-text" id="small-searchterms" autocomplete="off" name="q" placeholder="@T(" Search.SearchBox.Tooltip")" />
+    <input type="text" style="width:250px;"  class="search-box-text" id="small-searchterms1" autocomplete="off" name="q" placeholder="@T(" Search.SearchBox.Tooltip")" />
     @await Component.InvokeAsync("Widget", new { widgetZone = "searchbox_before_search_button" })
     <input type="submit" class="button-1 search-box-button" id="SearchfilterBTN" value="@T(" Search.Button")" />
     @if (Model.SearchTermMinimumLength > 0)
     {
+
     <script type="text/javascript" asp-location="Footer">
+
+        $("#SearchfilterBTN").click(function () {
+           
+
+                window.location.href = '/filterSearch?q=' + $("#small-searchterms1").val();
+
+                event.preventDefault();
+           
+        }); 
+
+
+        $('#small-searchterms1').keypress(function (e) {
+           
+            if (e.which == 13) {
+                
+                if ($("#small-searchterms1").val() == "") {
+                   
+                    window.location.href = '/filterSearch?q=' + $("#small-searchterms1").val();
+                   
+                    event.preventDefault();
+                }
+            }
+        });
+
+        $("#small-search-box-form").keydown(function (event) {
+            if (event.keyCode == 13) {
+               
+            window.location.href = '/filterSearch?q=' + $("#small-searchterms1").val();
+        }
+        });
+
         $("#small-search-box-form").submit(function (event) {
-            if ($("#small-searchterms").val() == "") {
+            if ($("#small-searchterms1").val() == "") {
                 alert('@Html.Raw(JavaScriptEncoder.Default.Encode(T("Search.EnterSearchTerms").Text))');
-                $("#small-searchterms").focus();
+                $("#small-searchterms1").focus();
                 event.preventDefault();
             }
-
+            
 
         });
     </script>
     }
     @if (Model.AutoCompleteEnabled)
-    {
+    { 
     <script type="text/javascript" asp-location="Footer">
 
         $(document).ready(function () {
 
-            $('#small-searchterms').autocomplete({
+            $('#small-searchterms1').autocomplete({
                 delay: 500,
                 minLength: @(Model.SearchTermMinimumLength.ToString()),
             source: '@(Url.RouteUrl("Searchfilter"))',
                 appendTo: '.search-box',
                     select: function(event, ui) {
-                        $("#small-searchterms").val(ui.item.label);
+                        $("#small-searchterms1").val(ui.item.label);
                         setLocation(ui.item.producturl);
                         return false;
                     }

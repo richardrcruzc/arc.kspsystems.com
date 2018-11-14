@@ -1028,16 +1028,23 @@ namespace Nop.Services.Catalog
             if (keywords!=null)
               legacyIds = _dbContext.SqlQuery<int>($"select [ItemId] from [dbo].[LegacyIds]  (NOLOCK) where [LegacyCode] like '{keywords}%'");
 
+            //   legacyIds = products.Where(x => !legacyIds.Contains(x.Id)).Select(x => x.Id).ToArray();
+
+            products = products.Where(x => !legacyIds.Contains(x.Id)).ToList();
+
             var _tmp = _productRepository.TableNoTracking.Where(x => legacyIds.Contains(x.Id));
+
+           
             var pg = new PagedList<Product>(_tmp, pageIndex, pageSize, _tmp.Count());
 
             // products.Add(_tmp);
             //return products
             var totalRecords = pTotalRecords.Value != DBNull.Value ? Convert.ToInt32(pTotalRecords.Value) : 0;
+            totalRecords += legacyIds.Count();
             var pa = new PagedList<Product>(products, pageIndex, pageSize, totalRecords); 
 
             pa.AddRange(pg);
-
+            
             return pa;
         }
 
@@ -1118,6 +1125,7 @@ namespace Nop.Services.Catalog
             return _cacheManager.Get(key, () => 
             {
                 var productNoDelted = _productRepository.GetById(productId);
+                if(productNoDelted!=null)
                 if (productNoDelted.Deleted)
                     return null;
                 return productNoDelted;
