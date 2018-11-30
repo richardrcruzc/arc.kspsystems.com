@@ -519,9 +519,14 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
             {
                 foreach (var selectedIdenId in selectedIds)
                 {
-                    var relation = _gpiRepository.Table.Where(x => x.Id == selectedIdenId).FirstOrDefault();
-                    relation.Deleted = true;
-                    _gpiRepository.Update(relation);
+
+                    var rGroups = _rgpRepository.Table.Where(x => x.Id == selectedIdenId).FirstOrDefault();
+                    rGroups.Deleted = true;
+                    _rgpRepository.Update(rGroups);
+
+                    //var relation = _gpiRepository.Table.Where(x => x.Id == selectedIdenId).FirstOrDefault();
+                    //relation.Deleted = true;
+                    //_gpiRepository.Update(relation);
 
                 }
             }

@@ -241,6 +241,17 @@ namespace Nop.Services.Catalog
             if (_catalogSettings.IgnoreDiscounts)
                 return allowedDiscounts;
 
+            //if we have any coupon code does not calculate de others discount
+            var anyCouponCode = _workContext.CurrentCustomer.ParseAppliedDiscountCouponCodes();
+
+            if (anyCouponCode.Length > 0)
+            {
+                 
+                    _cacheManager.RemoveByPattern("Nop.totals.productprice");
+               
+                return allowedDiscounts;
+
+            }
             //discounts applied to products
             foreach (var discount in GetAllowedDiscountsAppliedToProduct(product, customer))
                 if (!allowedDiscounts.ContainsDiscount(discount))
@@ -439,13 +450,27 @@ namespace Nop.Services.Catalog
                 if (includeDiscounts)
                 {
                     //discount
-                    var tmpDiscountAmount = GetDiscountAmount(product, customer, price, out List<DiscountForCaching> tmpAppliedDiscounts);
-                    price = price - tmpDiscountAmount;
+                    //if we have any coupon code does not calculate de others discount
+                    var anyCouponCode = _workContext.CurrentCustomer.ParseAppliedDiscountCouponCodes();
 
-                    if (tmpAppliedDiscounts != null)
+                    if (anyCouponCode.Length > 0)
                     {
-                        result.AppliedDiscounts = tmpAppliedDiscounts;
-                        result.AppliedDiscountAmount = tmpDiscountAmount;
+
+                        _cacheManager.RemoveByPattern("Nop.totals.productprice");
+
+
+
+                    }
+                    else
+                    {
+                        var tmpDiscountAmount = GetDiscountAmount(product, customer, price, out List<DiscountForCaching> tmpAppliedDiscounts);
+                        price = price - tmpDiscountAmount;
+
+                        if (tmpAppliedDiscounts != null)
+                        {
+                            result.AppliedDiscounts = tmpAppliedDiscounts;
+                            result.AppliedDiscountAmount = tmpDiscountAmount;
+                        }
                     }
                 }
 

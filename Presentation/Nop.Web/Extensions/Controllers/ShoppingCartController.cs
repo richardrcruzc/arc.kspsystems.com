@@ -1450,6 +1450,9 @@ namespace Nop.Web.Controllers
                         _workContext.CurrentCustomer.ApplyDiscountCouponCode(discountcouponcode);
                         model.DiscountBox.Messages.Add(_localizationService.GetResource("ShoppingCart.DiscountCouponCode.Applied"));
                         model.DiscountBox.IsApplied = true;
+                        
+                            _cacheManager.RemoveByPattern("Nop.totals.productprice");
+                        
                     }
                     else
                     {
@@ -1607,13 +1610,25 @@ namespace Nop.Web.Controllers
                     discountId = Convert.ToInt32(formValue.Substring("removediscount-".Length));
             var discount = _discountService.GetDiscountById(discountId);
             if (discount != null)
+            {
                 _workContext.CurrentCustomer.RemoveDiscountCouponCode(discount.CouponCode);
+                
+            }
 
 
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
                 .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
                 .LimitPerStore(_storeContext.CurrentStore.Id)
                 .ToList();
+
+            if (discount != null)
+            {              
+                
+                    _cacheManager.RemoveByPattern("Nop.totals.productprice");
+                
+            }
+
+
             model = _shoppingCartModelFactory.PrepareShoppingCartModel(model, cart);
             return View(model);
         }

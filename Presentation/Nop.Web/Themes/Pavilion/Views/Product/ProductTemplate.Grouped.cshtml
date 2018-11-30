@@ -20,10 +20,17 @@
     var showShareButton = catalogSettings.ShowShareButton;
 
     //canonical URL
-    if (seoSettings.CanonicalUrlsEnabled)
+    //if (seoSettings.CanonicalUrlsEnabled)
+    //{
+    //    var productUrl = Url.RouteUrl("Product", new { SeName = Model.SeName }, this.Url.ActionContext.HttpContext.Request.Scheme);
+    //    Html.AddCanonicalUrlParts(productUrl, seoSettings.QueryStringInCanonicalUrlsEnabled);
+    //}
+    if (string.IsNullOrWhiteSpace(this.Url.ActionContext.HttpContext.Request.GetDisplayUrl()))
     {
-        var productUrl = Url.RouteUrl("Product", new { SeName = Model.SeName }, this.Url.ActionContext.HttpContext.Request.Scheme);
-        Html.AddCanonicalUrlParts(productUrl, seoSettings.QueryStringInCanonicalUrlsEnabled);
+        if (this.Url.ActionContext.HttpContext.Request.GetDisplayUrl().Contains("-for/"))
+        {
+            Html.AddHeadCustomParts("<meta property=\"canonical\" content=\"" + this.Url.ActionContext.HttpContext.Request.GetEncodedUrl() + "\" />");
+        }
     }
 
     //open graph META tags

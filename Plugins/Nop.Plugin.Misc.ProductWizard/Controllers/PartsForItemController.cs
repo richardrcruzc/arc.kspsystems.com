@@ -223,7 +223,7 @@ namespace Nop.Plugin.Misc.ProductWizard.Controllers
 
                 //var catergories
 
-                var queryC = _productService.GetProductsByIds(rgp.ToArray()).Select(x => new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id }).ToList();
+                var queryC = _productService.GetProductsByIds(rgp.ToArray()).Where(x=>x.ProductCategories.Count()>0).Select(x => new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id }).ToList();
 
                 //  var catergories = products.Where(x => ic.Contains(x.Id) || rgp.Contains(x.Id)).Select(x=> new { x.ProductCategories.FirstOrDefault().Category.Name, x.ProductCategories.FirstOrDefault().Category.Id}).ToList();
                // query.Insert(0, new { Name = "All Categories", Id = 0 });

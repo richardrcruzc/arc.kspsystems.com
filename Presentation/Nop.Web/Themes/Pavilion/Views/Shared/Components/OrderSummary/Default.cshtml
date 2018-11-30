@@ -186,7 +186,7 @@
                                     <span class="product-subtotal">@item.SubTotal</span>
                                     @if (!String.IsNullOrEmpty(item.Discount))
                                     {
-                                        <div class="discount">
+                                        <div class="discount"> 
                                             @T("ShoppingCart.ItemYouSave", item.Discount)
                                         </div>
                                         if (item.MaximumDiscountedQty.HasValue)

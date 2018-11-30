@@ -1,5 +1,4 @@
 [
-  "DiscountRequirement.MustBeAssignedToCustomerRole",
   "CurrencyExchange.ECB",
   "ExternalAuth.Facebook",
   "Payments.CheckMoneyOrder",
@@ -33,5 +32,6 @@
   "Shipping.Ontrac",
   "DiscountRequirement.MustUseShippingProvider",
   "PromotionFeed.Froogle",
-  "Payments.AuthorizeNet"
+  "Payments.AuthorizeNet",
+  "DiscountRequirement.MustBeAssignedToCustomerRole"
 ]

@@ -26,7 +26,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\Presentation\Nop.Web\Plugins\DiscountRules.CustomerRoles</OutputPath>
+    <OutputPath>..\..\Presentation\Nop.Web\Plugins\DiscountRules.ShippingType</OutputPath>
     <OutDir>$(OutputPath)</OutDir>
   </PropertyGroup>
 

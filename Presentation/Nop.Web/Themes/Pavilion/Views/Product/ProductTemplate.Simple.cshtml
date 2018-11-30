@@ -7,6 +7,7 @@
 @inject CatalogSettings catalogSettings
 
 @{
+    var richardCruz = "222222222222222";
     Layout = "_ColumnsOne";
 
     //title
@@ -20,11 +21,20 @@
     var showShareButton = catalogSettings.ShowShareButton;
 
     //canonical URL
-    if (seoSettings.CanonicalUrlsEnabled)
+    //if (seoSettings.CanonicalUrlsEnabled)
+    //{
+    //    var productUrl = Url.RouteUrl("Product", new { SeName = Html.Encode(Model.SeName) }, this.Url.ActionContext.HttpContext.Request.Scheme);
+    //    Html.AddCanonicalUrlParts(productUrl, seoSettings.QueryStringInCanonicalUrlsEnabled);
+    //}
+
+    if (!string.IsNullOrWhiteSpace(this.Url.ActionContext.HttpContext.Request.GetDisplayUrl()))
     {
-        var productUrl = Url.RouteUrl("Product", new { SeName = Model.SeName }, this.Url.ActionContext.HttpContext.Request.Scheme);
-        Html.AddCanonicalUrlParts(productUrl, seoSettings.QueryStringInCanonicalUrlsEnabled);
+        if (this.Url.ActionContext.HttpContext.Request.GetDisplayUrl().Contains("-for/"))
+        {
+            Html.AddHeadCustomParts("<meta property=\"canonical\" content=\"" + this.Url.ActionContext.HttpContext.Request.GetEncodedUrl() + "\" />");
+        }
     }
+
 
     //open graph META tags
     if (seoSettings.OpenGraphMetaTags)
@@ -48,12 +58,13 @@
         Html.AddHeadCustomParts("<meta property=\"twitter:url\" content=\"" + this.Url.ActionContext.HttpContext.Request.GetEncodedUrl() + "\" />");
     }
 }
+<div>@richardCruz</div>
 <!--product breadcrumb-->
 @section Breadcrumb
-{
-    @await Html.PartialAsync("_ProductBreadcrumb", Model.Breadcrumb)
+            {
+                @await Html.PartialAsync("_ProductBreadcrumb", Model.Breadcrumb)
 }
-@await Component.InvokeAsync("Widget", new { widgetZone = "productdetails_after_breadcrumb", additionalData = Model.Id })
+        @await Component.InvokeAsync("Widget", new { widgetZone = "productdetails_after_breadcrumb", additionalData = Model.Id })
 <div class="page product-details-page">
     <div class="page-body">
         @await Component.InvokeAsync("Widget", new { widgetZone = "productdetails_top", additionalData = Model.Id })
