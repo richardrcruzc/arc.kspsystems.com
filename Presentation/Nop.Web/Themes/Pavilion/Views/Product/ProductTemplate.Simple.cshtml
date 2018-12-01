@@ -7,7 +7,7 @@
 @inject CatalogSettings catalogSettings
 
 @{
-    var richardCruz = "222222222222222";
+
     Layout = "_ColumnsOne";
 
     //title
@@ -27,11 +27,17 @@
     //    Html.AddCanonicalUrlParts(productUrl, seoSettings.QueryStringInCanonicalUrlsEnabled);
     //}
 
+
     if (!string.IsNullOrWhiteSpace(this.Url.ActionContext.HttpContext.Request.GetDisplayUrl()))
     {
         if (this.Url.ActionContext.HttpContext.Request.GetDisplayUrl().Contains("-for/"))
         {
-            Html.AddHeadCustomParts("<meta property=\"canonical\" content=\"" + this.Url.ActionContext.HttpContext.Request.GetEncodedUrl() + "\" />");
+            Html.AddHeadCustomParts("<link rel=\"canonical\" href=\"" + this.Url.ActionContext.HttpContext.Request.GetEncodedUrl() + "\" />");
+        }
+        else
+        {
+            var productUrl = System.Net.WebUtility.UrlDecode(Url.RouteUrl("Product", new { SeName = Model.SeName }, this.Url.ActionContext.HttpContext.Request.Scheme));
+            Html.AddCanonicalUrlParts(productUrl, seoSettings.QueryStringInCanonicalUrlsEnabled);
         }
     }
 
@@ -58,7 +64,7 @@
         Html.AddHeadCustomParts("<meta property=\"twitter:url\" content=\"" + this.Url.ActionContext.HttpContext.Request.GetEncodedUrl() + "\" />");
     }
 }
-<div>@richardCruz</div>
+ 
 <!--product breadcrumb-->
 @section Breadcrumb
             {
