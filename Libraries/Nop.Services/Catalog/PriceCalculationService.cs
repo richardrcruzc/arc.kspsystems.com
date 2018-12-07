@@ -455,11 +455,7 @@ namespace Nop.Services.Catalog
 
                     if (anyCouponCode.Length > 0)
                     {
-
                         _cacheManager.RemoveByPattern("Nop.totals.productprice");
-
-
-
                     }
                     else
                     {

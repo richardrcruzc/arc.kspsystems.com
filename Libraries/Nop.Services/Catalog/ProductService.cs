@@ -691,7 +691,9 @@ namespace Nop.Services.Catalog
                               //manufacturer part number
                               (searchManufacturerPartNumber && p.ManufacturerPartNumber == keywords) ||
                               //SKU (exact match)
-                              (searchSku && p.Sku == keywords) ||
+                              //(searchSku && p.Sku == keywords) ||
+                               (searchSku && p.Sku.Contains(keywords)) ||
+
                               //product tags (exact match)
                               (searchProductTags && pt.Name == keywords) ||
                               //localized values

@@ -919,7 +919,6 @@ namespace Nop.Services.Shipping
                         if (_shoppingCartSettings.RoundPricesDuringCalculation)
                             so.Rate = RoundingHelper.RoundPrice(so.Rate);
 
-
                         var qty = cart.AsEnumerable().Sum(x => x.Quantity);
 
                         if (so.ShippingRateComputationMethodSystemName.Contains("CANADA"))
@@ -932,7 +931,13 @@ namespace Nop.Services.Shipping
                         }
                         else
                         {
-                            
+                            //if (Alternate_Discount_System(srcm.pro))
+                            //{
+                            //    //so.Rate *= Discount_Price(cartdata.ItemCategoryName);
+                            //    continue;
+                            //}
+
+
                             if (qty == 1)
                             {
                                  so.Rate *= 1M;
@@ -1031,6 +1036,57 @@ namespace Nop.Services.Shipping
                 result.Errors.Add(_localizationService.GetResource("Checkout.ShippingOptionCouldNotBeLoaded"));
             
             return result;
+        }
+
+        static protected bool Discount(string category, IList<ShoppingCartItem> cartList)
+        {
+            int count = 0;
+
+           
+
+            foreach (ShoppingCartItem cartdata in cartList)
+            {
+                if(cartdata.Product.ProductCategories.Any())
+                if (cartdata.Product.ProductCategories.FirstOrDefault().Category.Name == category)
+                {
+                    count++;
+                }
+            }
+
+            if (count > 1)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        static protected bool Alternate_Discount_System(string category)
+        {
+            if (category == "Actuators" ||
+                category == "AIDC/ATDC Sensors" ||
+                category == "Bearings/Bushings" ||
+                category == "Clutches" ||
+                category == "Fans" ||
+                category == "Filters" ||
+                category == "Fusing Unit Parts" ||
+                category == "Gears" ||
+                category == "Latches" ||
+                category == "Memory" ||
+                category == "Motors" ||
+                category == "Paper Feed" ||
+                category == "Photo Interrupters" ||
+                category == "Scan Units" ||
+                category == "Separation Fingers" ||
+                category == "Springs" ||
+                category == "Staples" ||
+                category == "Switches")
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
