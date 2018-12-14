@@ -207,6 +207,9 @@ namespace Nop.Services.Shipping
         IList<GetShippingOptionRequest> CreateShippingOptionRequests(IList<ShoppingCartItem> cart,
             Address shippingAddress, int storeId, out bool shippingFromMultipleLocations);
 
+        IList<GetShippingOptionRequest> CreateShippingOptionRequestsShoppingCartItem(ShoppingCartItem cartItem,
+          Address shippingAddress, int storeId, out bool shippingFromMultipleLocations);
+        
         /// <summary>
         ///  Gets available shipping options
         /// </summary>

@@ -54,12 +54,15 @@ namespace Nop.Web.Controllers
         private readonly ShoppingCartSettings _shoppingCartSettings;
         private readonly LocalizationSettings _localizationSettings;
         private readonly CaptchaSettings _captchaSettings;
-
+        private readonly ICategoryService _categoryService;
+        private readonly IUrlRecordService _urlRecordService;
         #endregion
 
         #region Ctor
 
         public ProductController(
+             IUrlRecordService urlRecordService,
+            ICategoryService categoryService,
             IVendorService vendorService,
             IDbContext dbContext,
         IProductModelFactory productModelFactory,
@@ -82,6 +85,8 @@ namespace Nop.Web.Controllers
             LocalizationSettings localizationSettings,
             CaptchaSettings captchaSettings)
         {
+            this._urlRecordService = urlRecordService;
+            this._categoryService = categoryService;
             this._vendorService= vendorService;
             this._dbContext = dbContext;
             this._productModelFactory = productModelFactory;
@@ -111,6 +116,26 @@ namespace Nop.Web.Controllers
         [HttpsRequirement(SslRequirement.No)]
         public virtual IActionResult UrlRecordSlug(int productId, string productName="", string partNumber="", string partNumber1="")
         {
+
+            var category = _categoryService.GetCategoryById(productId);
+            if (category != null && !category.Deleted)
+            {
+                var categoryName= $"{productName.Trim()} {partNumber.Trim()} {partNumber1.Trim()}";                
+                categoryName = categoryName.Replace("-", " ").Trim().TrimEnd('-');
+
+                var slug = $"{productName.Trim()}-{partNumber.Trim()}-{partNumber1.Trim()}";
+                slug =   slug.TrimEnd('-');
+
+                var urlRecord = _urlRecordService.GetBySlug(slug);
+                if(urlRecord!=null)
+                    return Redirect($"/{slug}");
+                //if (category.Name.ToLower() == categoryName.Replace("-", " "))
+                //{
+                //    return Redirect($"/{productName}");
+                //}
+            }
+
+
             int updatecartitemid = 0;
             var product = _productService.GetProductById(productId);
             if (product == null || product.Deleted)

@@ -93,55 +93,13 @@ namespace Nop.Web.Controllers
 
         #region Categories
 
-        [HttpsRequirement(SslRequirement.No)]
-        public virtual IActionResult Category(int categoryId, string SeName, CatalogPagingFilteringModel command)
-        {
-            var category = _categoryService.GetCategoryById(categoryId);
-            if (category == null || category.Deleted)
-                return RedirectToRoute("Nop.Plugin.Misc.ProductWizard.Slug", new { productId= categoryId });
-
-
-                //return InvokeHttp404();
-
-            var notAvailable =
-                //published?
-                !category.Published ||
-                //ACL (access control list) 
-                !_aclService.Authorize(category) ||
-                //Store mapping
-                !_storeMappingService.Authorize(category);
-            //Check whether the current user has a "Manage categories" permission (usually a store owner)
-            //We should allows him (her) to use "Preview" functionality
-            if (notAvailable && !_permissionService.Authorize(StandardPermissionProvider.ManageCategories))
-                return InvokeHttp404();
-
-            //'Continue shopping' URL
-            _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer,
-                SystemCustomerAttributeNames.LastContinueShoppingPage,
-                _webHelper.GetThisPageUrl(false),
-                _storeContext.CurrentStore.Id);
-
-            //display "edit" (manage) link
-            if (_permissionService.Authorize(StandardPermissionProvider.AccessAdminPanel) && _permissionService.Authorize(StandardPermissionProvider.ManageCategories))
-                DisplayEditLink(Url.Action("Edit", "Category", new { id = category.Id, area = AreaNames.Admin }));
-
-            //activity log
-            _customerActivityService.InsertActivity("PublicStore.ViewCategory", _localizationService.GetResource("ActivityLog.PublicStore.ViewCategory"), category.Name);
-
-            //model
-            var model = _catalogModelFactory.PrepareCategoryModel(category, command);
-
-            //template
-            var templateViewPath = _catalogModelFactory.PrepareCategoryTemplateViewPath(category.CategoryTemplateId);
-            return View(templateViewPath, model);
-        }
+   
         [HttpsRequirement(SslRequirement.No)]
         public virtual IActionResult Category(int categoryId, CatalogPagingFilteringModel command)
         {
             var category = _categoryService.GetCategoryById(categoryId);
-            if (category == null || category.Deleted)
-                return RedirectToRoute("Nop.Plugin.Misc.ProductWizard.Slug", new { productId = categoryId });
-            //return InvokeHttp404();
+            if (category == null || category.Deleted) 
+             return InvokeHttp404();
 
             var notAvailable =
                 //published?
@@ -303,7 +261,7 @@ namespace Nop.Web.Controllers
             if (model == null)
                 model = new SearchModel();
 
-            model = _catalogModelFactory.PrepareSearchModel(model, command);
+         model = _catalogModelFactory.PrepareSearchModel(model, command);
             return View("Search", model);
 
         }

@@ -94,12 +94,12 @@
                         @await Component.InvokeAsync("Widget", new { widgetZone = "productdetails_overview_top", additionalData = Model.Id })
                         @await Html.PartialAsync("_Discontinued", Model)
                         <!--manufacturers-->
-                        @await Html.PartialAsync("_ProductManufacturers", Model.ProductManufacturers)
+                        @*@await Html.PartialAsync("_ProductManufacturers", Model.ProductManufacturers)
                         <div class="product-name">
                             <h1 itemprop="name">
                                 @Model.Name
                             </h1>
-                        </div>
+                        </div>*@
                         <!--reviews-->
                         @await Html.PartialAsync("_ProductReviewOverview", Model.ProductReviewOverview)
                         <!--price-->

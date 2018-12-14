@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ImageResizer.ExtensionMethods;
 using Nop.Core;
 using Nop.Core.Caching;
 using Nop.Core.Data;
@@ -823,7 +824,347 @@ namespace Nop.Services.Shipping
 
             return result;
         }
+        public virtual IList<GetShippingOptionRequest> CreateShippingOptionRequestsShoppingCartItem(ShoppingCartItem sci,
+          Address shippingAddress, int storeId, out bool shippingFromMultipleLocations)
+        {
+            //if we always ship from the default shipping origin, then there's only one request
+            //if we ship from warehouses ("ShippingSettings.UseWarehouseLocation" enabled),
+            //then there could be several requests
 
+
+            //key - warehouse identifier (0 - default shipping origin)
+            //value - request
+            var requests = new Dictionary<int, GetShippingOptionRequest>();
+
+            //a list of requests with products which should be shipped separately
+            var separateRequests = new List<GetShippingOptionRequest>();
+
+
+            if (!sci.IsShipEnabled(_productService, _productAttributeParser))
+            {
+                shippingFromMultipleLocations = false;
+                return null;
+            }
+                var product = sci.Product;
+
+                //TODO properly create requests for the assocated products
+                if (product == null || !product.IsShipEnabled)
+                {
+                    var associatedProducts = _productAttributeParser.ParseProductAttributeValues(sci.AttributesXml)
+                        .Where(attributeValue => attributeValue.AttributeValueType == AttributeValueType.AssociatedToProduct)
+                        .Select(attributeValue => _productService.GetProductById(attributeValue.AssociatedProductId));
+                    product = associatedProducts.FirstOrDefault(associatedProduct => associatedProduct != null && associatedProduct.IsShipEnabled);
+                }
+                if (product == null)
+            {
+                shippingFromMultipleLocations = false;
+                return null;
+            }
+
+            //warehouses
+            Warehouse warehouse = null;
+                if (_shippingSettings.UseWarehouseLocation)
+                {
+                    if (product.ManageInventoryMethod == ManageInventoryMethod.ManageStock &&
+                        product.UseMultipleWarehouses)
+                    {
+                        var allWarehouses = new List<Warehouse>();
+                        //multiple warehouses supported
+                        foreach (var pwi in product.ProductWarehouseInventory)
+                        {
+                            //TODO validate stock quantity when backorder is not allowed?
+                            var tmpWarehouse = GetWarehouseById(pwi.WarehouseId);
+                            if (tmpWarehouse != null)
+                                allWarehouses.Add(tmpWarehouse);
+                        }
+                        warehouse = GetNearestWarehouse(shippingAddress, allWarehouses);
+                    }
+                    else
+                    {
+                        //multiple warehouses are not supported
+                        warehouse = GetWarehouseById(product.WarehouseId);
+                    }
+                }
+                var warehouseId = warehouse != null ? warehouse.Id : 0;
+
+                if (requests.ContainsKey(warehouseId) && !product.ShipSeparately)
+                {
+                    //add item to existing request
+                    requests[warehouseId].Items.Add(new GetShippingOptionRequest.PackageItem(sci));
+                }
+                else
+                {
+                    //create a new request
+                    var request = new GetShippingOptionRequest
+                    {
+                        //store
+                        StoreId = storeId
+                    };
+                    //add item
+                    request.Items.Add(new GetShippingOptionRequest.PackageItem(sci));
+                    //customer
+                    request.Customer = sci.Customer;
+                    //ship to
+                    request.ShippingAddress = shippingAddress;
+                    //ship from
+                    Address originAddress = null;
+                    if (warehouse != null)
+                    {
+                        //warehouse address
+                        originAddress = _addressService.GetAddressById(warehouse.AddressId);
+                        request.WarehouseFrom = warehouse;
+                    }
+                    if (originAddress == null)
+                    {
+                        //no warehouse address. in this case use the default shipping origin
+                        originAddress = _addressService.GetAddressById(_shippingSettings.ShippingOriginAddressId);
+                    }
+                    if (originAddress != null)
+                    {
+                        request.CountryFrom = originAddress.Country;
+                        request.StateProvinceFrom = originAddress.StateProvince;
+                        request.ZipPostalCodeFrom = originAddress.ZipPostalCode;
+                        request.CityFrom = originAddress.City;
+                        request.AddressFrom = originAddress.Address1;
+                    }
+
+                    if (product.ShipSeparately)
+                    {
+                        //ship separately
+                        separateRequests.Add(request);
+                    }
+                    else
+                    {
+                        //usual request
+                        requests.Add(warehouseId, request);
+                    }
+                }
+            
+
+            //multiple locations?
+            //currently we just compare warehouses
+            //but we should also consider cases when several warehouses are located in the same address
+            shippingFromMultipleLocations = requests.Select(x => x.Key).Distinct().Count() > 1;
+
+
+            var result = requests.Values.ToList();
+            result.AddRange(separateRequests);
+
+            return result;
+        }
+        ///// <summary>
+        /////  Gets available shipping options
+        ///// </summary>
+        ///// <param name="cart">Shopping cart</param>
+        ///// <param name="shippingAddress">Shipping address</param>
+        ///// <param name="customer">Load records allowed only to a specified customer; pass null to ignore ACL permissions</param>
+        ///// <param name="allowedShippingRateComputationMethodSystemName">Filter by shipping rate computation method identifier; null to load shipping options of all shipping rate computation methods</param>
+        ///// <param name="storeId">Load records allowed only in a specified store; pass 0 to load all records</param>
+        ///// <returns>Shipping options</returns>
+        //public virtual GetShippingOptionResponse GetShippingOptions(IList<ShoppingCartItem> cart,
+        //    Address shippingAddress, Customer customer = null, string allowedShippingRateComputationMethodSystemName = "", 
+        //    int storeId = 0)
+        //{
+        //    if (cart == null)
+        //        throw new ArgumentNullException(nameof(cart));
+
+        //    var result = new GetShippingOptionResponse();
+
+        //    //create a package
+        //    var shippingOptionRequests = CreateShippingOptionRequests(cart, shippingAddress, storeId, out bool shippingFromMultipleLocations);
+        //    result.ShippingFromMultipleLocations = shippingFromMultipleLocations;
+
+        //    var shippingRateComputationMethods = LoadActiveShippingRateComputationMethods(customer, storeId);
+        //    //filter by system name
+        //    if (!string.IsNullOrWhiteSpace(allowedShippingRateComputationMethodSystemName))
+        //    {
+        //        shippingRateComputationMethods = shippingRateComputationMethods
+        //            .Where(srcm => allowedShippingRateComputationMethodSystemName.Equals(srcm.PluginDescriptor.SystemName, StringComparison.InvariantCultureIgnoreCase))
+        //            .ToList();
+        //    }
+        //    if (!shippingRateComputationMethods.Any())
+        //        //throw new NopException("Shipping rate computation method could not be loaded");
+        //        return result;
+
+
+
+        //    //request shipping options from each shipping rate computation methods
+        //    foreach (var srcm in shippingRateComputationMethods)
+        //    {
+        //        //request shipping options (separately for each package-request)
+        //        IList<ShippingOption> srcmShippingOptions = null;
+        //        foreach (var shippingOptionRequest in shippingOptionRequests)
+        //        {
+        //            var getShippingOptionResponse = srcm.GetShippingOptions(shippingOptionRequest);
+
+        //            if (getShippingOptionResponse.Success)
+        //            {
+        //                //success
+        //                if (srcmShippingOptions == null)
+        //                {
+        //                    //first shipping option request
+        //                    srcmShippingOptions = getShippingOptionResponse.ShippingOptions;
+        //                }
+        //                else
+        //                {
+        //                    //get shipping options which already exist for prior requested packages for this scrm (i.e. common options)
+        //                    srcmShippingOptions = srcmShippingOptions
+        //                        .Where(existingso => getShippingOptionResponse.ShippingOptions.Any(newso => newso.Name == existingso.Name))
+        //                        .ToList();
+
+        //                    //and sum the rates
+        //                    foreach (var existingso in srcmShippingOptions)
+        //                    {
+        //                        existingso.Rate += getShippingOptionResponse
+        //                            .ShippingOptions
+        //                            .First(newso => newso.Name == existingso.Name)
+        //                            .Rate;
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                //errors
+        //                foreach (var error in getShippingOptionResponse.Errors)
+        //                {
+        //                    result.AddError(error);
+        //                    _logger.Warning($"Shipping ({srcm.PluginDescriptor.FriendlyName}). {error}");
+        //                }
+        //                //clear the shipping options in this case
+        //                srcmShippingOptions = new List<ShippingOption>();
+        //                break;
+        //            }
+        //        }
+
+        //        //add this scrm's options to the result
+        //        if (srcmShippingOptions != null)
+        //        {
+        //            foreach (var so in srcmShippingOptions)
+        //            {
+        //                //set system name if not set yet
+        //                if (string.IsNullOrEmpty(so.ShippingRateComputationMethodSystemName))
+        //                    so.ShippingRateComputationMethodSystemName = srcm.PluginDescriptor.SystemName;
+        //                if (_shoppingCartSettings.RoundPricesDuringCalculation)
+        //                    so.Rate = RoundingHelper.RoundPrice(so.Rate);
+
+        //                var qty = cart.AsEnumerable().Sum(x => x.Quantity);
+
+        //                if (so.ShippingRateComputationMethodSystemName.Contains("CANADA"))
+        //                {
+        //                    if (qty > 1)
+        //                    {
+        //                        so.Rate *= 0.75M;
+        //                    }
+
+        //                }
+        //                else
+        //                {
+        //                    //if (Alternate_Discount_System(srcm.pro))
+        //                    //{
+        //                    //    //so.Rate *= Discount_Price(cartdata.ItemCategoryName);
+        //                    //    continue;
+        //                    //}
+
+
+        //                    if (qty == 1)
+        //                    {
+        //                         so.Rate *= 1M;
+        //                    }
+        //                    if (qty == 2)
+        //                    {
+        //                         so.Rate *= 0.58M;
+        //                    }
+        //                    else if (qty == 3)
+        //                    {
+        //                         so.Rate *= 0.425M;
+        //                    }
+        //                    else if (qty == 4)
+        //                    {
+        //                         so.Rate *= 0.353M;
+        //                    }
+        //                    else if (qty == 5)
+        //                    {
+        //                         so.Rate *= 0.31M;
+        //                    }
+        //                    else if (qty == 6M)
+        //                    {
+        //                         so.Rate *= 0.28M;
+        //                    }
+        //                    else if (qty == 7)
+        //                    {
+        //                         so.Rate *= 0.26M;
+        //                    }
+        //                    else if (qty == 8)
+        //                    {
+        //                         so.Rate *= 0.253M;
+        //                    }
+        //                    else if (qty == 9)
+        //                    {
+        //                         so.Rate *= 0.245M;
+        //                    }
+        //                    else if (qty == 10)
+        //                    {
+        //                         so.Rate *= 0.24M;
+        //                    }
+        //                    else if (qty == 11)
+        //                    {
+        //                         so.Rate *= 0.235M;
+        //                    }
+        //                    else if (qty >= 12)
+        //                    {
+        //                         so.Rate *= 0.233M;
+        //                    }
+
+
+        //                    if (so.ShippingRateComputationMethodSystemName.Contains("Ground"))
+        //                    {
+        //                        so.Rate *= 0.95M;
+        //                    }
+        //                    else if (so.ShippingRateComputationMethodSystemName.Contains("3 Day"))
+        //                    {
+        //                        so.Rate *= 0.85M;
+        //                    }
+        //                    else if (so.ShippingRateComputationMethodSystemName.Contains("2nd Day"))
+        //                    {
+        //                        so.Rate *= 0.75M;
+        //                    }
+        //                    else if (so.ShippingRateComputationMethodSystemName.Contains("Next Day"))
+        //                    {
+        //                        so.Rate *= 0.68M;
+        //                    }
+
+        //                }
+
+
+        //                //discount ground >=99
+
+        //                if (so.Name.ToLower().Contains("ground"))
+        //                {
+        //                    var totalCart = cart.AsQueryable().Sum(x => x.Product.Price * x.Quantity);
+        //                    if(totalCart>=99)
+        //                       so.Rate = 0;
+        //                } 
+
+
+
+        //                result.ShippingOptions.Add(so);
+        //            }
+        //        }
+        //    }
+
+        //    if (_shippingSettings.ReturnValidOptionsIfThereAreAny)
+        //    {
+        //        //return valid options if there are any (no matter of the errors returned by other shipping rate computation methods).
+        //        if (result.ShippingOptions.Any() && result.Errors.Any())
+        //            result.Errors.Clear();
+        //    }
+
+        //    //no shipping options loaded
+        //    if (!result.ShippingOptions.Any() && !result.Errors.Any())
+        //        result.Errors.Add(_localizationService.GetResource("Checkout.ShippingOptionCouldNotBeLoaded"));
+
+        //    return result;
+        //}
         /// <summary>
         ///  Gets available shipping options
         /// </summary>
@@ -834,7 +1175,7 @@ namespace Nop.Services.Shipping
         /// <param name="storeId">Load records allowed only in a specified store; pass 0 to load all records</param>
         /// <returns>Shipping options</returns>
         public virtual GetShippingOptionResponse GetShippingOptions(IList<ShoppingCartItem> cart,
-            Address shippingAddress, Customer customer = null, string allowedShippingRateComputationMethodSystemName = "", 
+            Address shippingAddress, Customer customer = null, string allowedShippingRateComputationMethodSystemName = "",
             int storeId = 0)
         {
             if (cart == null)
@@ -842,203 +1183,262 @@ namespace Nop.Services.Shipping
 
             var result = new GetShippingOptionResponse();
 
-            //create a package
-            var shippingOptionRequests = CreateShippingOptionRequests(cart, shippingAddress, storeId, out bool shippingFromMultipleLocations);
-            result.ShippingFromMultipleLocations = shippingFromMultipleLocations;
-
-            var shippingRateComputationMethods = LoadActiveShippingRateComputationMethods(customer, storeId);
-            //filter by system name
-            if (!string.IsNullOrWhiteSpace(allowedShippingRateComputationMethodSystemName))
+            //create a pagackge for each item in the shopping cart
+            foreach (var cartItem in cart)
             {
-                shippingRateComputationMethods = shippingRateComputationMethods
-                    .Where(srcm => allowedShippingRateComputationMethodSystemName.Equals(srcm.PluginDescriptor.SystemName, StringComparison.InvariantCultureIgnoreCase))
-                    .ToList();
-            }
-            if (!shippingRateComputationMethods.Any())
-                //throw new NopException("Shipping rate computation method could not be loaded");
-                return result;
-
-
-
-            //request shipping options from each shipping rate computation methods
-            foreach (var srcm in shippingRateComputationMethods)
-            {
-                //request shipping options (separately for each package-request)
-                IList<ShippingOption> srcmShippingOptions = null;
-                foreach (var shippingOptionRequest in shippingOptionRequests)
+                var qty = cartItem.Quantity;
+                cartItem.Quantity = 1;
+                //create a package
+                var shippingOptionRequests = CreateShippingOptionRequestsShoppingCartItem(cartItem, shippingAddress, storeId, out bool shippingFromMultipleLocations);
+                result.ShippingFromMultipleLocations = shippingFromMultipleLocations;
+                cartItem.Quantity = qty;
+                var shippingRateComputationMethods = LoadActiveShippingRateComputationMethods(customer, storeId);
+                //filter by system name
+                if (!string.IsNullOrWhiteSpace(allowedShippingRateComputationMethodSystemName))
                 {
-                    var getShippingOptionResponse = srcm.GetShippingOptions(shippingOptionRequest);
+                    shippingRateComputationMethods = shippingRateComputationMethods
+                        .Where(srcm => allowedShippingRateComputationMethodSystemName.Equals(srcm.PluginDescriptor.SystemName, StringComparison.InvariantCultureIgnoreCase))
+                        .ToList();
+                }
+                if (!shippingRateComputationMethods.Any())
+                    //throw new NopException("Shipping rate computation method could not be loaded");
+                    return result;
 
-                    if (getShippingOptionResponse.Success)
+                //request shipping options from each shipping rate computation methods
+                foreach (var srcm in shippingRateComputationMethods)
+                {
+                    //request shipping options (separately for each package-request)
+                    IList<ShippingOption> srcmShippingOptions = null;
+                    foreach (var shippingOptionRequest in shippingOptionRequests)
                     {
-                        //success
-                        if (srcmShippingOptions == null)
+                        var getShippingOptionResponse = srcm.GetShippingOptions(shippingOptionRequest);
+
+                        if (getShippingOptionResponse.Success)
                         {
-                            //first shipping option request
-                            srcmShippingOptions = getShippingOptionResponse.ShippingOptions;
+                            //success
+                            if (srcmShippingOptions == null)
+                            {
+                                //first shipping option request
+                                srcmShippingOptions = getShippingOptionResponse.ShippingOptions;
+                            }
+                            else
+                            {
+                                //get shipping options which already exist for prior requested packages for this scrm (i.e. common options)
+                                srcmShippingOptions = srcmShippingOptions
+                                    .Where(existingso => getShippingOptionResponse.ShippingOptions.Any(newso => newso.Name == existingso.Name))
+                                    .ToList();
+
+                                //and sum the rates
+                                foreach (var existingso in srcmShippingOptions)
+                                {
+                                    existingso.Rate += getShippingOptionResponse
+                                        .ShippingOptions
+                                        .First(newso => newso.Name == existingso.Name)
+                                        .Rate;
+                                }
+                            }
                         }
                         else
                         {
-                            //get shipping options which already exist for prior requested packages for this scrm (i.e. common options)
-                            srcmShippingOptions = srcmShippingOptions
-                                .Where(existingso => getShippingOptionResponse.ShippingOptions.Any(newso => newso.Name == existingso.Name))
-                                .ToList();
-
-                            //and sum the rates
-                            foreach (var existingso in srcmShippingOptions)
+                            //errors
+                            foreach (var error in getShippingOptionResponse.Errors)
                             {
-                                existingso.Rate += getShippingOptionResponse
-                                    .ShippingOptions
-                                    .First(newso => newso.Name == existingso.Name)
-                                    .Rate;
+                                result.AddError(error);
+                                _logger.Warning($"Shipping ({srcm.PluginDescriptor.FriendlyName}). {error}");
+                            }
+                            //clear the shipping options in this case
+                            srcmShippingOptions = new List<ShippingOption>();
+                            break;
+                        }
+                    }
+
+                    //add this scrm's options to the result
+                    if (srcmShippingOptions != null)
+                    {
+                        foreach (var so in srcmShippingOptions)
+                        {
+                            //set system name if not set yet
+                            if (string.IsNullOrEmpty(so.ShippingRateComputationMethodSystemName))
+                                so.ShippingRateComputationMethodSystemName = srcm.PluginDescriptor.SystemName;
+                            if (_shoppingCartSettings.RoundPricesDuringCalculation)
+                                so.Rate = RoundingHelper.RoundPrice(so.Rate);
+                           
+                           var find = result.ShippingOptions.Where(x => x.Name == so.Name && x.Rate<=so.Rate).FirstOrDefault();
+                            if (find == null)
+                            {
+                               
+                                result.ShippingOptions.Add(so);
                             }
                         }
                     }
-                    else
-                    {
-                        //errors
-                        foreach (var error in getShippingOptionResponse.Errors)
-                        {
-                            result.AddError(error);
-                            _logger.Warning($"Shipping ({srcm.PluginDescriptor.FriendlyName}). {error}");
-                        }
-                        //clear the shipping options in this case
-                        srcmShippingOptions = new List<ShippingOption>();
-                        break;
-                    }
                 }
 
-                //add this scrm's options to the result
-                if (srcmShippingOptions != null)
+                if (_shippingSettings.ReturnValidOptionsIfThereAreAny)
                 {
-                    foreach (var so in srcmShippingOptions)
-                    {
-                        //set system name if not set yet
-                        if (string.IsNullOrEmpty(so.ShippingRateComputationMethodSystemName))
-                            so.ShippingRateComputationMethodSystemName = srcm.PluginDescriptor.SystemName;
-                        if (_shoppingCartSettings.RoundPricesDuringCalculation)
-                            so.Rate = RoundingHelper.RoundPrice(so.Rate);
-
-                        var qty = cart.AsEnumerable().Sum(x => x.Quantity);
-
-                        if (so.ShippingRateComputationMethodSystemName.Contains("CANADA"))
-                        {
-                            if (qty > 1)
-                            {
-                                so.Rate *= 0.75M;
-                            }
-
-                        }
-                        else
-                        {
-                            //if (Alternate_Discount_System(srcm.pro))
-                            //{
-                            //    //so.Rate *= Discount_Price(cartdata.ItemCategoryName);
-                            //    continue;
-                            //}
-
-
-                            if (qty == 1)
-                            {
-                                 so.Rate *= 1M;
-                            }
-                            if (qty == 2)
-                            {
-                                 so.Rate *= 0.58M;
-                            }
-                            else if (qty == 3)
-                            {
-                                 so.Rate *= 0.425M;
-                            }
-                            else if (qty == 4)
-                            {
-                                 so.Rate *= 0.353M;
-                            }
-                            else if (qty == 5)
-                            {
-                                 so.Rate *= 0.31M;
-                            }
-                            else if (qty == 6M)
-                            {
-                                 so.Rate *= 0.28M;
-                            }
-                            else if (qty == 7)
-                            {
-                                 so.Rate *= 0.26M;
-                            }
-                            else if (qty == 8)
-                            {
-                                 so.Rate *= 0.253M;
-                            }
-                            else if (qty == 9)
-                            {
-                                 so.Rate *= 0.245M;
-                            }
-                            else if (qty == 10)
-                            {
-                                 so.Rate *= 0.24M;
-                            }
-                            else if (qty == 11)
-                            {
-                                 so.Rate *= 0.235M;
-                            }
-                            else if (qty >= 12)
-                            {
-                                 so.Rate *= 0.233M;
-                            }
-
-
-                            if (so.ShippingRateComputationMethodSystemName.Contains("Ground"))
-                            {
-                                so.Rate *= 0.95M;
-                            }
-                            else if (so.ShippingRateComputationMethodSystemName.Contains("3 Day"))
-                            {
-                                so.Rate *= 0.85M;
-                            }
-                            else if (so.ShippingRateComputationMethodSystemName.Contains("2nd Day"))
-                            {
-                                so.Rate *= 0.75M;
-                            }
-                            else if (so.ShippingRateComputationMethodSystemName.Contains("Next Day"))
-                            {
-                                so.Rate *= 0.68M;
-                            }
-
-                        }
-
-
-                        //discount ground >=99
-
-                        if (so.Name.ToLower().Contains("ground"))
-                        {
-                            var totalCart = cart.AsQueryable().Sum(x => x.Product.Price * x.Quantity);
-                            if(totalCart>=99)
-                               so.Rate = 0;
-                        } 
-
-
-
-                        result.ShippingOptions.Add(so);
-                    }
+                    //return valid options if there are any (no matter of the errors returned by other shipping rate computation methods).
+                    if (result.ShippingOptions.Any() && result.Errors.Any())
+                        result.Errors.Clear();
                 }
-            }
 
-            if (_shippingSettings.ReturnValidOptionsIfThereAreAny)
-            {
-                //return valid options if there are any (no matter of the errors returned by other shipping rate computation methods).
-                if (result.ShippingOptions.Any() && result.Errors.Any())
-                    result.Errors.Clear();
+                //no shipping options loaded
+                if (!result.ShippingOptions.Any() && !result.Errors.Any())
+                    result.Errors.Add(_localizationService.GetResource("Checkout.ShippingOptionCouldNotBeLoaded"));
             }
-            
-            //no shipping options loaded
-            if (!result.ShippingOptions.Any() && !result.Errors.Any())
-                result.Errors.Add(_localizationService.GetResource("Checkout.ShippingOptionCouldNotBeLoaded"));
-            
+            //lock (_lock)
+            //{
+                GetCrazyDiscount(result, cart);
+            //}
+           
+
             return result;
         }
+        public static readonly object _lock = new object();
 
-        static protected bool Discount(string category, IList<ShoppingCartItem> cartList)
+        void GetCrazyDiscount(GetShippingOptionResponse result, IList<ShoppingCartItem> cart)
+        {
+            foreach (var so in result.ShippingOptions)
+            {
+
+                //discount ground >=99
+
+                if (so.Name.ToLower().Contains("ground"))
+                {
+                    var totalCart = cart.AsQueryable().Sum(x => x.Product.Price * x.Quantity);
+                    if (totalCart >= 99)
+                    {
+                        so.Rate = 0;
+                        continue;
+                    }
+                }
+
+                foreach (var cartItem in cart)
+                {
+
+                var itemCategory = string.Empty;
+                if (cartItem.Product.ProductCategories.FirstOrDefault() != null)
+                    itemCategory = cartItem.Product.ProductCategories.FirstOrDefault().Category.Name;
+
+                    so.Rate = TempPrice(cartItem.Quantity, itemCategory, cart, so.Name, so.Rate);
+                    //if(tempPrice!=0)
+                   // so.RateWithDiscount += (so.Rate*tempPrice)* cartItem.Quantity;
+                }
+                //so.Rate = so.RateWithDiscount;
+            }
+            
+        }
+
+
+
+      decimal TempPrice(int qty, string category, IList<ShoppingCartItem> cartList, string shippingType, decimal rate, bool isCanada = false)
+        {
+             decimal tempprice = rate * qty;
+
+            if (Alternate_Discount_System(category))
+            {
+                var price = Discount_Price(category, cartList);
+                if(tempprice==0)
+                      tempprice = price;
+                else
+                    tempprice *= price;
+            }
+            else
+            {
+                if (!isCanada)
+                {
+                    if (qty == 1)
+                    {
+                        tempprice *= 1;
+                    }
+                    if (qty == 2)
+                    {
+                        tempprice *= 0.58M;
+                    }
+                    else if (qty == 3)
+                    {
+                        tempprice *= 0.425M;
+                    }
+                    else if (qty == 4)
+                    {
+                        tempprice *= 0.353M;
+                    }
+                    else if (qty == 5)
+                    {
+                        tempprice *= 0.31M;
+                    }
+                    else if (qty == 6)
+                    {
+                        tempprice *= 0.28M;
+                    }
+                    else if (qty == 7)
+                    {
+                        tempprice *= 0.26M;
+                    }
+                    else if (qty == 8)
+                    {
+                        tempprice *= 0.253M;
+                    }
+                    else if (qty == 9)
+                    {
+                        tempprice *= 0.245M;
+                    }
+                    else if (qty == 10)
+                    {
+                        tempprice *= 0.24M;
+                    }
+                    else if (qty == 11)
+                    {
+                        tempprice *= 0.235M;
+                    }
+                    else if (qty >= 12)
+                    {
+                        tempprice *= 0.233M;
+                    }
+                    else if (Discount(category, cartList))
+                    {
+                        tempprice *= 0.75M;
+                    }
+                }
+                else
+                {
+                    if (qty >1)
+                    {
+                        tempprice *= 0.75M;
+                    }
+                    else if (Discount(category, cartList))
+                    {
+                        tempprice *= 0.75M;
+                    }
+
+                }
+
+            }
+            if (!isCanada)
+            {
+                if (shippingType == "Ground")
+                {
+                    tempprice *= 0.95M;
+                }
+                else if (shippingType == "3 Day Select")
+                {
+                    tempprice *= 0.85M;
+                }
+                else if (shippingType == "2nd Day Air")
+                {
+                    tempprice *= 0.75M;
+                }
+                else if (shippingType == "Next Day Air Early A.M." || shippingType == "Next Day Air")
+                {
+                    tempprice *= 0.68M;
+                }
+                else
+                {
+                }
+            }
+             
+
+            return tempprice;
+        }
+        bool Discount(string category, IList<ShoppingCartItem> cartList)
         {
             int count = 0;
 
@@ -1060,7 +1460,7 @@ namespace Nop.Services.Shipping
             return false;
         }
 
-        static protected bool Alternate_Discount_System(string category)
+     bool Alternate_Discount_System(string category)
         {
             if (category == "Actuators" ||
                 category == "AIDC/ATDC Sensors" ||
@@ -1088,6 +1488,73 @@ namespace Nop.Services.Shipping
                 return false;
             }
         }
+
+        decimal Discount_Price(string category, IList<ShoppingCartItem>  cartList)
+        {           
+            int count = 0;
+
+            foreach (var cartdata in cartList)
+            {
+                var itemCategory = string.Empty;
+                if (cartdata.Product.ProductCategories.FirstOrDefault() != null)
+                    itemCategory = cartdata.Product.ProductCategories.FirstOrDefault().Category.Name;
+
+                if (itemCategory == category)
+                {
+                    count += cartdata.Quantity;
+                }
+            }
+
+            if (count < 2)
+            {
+                return (1);
+            }
+            else if (count == 2)
+            {
+                return (0.58M);
+            }
+            else if (count == 3)
+            {
+                return (0.425M);
+            }
+            else if (count == 4)
+            {
+                return (0.353M);
+            }
+            else if (count == 5)
+            {
+                return (0.31M);
+            }
+            else if (count == 6)
+            {
+                return (0.28M);
+            }
+            else if (count == 7)
+            {
+                return (0.26M);
+            }
+            else if (count == 8)
+            {
+                return (0.253M);
+            }
+            else if (count == 9)
+            {
+                return (0.245M);
+            }
+            else if (count == 10)
+            {
+                return (0.24M);
+            }
+            else if (count == 11)
+            {
+                return (0.235M);
+            }
+            else
+            {
+                return (0.233M);
+            }
+        }
+
 
         /// <summary>
         /// Gets available pickup points

@@ -876,10 +876,29 @@ namespace Nop.Services.Catalog
                 query = query.OrderBy(p => p.Name);
             }
 
-            var products = new PagedList<Product>(query, pageIndex, pageSize);
+            IEnumerable<int> legacyIds = new int[0];
+            if (keywords != null)
+                legacyIds = _dbContext.SqlQuery<int>($"select [ItemId] from [dbo].[LegacyIds]  (NOLOCK) where [LegacyCode] like '{keywords}%'");
+             
+
+            query = query.Where(x => !legacyIds.Contains(x.Id)) ;
+
+            var _tmp = _productRepository.TableNoTracking.Where(x => legacyIds.Contains(x.Id));
+
+
+            var pg = new PagedList<Product>(_tmp, pageIndex, pageSize, _tmp.Count());
+                       
+            var pa = new PagedList<Product>(query, pageIndex, pageSize);
+
+            pa.AddRange(pg);
+
+            return pa; 
+
+
+            //var products = new PagedList<Product>(query, pageIndex, pageSize);
 
             //return products
-            return products;
+            //return products;
         }
 
         /// <summary>
@@ -1425,21 +1444,21 @@ namespace Nop.Services.Catalog
             //Access control list. Allowed customer roles
             var allowedCustomerRolesIds = _workContext.CurrentCustomer.GetCustomerRoleIds();
 
-            IPagedList<Product> products;
+            //IPagedList<Product> products;
 
-            if (_commonSettings.UseStoredProceduresIfSupported && _dataProvider.StoredProceduredSupported)
-            {
-                //stored procedures are enabled and supported by the database. 
-                //It's much faster than the LINQ implementation below 
-                products = SearchProductsUseStoredProcedure(ref filterableSpecificationAttributeOptionIds, loadFilterableSpecificationAttributeOptionIds, pageIndex, pageSize, categoryIds, manufacturerId, storeId, vendorId, warehouseId, productType, visibleIndividuallyOnly, markedAsNewOnly, featuredProducts, priceMin, priceMax, productTagId, keywords, searchDescriptions, searchManufacturerPartNumber, searchSku, allowedCustomerRolesIds, searchProductTags, searchLocalizedValue, languageId, filteredSpecs, orderBy, showHidden, overridePublished);
-            }
-            else
-            {
+            //if (_commonSettings.UseStoredProceduresIfSupported && _dataProvider.StoredProceduredSupported)
+            //{
+            //    //stored procedures are enabled and supported by the database. 
+            //    //It's much faster than the LINQ implementation below 
+            //    products = SearchProductsUseStoredProcedure(ref filterableSpecificationAttributeOptionIds, loadFilterableSpecificationAttributeOptionIds, pageIndex, pageSize, categoryIds, manufacturerId, storeId, vendorId, warehouseId, productType, visibleIndividuallyOnly, markedAsNewOnly, featuredProducts, priceMin, priceMax, productTagId, keywords, searchDescriptions, searchManufacturerPartNumber, searchSku, allowedCustomerRolesIds, searchProductTags, searchLocalizedValue, languageId, filteredSpecs, orderBy, showHidden, overridePublished);
+            //}
+            //else
+            //{
                 //stored procedures aren't supported. Use LINQ
                 return SearchProductsUseLinq(ref filterableSpecificationAttributeOptionIds, loadFilterableSpecificationAttributeOptionIds, pageIndex, pageSize, categoryIds, manufacturerId, storeId, vendorId, warehouseId, productType, visibleIndividuallyOnly, markedAsNewOnly, featuredProducts, priceMin, priceMax, productTagId, keywords, searchDescriptions, searchManufacturerPartNumber, searchSku, searchProductTags, searchLocalizedValue, allowedCustomerRolesIds, languageId, filteredSpecs, orderBy, showHidden, overridePublished);
-            }
+            //}
 
-            return products;
+            //return products;
         }
 
         /// <summary>

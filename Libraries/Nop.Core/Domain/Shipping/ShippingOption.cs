@@ -22,6 +22,7 @@ namespace Nop.Core.Domain.Shipping
         /// Gets or sets a shipping rate (without discounts, additional shipping charges, etc)
         /// </summary>
         public decimal Rate { get; set; }
+        public decimal RateWithDiscount { get; set; }
 
         /// <summary>
         /// Gets or sets a shipping option name
