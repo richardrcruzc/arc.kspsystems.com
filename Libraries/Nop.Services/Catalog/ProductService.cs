@@ -878,7 +878,7 @@ namespace Nop.Services.Catalog
 
             IEnumerable<int> legacyIds = new int[0];
             if (keywords != null)
-                legacyIds = _dbContext.SqlQuery<int>($"select [ItemId] from [dbo].[LegacyIds]  (NOLOCK) where [LegacyCode] like '{keywords}%'");
+                legacyIds = _dbContext.SqlQuery<int>($"select [ItemId] from [dbo].[LegacyIds]  (NOLOCK) where [LegacyCode] like '%{keywords}%'");
              
 
             query = query.Where(x => !legacyIds.Contains(x.Id)) ;
